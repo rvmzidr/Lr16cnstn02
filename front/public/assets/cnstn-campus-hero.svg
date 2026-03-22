@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Illustration du site CNSTN</title>
+  <desc id="desc">Illustration stylisee inspirée de l'entree du departement CNSTN.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#8db4ee"/>
+      <stop offset="100%" stop-color="#dfe8f4"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#d0d5db"/>
+      <stop offset="100%" stop-color="#adb5bf"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect y="560" width="1600" height="340" fill="#8bb07d"/>
+  <path d="M420 900L840 470L1220 900Z" fill="url(#road)" opacity="0.92"/>
+  <path d="M320 900L760 505L1140 900Z" fill="#f1f2f4" opacity="0.45"/>
+
+  <g transform="translate(860 420)">
+    <path d="M-240 70C-160 -38 40 -72 216 -34c32 8 62 24 84 46l70 74v20H100c-18 0-34 8-46 22l-98 114H-240Z" fill="#28313d"/>
+    <path d="M-180 8h316c34 0 66 13 91 38l89 87h-64l-56-53c-22-21-52-33-83-33H-180Z" fill="#f4f5f6"/>
+    <rect x="-96" y="48" width="108" height="158" rx="6" fill="#1a222c"/>
+    <rect x="-66" y="84" width="32" height="58" rx="3" fill="#374555"/>
+    <rect x="-12" y="84" width="20" height="58" rx="3" fill="#374555"/>
+    <rect x="-74" y="146" width="48" height="60" rx="3" fill="#0f151c"/>
+    <path d="M248 124l86 84-40 20-78-84Z" fill="#d8dadd"/>
+  </g>
+
+  <g transform="translate(202 384)" fill="#162027">
+    <rect x="-10" y="90" width="20" height="116" rx="10"/>
+    <path d="M0 88C-20 48-50 10-92-24c56 8 94 32 128 72C80 18 122 0 176 2c-58 24-106 58-144 106Z"/>
+    <path d="M18 126C-2 92-38 70-82 64c48-10 88-2 122 22 26-24 62-38 112-40-48 20-86 48-118 80Z" opacity="0.88"/>
+  </g>
+
+  <g transform="translate(1280 420)" fill="#20342a">
+    <rect x="-8" y="120" width="16" height="96" rx="8"/>
+    <path d="M0 118C-20 78-52 48-102 28c56 0 96 12 132 42 22-28 56-46 104-56-44 26-80 60-108 102Z"/>
+    <path d="M8 144C-4 118-24 94-62 82c42-4 76 2 104 20 18-18 42-30 74-36-32 18-58 44-82 78Z" opacity="0.84"/>
+  </g>
+
+  <g opacity="0.25" transform="translate(280 270)">
+    <path d="M0 0h220v120H0z" fill="#2a3440"/>
+    <g fill="#d9dee4">
+      <circle cx="174" cy="42" r="6"/>
+      <ellipse cx="146" cy="46" rx="42" ry="18" fill="none" stroke="#d9dee4" stroke-width="4"/>
+      <ellipse cx="146" cy="46" rx="42" ry="18" fill="none" stroke="#d9dee4" stroke-width="4" transform="rotate(60 146 46)"/>
+      <ellipse cx="146" cy="46" rx="42" ry="18" fill="none" stroke="#d9dee4" stroke-width="4" transform="rotate(-60 146 46)"/>
+    </g>
+  </g>
+</svg>

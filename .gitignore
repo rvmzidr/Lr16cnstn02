@@ -1,0 +1,11 @@
+node_modules/ 
+front/node_modules/ 
+backend/node_modules/ 
+dist/ 
+build/ 
+.env 
+*.log 
+node_modules_corrupt_20260317_1/ 
+backend/node_modules_corrupt_20260317_1/ 
+node_modules_corrupt_20260317_1/ 
+backend/node_modules_corrupt_20260317_1/ 

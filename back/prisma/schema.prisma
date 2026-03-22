@@ -1,0 +1,648 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model actualites {
+  id                  BigInt                @id @default(autoincrement())
+  titre               String                @db.VarChar(300)
+  resume              String?               @db.Text
+  contenu             String                @db.Text
+  auteur_id           String                @db.Char(36)
+  equipe_recherche_id BigInt?
+  statut              type_statut_actualite @default(BROUILLON)
+  publiee_le          DateTime?             @db.Timestamp(6)
+  cree_le             DateTime              @default(now()) @db.Timestamp(6)
+  modifie_le          DateTime              @default(now()) @db.Timestamp(6)
+  auteur              utilisateurs          @relation("actualites_auteur", fields: [auteur_id], references: [id], onUpdate: NoAction, map: "fk_actualites_auteur")
+  equipes_recherche   equipes_recherche?    @relation(fields: [equipe_recherche_id], references: [id], onUpdate: NoAction, map: "fk_actualites_equipe")
+  mots_cles_actualite mots_cles_actualite[]
+  notifications       notifications[]
+
+  @@index([equipe_recherche_id], map: "idx_actualites_equipe")
+  @@index([statut], map: "idx_actualites_statut")
+}
+
+model articles {
+  id               BigInt              @id @default(autoincrement())
+  titre            String              @db.VarChar(500)
+  resume           String              @db.Text
+  contenu          String              @db.Text
+  deposant_id      String              @db.Char(36)
+  categorie_id     BigInt?
+  statut           type_statut_article @default(BROUILLON)
+  date_soumission  DateTime?           @db.Timestamp(6)
+  valide_par       String?             @db.Char(36)
+  date_validation  DateTime?           @db.Timestamp(6)
+  motif_rejet      String?             @db.Text
+  publie_le        DateTime?           @db.Timestamp(6)
+  modifie_par      String?             @db.Char(36)
+  cree_le          DateTime            @default(now()) @db.Timestamp(6)
+  modifie_le       DateTime            @default(now()) @db.Timestamp(6)
+  categorie        categories_article? @relation(fields: [categorie_id], references: [id], onUpdate: NoAction, map: "fk_articles_categorie")
+  deposant         utilisateurs        @relation("articles_deposant", fields: [deposant_id], references: [id], onUpdate: NoAction, map: "fk_articles_deposant")
+  modificateur     utilisateurs?       @relation("articles_modificateur", fields: [modifie_par], references: [id], onUpdate: NoAction, map: "fk_articles_modificateur")
+  validateur       utilisateurs?       @relation("articles_validateur", fields: [valide_par], references: [id], onUpdate: NoAction, map: "fk_articles_validateur")
+  auteurs_article  auteurs_article[]
+  mots_cles_article mots_cles_article[]
+  notifications    notifications[]
+  versions_article versions_article[]
+
+  @@index([deposant_id], map: "idx_articles_deposant")
+  @@index([publie_le], map: "idx_articles_publie_le")
+  @@index([statut], map: "idx_articles_statut")
+}
+
+model auteurs_article {
+  article_id           BigInt
+  utilisateur_id       String       @db.Char(36)
+  ordre_auteur         Int          @default(1)
+  auteur_correspondant Boolean      @default(false)
+  article              articles     @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auteurs_article_article")
+  utilisateur          utilisateurs @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auteurs_article_utilisateur")
+
+  @@id([article_id, utilisateur_id])
+  @@unique([article_id, ordre_auteur], map: "uq_auteurs_article_ordre")
+}
+
+model categories_article {
+  id       BigInt                 @id @default(autoincrement())
+  libelle  type_categorie_article @unique
+  cree_le  DateTime               @default(now()) @db.Timestamp(6)
+  articles articles[]
+}
+
+model commentaires_demande {
+  id               BigInt         @id @default(autoincrement())
+  demande_achat_id BigInt
+  auteur_id        String         @db.Char(36)
+  commentaire      String         @db.Text
+  cree_le          DateTime       @default(now()) @db.Timestamp(6)
+  modifie_le       DateTime       @default(now()) @db.Timestamp(6)
+  demandes_achat   demandes_achat @relation(fields: [demande_achat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_commentaires_demande")
+  utilisateurs     utilisateurs   @relation(fields: [auteur_id], references: [id], onUpdate: NoAction, map: "fk_commentaires_demande_auteur")
+}
+
+model conversations {
+  id                        BigInt                      @id @default(autoincrement())
+  sujet                     String?                     @db.VarChar(255)
+  est_groupe                Boolean                     @default(false)
+  cree_par                  String                      @db.Char(36)
+  cree_le                   DateTime                    @default(now()) @db.Timestamp(6)
+  modifie_le                DateTime                    @default(now()) @db.Timestamp(6)
+  utilisateurs              utilisateurs                @relation(fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_conversations_createur")
+  messages                  messages[]
+  notifications             notifications[]
+  participants_conversation participants_conversation[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model decisions_demande {
+  id               BigInt         @id @default(autoincrement())
+  demande_achat_id BigInt         @unique
+  decision         String         @db.VarChar(50)
+  commentaire      String?        @db.Text
+  document_url     String?        @db.Text
+  decidee_par      String         @db.Char(36)
+  cree_le          DateTime       @default(now()) @db.Timestamp(6)
+  demandes_achat   demandes_achat @relation(fields: [demande_achat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_decisions_demande")
+  utilisateurs     utilisateurs   @relation(fields: [decidee_par], references: [id], onUpdate: NoAction, map: "fk_decisions_demande_par")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model demandes_achat {
+  id                                                    BigInt                 @id @default(autoincrement())
+  projet_id                                             BigInt
+  cree_par                                              String                 @db.Char(36)
+  objet                                                 String                 @db.VarChar(255)
+  description                                           String                 @db.Text
+  quantite                                              Int                    @default(1)
+  estimation_cout                                       Decimal?               @db.Decimal(14, 3)
+  justification_scientifique                            String                 @db.Text
+  statut                                                type_statut_demande    @default(EN_ATTENTE)
+  urgente                                               Boolean                @default(false)
+  date_decision                                         DateTime?              @db.Timestamp(6)
+  decidee_par                                           String?                @db.Char(36)
+  motif_rejet                                           String?                @db.Text
+  date_livraison                                        DateTime?              @db.Date
+  cree_le                                               DateTime               @default(now()) @db.Timestamp(6)
+  modifie_le                                            DateTime               @default(now()) @db.Timestamp(6)
+  commentaires_demande                                  commentaires_demande[]
+  decisions_demande                                     decisions_demande?
+  utilisateurs_demandes_achat_cree_parToutilisateurs    utilisateurs           @relation("demandes_achat_cree_parToutilisateurs", fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_createur")
+  utilisateurs_demandes_achat_decidee_parToutilisateurs utilisateurs?          @relation("demandes_achat_decidee_parToutilisateurs", fields: [decidee_par], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_decideur")
+  projets                                               projets                @relation(fields: [projet_id], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_projet")
+  historiques_demande                                   historiques_demande[]
+  notifications                                         notifications[]
+
+  @@index([cree_par], map: "idx_demandes_createur")
+  @@index([projet_id], map: "idx_demandes_projet")
+  @@index([statut], map: "idx_demandes_statut")
+}
+
+model equipes_projet {
+  projet_id           BigInt
+  equipe_recherche_id BigInt
+  equipes_recherche   equipes_recherche @relation(fields: [equipe_recherche_id], references: [id], onUpdate: NoAction, map: "fk_equipes_projet_equipe")
+  projets             projets           @relation(fields: [projet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_equipes_projet_projet")
+
+  @@id([projet_id, equipe_recherche_id])
+}
+
+model equipes_recherche {
+  id                  BigInt                @id @default(autoincrement())
+  code                String                @unique @db.VarChar(20)
+  nom                 String                @unique @db.VarChar(255)
+  description         String?               @db.Text
+  actif               Boolean               @default(true)
+  cree_le             DateTime              @default(now()) @db.Timestamp(6)
+  modifie_le          DateTime              @default(now()) @db.Timestamp(6)
+  actualites          actualites[]
+  equipes_projet      equipes_projet[]
+  profils_utilisateur profils_utilisateur[]
+}
+
+model historiques_compte {
+  id                   BigInt              @id @default(autoincrement())
+  utilisateur_id       String              @db.Char(36)
+  ancien_statut        type_statut_compte?
+  nouveau_statut       type_statut_compte?
+  ancien_role          type_role?
+  nouveau_role         type_role?
+  commentaire          String?             @db.Text
+  modifie_par          String?             @db.Char(36)
+  cree_le              DateTime            @default(now()) @db.Timestamp(6)
+  modificateur         utilisateurs?       @relation("historiques_compte_modificateur", fields: [modifie_par], references: [id], onUpdate: NoAction, map: "fk_hist_compte_modifie_par")
+  utilisateur          utilisateurs        @relation("historiques_compte_utilisateur", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_hist_compte_utilisateur")
+}
+
+model historiques_demande {
+  id               BigInt               @id @default(autoincrement())
+  demande_achat_id BigInt
+  ancien_statut    type_statut_demande?
+  nouveau_statut   type_statut_demande
+  commentaire      String?               @db.Text
+  modifie_par      String               @db.Char(36)
+  cree_le          DateTime             @default(now()) @db.Timestamp(6)
+  demandes_achat   demandes_achat       @relation(fields: [demande_achat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_hist_demande_demande")
+  utilisateurs     utilisateurs         @relation(fields: [modifie_par], references: [id], onUpdate: NoAction, map: "fk_hist_demande_utilisateur")
+}
+
+model historiques_projet {
+  id           BigInt        @id @default(autoincrement())
+  projet_id    BigInt
+  action       String        @db.VarChar(120)
+  description  String?       @db.Text
+  effectue_par String?       @db.Char(36)
+  cree_le      DateTime      @default(now()) @db.Timestamp(6)
+  projets      projets       @relation(fields: [projet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historiques_projet")
+  utilisateurs utilisateurs? @relation(fields: [effectue_par], references: [id], onUpdate: NoAction, map: "fk_historiques_projet_par")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model informations_doctorales {
+  utilisateur_id             String       @id @db.Char(36)
+  sujet_recherche            String       @db.Text
+  pourcentage_avancement     Decimal      @default(0) @db.Decimal(5, 2)
+  annee_premiere_inscription Int?
+  annee_universitaire_premiere_inscription String?   @db.VarChar(20)
+  universite_inscription     String?      @db.VarChar(255)
+  directeur_these            String?      @db.VarChar(255)
+  attestation_nom_original   String?      @db.VarChar(255)
+  attestation_nom_stocke     String?      @db.VarChar(255)
+  attestation_chemin         String?      @db.Text
+  attestation_type_mime      String?      @db.VarChar(150)
+  attestation_taille_octets  BigInt?
+  attestation_deposee_le     DateTime?    @db.Timestamp(6)
+  cree_le                    DateTime     @default(now()) @db.Timestamp(6)
+  modifie_le                 DateTime     @default(now()) @db.Timestamp(6)
+  utilisateurs               utilisateurs @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_doctorat_utilisateur")
+}
+
+model institutions {
+  id                  BigInt                @id @default(autoincrement())
+  nom                 String                @unique @db.VarChar(255)
+  adresse             String?               @db.Text
+  ville               String?               @db.VarChar(120)
+  pays                String                @default("Tunisie") @db.VarChar(120)
+  cree_le             DateTime              @default(now()) @db.Timestamp(6)
+  modifie_le          DateTime              @default(now()) @db.Timestamp(6)
+  profils_utilisateur profils_utilisateur[]
+}
+
+model journaux_audit {
+  id                BigInt        @id @default(autoincrement())
+  utilisateur_id    String?       @db.Char(36)
+  table_cible       String        @db.VarChar(120)
+  identifiant_cible String?       @db.VarChar(120)
+  action            String        @db.VarChar(60)
+  details           Json?
+  adresse_ip        String?       @db.VarChar(64)
+  agent_utilisateur String?       @db.Text
+  cree_le           DateTime      @default(now()) @db.Timestamp(6)
+  utilisateurs      utilisateurs? @relation(fields: [utilisateur_id], references: [id], onUpdate: NoAction, map: "fk_journaux_audit_utilisateur")
+
+  @@index([table_cible, cree_le(sort: Desc)], map: "idx_audit_table_cible")
+}
+
+model lectures_message {
+  message_id     BigInt
+  utilisateur_id String       @db.Char(36)
+  lu             Boolean      @default(false)
+  lu_le          DateTime?    @db.Timestamp(6)
+  messages       messages     @relation(fields: [message_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lectures_message_message")
+  utilisateurs   utilisateurs @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lectures_message_utilisateur")
+
+  @@id([message_id, utilisateur_id])
+}
+
+model membres_projet {
+  projet_id                                                BigInt
+  utilisateur_id                                           String        @db.Char(36)
+  role_dans_projet                                         String?       @db.VarChar(120)
+  ajoute_par                                               String?       @db.Char(36)
+  ajoute_le                                                DateTime      @default(now()) @db.Timestamp(6)
+  utilisateurs_membres_projet_ajoute_parToutilisateurs     utilisateurs? @relation("membres_projet_ajoute_parToutilisateurs", fields: [ajoute_par], references: [id], onUpdate: NoAction, map: "fk_membres_projet_ajoute_par")
+  projets                                                  projets       @relation(fields: [projet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_membres_projet_projet")
+  utilisateurs_membres_projet_utilisateur_idToutilisateurs utilisateurs  @relation("membres_projet_utilisateur_idToutilisateurs", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_membres_projet_utilisateur")
+
+  @@id([projet_id, utilisateur_id])
+}
+
+model messages {
+  id               BigInt             @id @default(autoincrement())
+  conversation_id  BigInt
+  expediteur_id    String             @db.Char(36)
+  contenu          String             @db.Text
+  cree_le          DateTime           @default(now()) @db.Timestamp(6)
+  modifie_le       DateTime           @default(now()) @db.Timestamp(6)
+  lectures_message lectures_message[]
+  conversations    conversations      @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_messages_conversation")
+  utilisateurs     utilisateurs       @relation(fields: [expediteur_id], references: [id], onUpdate: NoAction, map: "fk_messages_expediteur")
+  notifications    notifications[]
+
+  @@index([conversation_id, cree_le], map: "idx_messages_conversation")
+}
+
+model messages_contact {
+  id                   BigInt        @id @default(autoincrement())
+  nom_complet          String        @db.VarChar(200)
+  email                String        @db.VarChar(191)
+  sujet                String        @db.VarChar(255)
+  message              String        @db.Text
+  traite               Boolean       @default(false)
+  traite_par           String?       @db.Char(36)
+  traite_le            DateTime?     @db.Timestamp(6)
+  reponse              String?       @db.Text
+  cree_le              DateTime      @default(now()) @db.Timestamp(6)
+  utilisateur_traitant utilisateurs? @relation("messages_contact_traitement", fields: [traite_par], references: [id], onUpdate: NoAction, map: "fk_messages_contact_traite_par")
+}
+
+model mots_cles {
+  id                  BigInt                @id @default(autoincrement())
+  libelle             String                @unique @db.VarChar(120)
+  cree_le             DateTime              @default(now()) @db.Timestamp(6)
+  mots_cles_actualite mots_cles_actualite[]
+  mots_cles_article   mots_cles_article[]
+  mots_cles_projet    mots_cles_projet[]
+}
+
+model mots_cles_actualite {
+  actualite_id BigInt
+  mot_cle_id   BigInt
+  actualites   actualites @relation(fields: [actualite_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_actualite_actualite")
+  mots_cles    mots_cles  @relation(fields: [mot_cle_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_actualite_mot")
+
+  @@id([actualite_id, mot_cle_id])
+}
+
+model mots_cles_article {
+  article_id BigInt
+  mot_cle_id BigInt
+  articles   articles  @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_article_article")
+  mots_cles  mots_cles @relation(fields: [mot_cle_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_article_mot")
+
+  @@id([article_id, mot_cle_id])
+}
+
+model mots_cles_projet {
+  projet_id  BigInt
+  mot_cle_id BigInt
+  mots_cles  mots_cles @relation(fields: [mot_cle_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_projet_mot")
+  projets    projets   @relation(fields: [projet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mot_projet_projet")
+
+  @@id([projet_id, mot_cle_id])
+}
+
+model niveaux_diplome {
+  id                  BigInt                @id @default(autoincrement())
+  libelle             String                @unique @db.VarChar(120)
+  profils_utilisateur profils_utilisateur[]
+}
+
+model notifications {
+  id                BigInt            @id @default(autoincrement())
+  utilisateur_id    String            @db.Char(36)
+  type_notification type_notification
+  titre             String            @db.VarChar(255)
+  message           String            @db.Text
+  projet_id         BigInt?
+  demande_achat_id  BigInt?
+  article_id        BigInt?
+  actualite_id      BigInt?
+  conversation_id   BigInt?
+  message_id        BigInt?
+  est_lue           Boolean           @default(false)
+  lue_le            DateTime?         @db.Timestamp(6)
+  lien_direct       String?          @db.Text
+  cree_le           DateTime          @default(now()) @db.Timestamp(6)
+  actualites        actualites?       @relation(fields: [actualite_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_actualite")
+  articles          articles?         @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_article")
+  conversations     conversations?    @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_conversation")
+  demandes_achat    demandes_achat?   @relation(fields: [demande_achat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_demande")
+  messages          messages?         @relation(fields: [message_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_message")
+  projets           projets?          @relation(fields: [projet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_projet")
+  utilisateurs      utilisateurs      @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_utilisateur")
+
+  @@index([utilisateur_id, est_lue, cree_le(sort: Desc)], map: "idx_notifications_utilisateur_lue")
+}
+
+model participants_conversation {
+  conversation_id BigInt
+  utilisateur_id  String        @db.Char(36)
+  rejoint_le      DateTime      @default(now()) @db.Timestamp(6)
+  quitte_le       DateTime?     @db.Timestamp(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_participants_conversation")
+  utilisateurs    utilisateurs  @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_participants_utilisateur")
+
+  @@id([conversation_id, utilisateur_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pieces_jointes {
+  id             BigInt                   @id @default(autoincrement())
+  type_entite    type_entite_piece_jointe
+  entite_id      BigInt
+  nom_fichier    String                   @db.VarChar(255)
+  chemin_fichier String                   @db.Text
+  type_mime      String?                  @db.VarChar(150)
+  taille_octets  BigInt?
+  ajoute_par     String?                  @db.Char(36)
+  cree_le        DateTime                 @default(now()) @db.Timestamp(6)
+  utilisateurs   utilisateurs?            @relation(fields: [ajoute_par], references: [id], onUpdate: NoAction, map: "fk_pieces_jointes_ajoute_par")
+
+  @@index([type_entite, entite_id], map: "idx_pieces_jointes_type_entite")
+}
+
+model preferences_notification {
+  utilisateur_id       String       @id @db.Char(36)
+  canal_application    Boolean      @default(true)
+  canal_email          Boolean      @default(false)
+  notif_comptes        Boolean      @default(true)
+  notif_articles       Boolean      @default(true)
+  notif_messages       Boolean      @default(true)
+  notif_projets        Boolean      @default(true)
+  notif_demandes_achat Boolean      @default(true)
+  notif_livraisons     Boolean      @default(true)
+  cree_le              DateTime     @default(now()) @db.Timestamp(6)
+  modifie_le           DateTime     @default(now()) @db.Timestamp(6)
+  utilisateurs         utilisateurs @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_preferences_notification")
+}
+
+model profils_utilisateur {
+  utilisateur_id             String             @id @db.Char(36)
+  grade                      String?            @db.VarChar(150)
+  institution_affectation_id BigInt?
+  est_doctorant              Boolean            @default(false)
+  dernier_diplome_libre      String?            @db.VarChar(255)
+  niveau_diplome_id          BigInt?
+  date_obtention_diplome     DateTime?          @db.Date
+  etablissement_diplome      String?            @db.VarChar(255)
+  laboratoire_denomination   String?            @db.VarChar(255)
+  laboratoire_etablissement  String?            @db.VarChar(255)
+  laboratoire_universite     String?            @db.VarChar(255)
+  laboratoire_responsable    String?            @db.VarChar(255)
+  orcid                      String?            @unique(map: "uq_profils_orcid") @db.VarChar(50)
+  equipe_recherche_id        BigInt?
+  biographie                 String?            @db.Text
+  photo_url                  String?            @db.Text
+  cree_le                    DateTime           @default(now()) @db.Timestamp(6)
+  modifie_le                 DateTime           @default(now()) @db.Timestamp(6)
+  equipes_recherche          equipes_recherche? @relation(fields: [equipe_recherche_id], references: [id], onUpdate: NoAction, map: "fk_profils_equipe")
+  institutions               institutions?      @relation(fields: [institution_affectation_id], references: [id], onUpdate: NoAction, map: "fk_profils_institution")
+  niveaux_diplome            niveaux_diplome?   @relation(fields: [niveau_diplome_id], references: [id], onUpdate: NoAction, map: "fk_profils_niveau")
+  utilisateur                utilisateurs       @relation("profil_utilisateur", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_profils_utilisateur")
+
+  @@index([equipe_recherche_id], map: "idx_profils_equipe")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model projets {
+  id                 BigInt               @id @default(autoincrement())
+  titre              String               @db.VarChar(300)
+  description        String               @db.Text
+  objectifs          String?              @db.Text
+  date_debut         DateTime?            @db.Date
+  date_fin           DateTime?            @db.Date
+  statut             type_statut_projet   @default(EN_COURS)
+  cree_par           String               @db.Char(36)
+  archive            Boolean              @default(false)
+  cree_le            DateTime             @default(now()) @db.Timestamp(6)
+  modifie_le         DateTime             @default(now()) @db.Timestamp(6)
+  demandes_achat     demandes_achat[]
+  equipes_projet     equipes_projet[]
+  historiques_projet historiques_projet[]
+  membres_projet     membres_projet[]
+  mots_cles_projet   mots_cles_projet[]
+  notifications      notifications[]
+  utilisateurs       utilisateurs         @relation(fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_projets_createur")
+
+  @@index([statut], map: "idx_projets_statut")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model utilisateurs {
+  id                                                                 String                      @id @default(uuid()) @db.Char(36)
+  nom                                                                String                      @db.VarChar(120)
+  prenom                                                             String                      @db.VarChar(120)
+  nom_jeune_fille                                                    String?                     @db.VarChar(120)
+  date_naissance                                                     DateTime?                   @db.Date
+  lieu_naissance                                                     String?                     @db.VarChar(150)
+  genre                                                              type_genre?
+  cin                                                                String?                     @unique(map: "uq_utilisateurs_cin") @db.VarChar(60)
+  passeport                                                          String?                     @unique(map: "uq_utilisateurs_passeport") @db.VarChar(60)
+  email_institutionnel                                               String                      @unique @db.VarChar(191)
+  email_secondaire                                                   String?                     @unique @db.VarChar(191)
+  telephone                                                          String?                     @db.VarChar(30)
+  adresse                                                            String?                     @db.Text
+  mot_de_passe_hash                                                  String                      @db.VarChar(255)
+  role_demande                                                       type_role                   @default(MEMBRE)
+  role                                                               type_role?
+  statut                                                             type_statut_compte          @default(EN_ATTENTE)
+  conditions_acceptees                                               Boolean                     @default(false)
+  derniere_connexion_le                                              DateTime?                   @db.Timestamp(6)
+  valide_par                                                         String?                     @db.Char(36)
+  valide_le                                                          DateTime?                   @db.Timestamp(6)
+  motif_rejet                                                        String?                     @db.Text
+  actif                                                              Boolean                     @default(true)
+  cree_le                                                            DateTime                    @default(now()) @db.Timestamp(6)
+  modifie_le                                                         DateTime                    @default(now()) @db.Timestamp(6)
+  actualites                                                         actualites[]                @relation("actualites_auteur")
+  articles_deposes                                                   articles[]                  @relation("articles_deposant")
+  articles_modifies                                                  articles[]                  @relation("articles_modificateur")
+  articles_valides                                                   articles[]                  @relation("articles_validateur")
+  auteurs_article                                                    auteurs_article[]
+  commentaires_demande                                               commentaires_demande[]
+  conversations                                                      conversations[]
+  decisions_demande                                                  decisions_demande[]
+  demandes_achat_demandes_achat_cree_parToutilisateurs               demandes_achat[]            @relation("demandes_achat_cree_parToutilisateurs")
+  demandes_achat_demandes_achat_decidee_parToutilisateurs            demandes_achat[]            @relation("demandes_achat_decidee_parToutilisateurs")
+  historiques_comptes_modifies                                       historiques_compte[]        @relation("historiques_compte_modificateur")
+  historiques_compte                                                 historiques_compte[]        @relation("historiques_compte_utilisateur")
+  historiques_demande                                                historiques_demande[]
+  historiques_projet                                                 historiques_projet[]
+  informations_doctorales                                            informations_doctorales?
+  journaux_audit                                                     journaux_audit[]
+  lectures_message                                                   lectures_message[]
+  membres_projet_membres_projet_ajoute_parToutilisateurs             membres_projet[]            @relation("membres_projet_ajoute_parToutilisateurs")
+  membres_projet_membres_projet_utilisateur_idToutilisateurs         membres_projet[]            @relation("membres_projet_utilisateur_idToutilisateurs")
+  messages                                                           messages[]
+  messages_contact                                                   messages_contact[]          @relation("messages_contact_traitement")
+  notifications                                                      notifications[]
+  participants_conversation                                          participants_conversation[]
+  pieces_jointes                                                     pieces_jointes[]
+  preferences_notification                                           preferences_notification?
+  profil                                                             profils_utilisateur?        @relation("profil_utilisateur")
+  projets                                                            projets[]
+  validateur_compte                                                  utilisateurs?               @relation("utilisateurs_validateur", fields: [valide_par], references: [id], onUpdate: NoAction, map: "fk_utilisateurs_validateur")
+  utilisateurs_valides                                               utilisateurs[]              @relation("utilisateurs_validateur")
+  versions_article                                                   versions_article[]          @relation("versions_article_sauvegarde")
+
+  @@index([role], map: "idx_utilisateurs_role")
+  @@index([statut], map: "idx_utilisateurs_statut")
+}
+
+model versions_article {
+  id                         BigInt        @id @default(autoincrement())
+  article_id                 BigInt
+  numero_version             Int
+  titre                      String        @db.VarChar(500)
+  resume                     String        @db.Text
+  contenu                    String        @db.Text
+  sauvegarde_par             String?       @db.Char(36)
+  cree_le                    DateTime      @default(now()) @db.Timestamp(6)
+  article                    articles      @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_versions_article")
+  sauvegarde_par_utilisateur utilisateurs? @relation("versions_article_sauvegarde", fields: [sauvegarde_par], references: [id], onUpdate: NoAction, map: "fk_versions_article_par")
+
+  @@unique([article_id, numero_version], map: "uq_versions_article")
+}
+
+enum type_canal_notification {
+  APPLICATION
+  EMAIL
+}
+
+enum type_categorie_article {
+  ENERGIE
+  MATERIAUX
+  ENVIRONNEMENT
+  DOSIMETRIE
+  BIO_DOSIMETRIE
+  RADIO_ANALYSE
+  RADIOCHIMIE
+  PHYSIQUE_ATOMIQUE
+  METROLOGIE
+  INSTRUMENTATION_NUCLEAIRE
+  AUTRE
+}
+
+enum type_entite_piece_jointe {
+  ARTICLE
+  ACTUALITE
+  MESSAGE
+  DEMANDE_ACHAT
+  COMMENTAIRE_DEMANDE
+  DECISION_DEMANDE
+}
+
+enum type_genre {
+  HOMME
+  FEMME
+  AUTRE
+}
+
+enum type_mot_cle_entite {
+  ARTICLE
+  ACTUALITE
+  PROJET
+}
+
+enum type_notification {
+  NOUVELLE_INSCRIPTION
+  COMPTE_VALIDE
+  COMPTE_REJETE
+  COMPTE_DESACTIVE
+  NOUVEL_ARTICLE
+  ARTICLE_VALIDE
+  ARTICLE_REJETE
+  ARTICLE_PUBLIE
+  ACTUALITE_PUBLIEE
+  NOUVEAU_MESSAGE
+  NOUVEAU_PROJET
+  PROJET_MODIFIE
+  NOUVELLE_DEMANDE_ACHAT
+  DEMANDE_ACHAT_ACCEPTEE
+  DEMANDE_ACHAT_REJETEE
+  DEMANDE_ACHAT_STATUT_MODIFIE
+  DEMANDE_ACHAT_COMMENTAIRE
+  DEMANDE_ACHAT_PIECE_JOINTE
+  DEMANDE_ACHAT_LIVREE
+  SYSTEME
+}
+
+enum type_role {
+  MEMBRE
+  ADMINISTRATEUR
+  CHEF_LABO
+}
+
+enum type_statut_actualite {
+  BROUILLON
+  PUBLIEE
+  ARCHIVEE
+}
+
+enum type_statut_article {
+  BROUILLON
+  SOUMIS
+  VALIDE
+  REJETE
+  PUBLIE
+}
+
+enum type_statut_compte {
+  EN_ATTENTE
+  ACTIF
+  REJETE
+  DESACTIVE
+}
+
+enum type_statut_demande {
+  EN_ATTENTE
+  ACCEPTEE
+  REJETEE
+  EN_COURS_TRAITEMENT
+  COMMANDEE
+  LIVREE
+  ANNULEE
+}
+
+enum type_statut_projet {
+  EN_COURS
+  TERMINE
+  ARCHIVE
+}

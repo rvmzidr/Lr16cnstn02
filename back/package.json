@@ -1,0 +1,39 @@
+{
+  "name": "back",
+  "version": "1.0.0",
+  "description": "API Release 1 pour la plateforme de gestion du laboratoire LR16CNSTN02",
+  "main": "src/server.js",
+  "scripts": {
+    "predev": "npm run prisma:generate",
+    "dev": "nodemon src/server.js",
+    "prestart": "npm run prisma:generate",
+    "start": "node src/server.js",
+    "db:create": "node src/scripts/createMysqlDatabase.js",
+    "db:push": "npm run db:create && prisma db push --accept-data-loss --skip-generate",
+    "db:init": "node src/scripts/bootstrapMysql.js",
+    "prisma:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
+    "seed:demo": "node src/scripts/seedDemo.js",
+    "test": "npm run db:init && node --test src/tests/release1.smoke.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.15.2",
+    "multer": "^2.0.2",
+    "morgan": "^1.10.1",
+    "prisma": "^6.19.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

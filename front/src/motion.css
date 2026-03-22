@@ -1,0 +1,222 @@
+body {
+  margin: 0;
+  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Merriweather', serif;
+}
+
+.hero-dynamic-background {
+  background-size: cover;
+  background-position: center;
+  animation: hero-pan 24s ease-in-out infinite alternate;
+}
+
+.nuclear-motif {
+  position: absolute;
+  top: 48%;
+  right: -6rem;
+  width: clamp(30rem, 62vw, 58rem);
+  aspect-ratio: 1;
+  transform: translate3d(0, -50%, 0);
+  opacity: var(--motif-opacity);
+  filter: drop-shadow(0 28px 64px var(--motif-glow));
+  animation: nuclear-drift 28s cubic-bezier(0.37, 0, 0.2, 1) infinite alternate;
+}
+
+.nuclear-motif__canvas {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: nuclear-sway 34s ease-in-out infinite alternate;
+}
+
+.nuclear-motif__orbit {
+  fill: none;
+  stroke: var(--motif-stroke);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.nuclear-motif__orbit--major {
+  stroke-width: 1.5;
+  stroke-dasharray: 14 18;
+  animation: nuclear-flow 22s linear infinite;
+}
+
+.nuclear-motif__orbit--soft {
+  stroke: var(--motif-stroke-soft);
+  stroke-width: 1.05;
+  stroke-dasharray: 10 18;
+  animation: nuclear-flow 30s linear infinite reverse;
+}
+
+.nuclear-motif__thread {
+  fill: none;
+  stroke: var(--motif-stroke-soft);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-dasharray: 4 20;
+  animation: nuclear-thread 16s linear infinite;
+}
+
+.nuclear-motif__delay-1 {
+  animation-delay: -7s;
+}
+
+.nuclear-motif__delay-2 {
+  animation-delay: -12s;
+}
+
+.nuclear-motif__core-glow {
+  fill: var(--motif-glow);
+  opacity: 0.34;
+  filter: blur(18px);
+}
+
+.nuclear-motif__core-ring {
+  fill: none;
+  stroke: var(--motif-stroke);
+  stroke-width: 1.35;
+  opacity: 0.75;
+}
+
+.nuclear-motif__core {
+  fill: var(--motif-core);
+}
+
+.nuclear-motif__node {
+  fill: var(--motif-particle);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nuclear-pulse 5.4s ease-in-out infinite;
+}
+
+.nuclear-motif__node--delay-1 {
+  animation-delay: -1.6s;
+}
+
+.nuclear-motif__node--delay-2 {
+  animation-delay: -3.1s;
+}
+
+.nuclear-motif__node--delay-3 {
+  animation-delay: -4.2s;
+}
+
+@media (max-width: 767px) {
+  .nuclear-motif {
+    right: -11rem;
+    width: min(32rem, 96vw);
+    opacity: calc(var(--motif-opacity) * 0.74);
+    animation-duration: 22s;
+  }
+
+  .nuclear-motif__canvas {
+    animation-duration: 26s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nuclear-motif,
+  .nuclear-motif__canvas,
+  .nuclear-motif__orbit--major,
+  .nuclear-motif__orbit--soft,
+  .nuclear-motif__thread,
+  .nuclear-motif__node {
+    animation: none;
+  }
+}
+
+@keyframes hero-pan {
+  from {
+    background-position: 50% 50%;
+  }
+
+  to {
+    background-position: 58% 44%;
+  }
+}
+
+@keyframes nuclear-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -180;
+  }
+}
+
+@keyframes nuclear-drift {
+  0% {
+    transform: translate3d(8vw, -54%, 0) scale(0.98);
+  }
+
+  50% {
+    transform: translate3d(-6vw, -49%, 0) scale(1.02);
+  }
+
+  100% {
+    transform: translate3d(-14vw, -46%, 0) scale(1.03);
+  }
+}
+
+@keyframes nuclear-sway {
+  0% {
+    transform: rotate(-5deg);
+  }
+
+  50% {
+    transform: rotate(2deg);
+  }
+
+  100% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes nuclear-thread {
+  from {
+    stroke-dashoffset: 120;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nuclear-pulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 0.88;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes route-nuclear-spin {
+  0% {
+    transform: scale(0.84) rotate(0deg);
+    opacity: 0.2;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.02) rotate(360deg);
+    opacity: 0.92;
+  }
+}
