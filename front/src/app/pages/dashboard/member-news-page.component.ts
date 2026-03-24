@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { api } from '../../core/services/api';
@@ -8,7 +8,7 @@ import { formatDate } from '../../core/utils/format';
 @Component({
   selector: 'app-member-news-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="space-y-6">
       <div>

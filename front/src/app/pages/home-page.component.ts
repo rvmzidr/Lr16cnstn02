@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -14,7 +14,7 @@ import { AnimatedCounterComponent } from '../shared/components/animated-counter.
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule, AnimatedCounterComponent],
+  imports: [RouterLink, LucideAngularModule, AnimatedCounterComponent],
   template: `
     <section class="page-shell py-8 lg:py-10">
       <div class="hero-banner hero-banner--campus hero-dynamic-background px-8 py-10 lg:px-12 lg:py-14">

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -10,7 +10,7 @@ import { sharedIcons } from '../shared/lucide-icons';
 @Component({
   selector: 'app-article-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     <section class="page-shell py-8">
       <a routerLink="/articles" class="btn-outline mb-6">

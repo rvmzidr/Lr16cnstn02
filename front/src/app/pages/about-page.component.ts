@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import type { AboutData } from '../core/models/models';
@@ -8,7 +8,7 @@ import { sharedIcons } from '../shared/lucide-icons';
 @Component({
   selector: 'app-about-page',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   template: `
     <section class="page-shell py-8">
       <div class="hero-banner--light surface-card px-8 py-12 lg:px-12 lg:py-16">

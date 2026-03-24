@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -16,7 +16,6 @@ import { sharedIcons } from '../shared/lucide-icons';
   selector: 'app-dashboard-layout',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -25,7 +24,7 @@ import { sharedIcons } from '../shared/lucide-icons';
     CnstnLogoComponent,
     ToolbarControlsComponent,
     UserMenuComponent
-  ],
+],
   template: `
     <div class="min-h-screen bg-muted/30">
       <div class="flex min-h-screen">

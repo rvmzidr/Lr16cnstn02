@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ import { sharedIcons } from '../shared/lucide-icons';
 @Component({
   selector: 'app-news-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [FormsModule, RouterLink, LucideAngularModule],
   template: `
     <section class="page-shell py-8">
       <div class="hero-banner--light surface-card px-8 py-12 lg:px-12">

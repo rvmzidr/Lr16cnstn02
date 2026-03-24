@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -8,7 +8,7 @@ import { sharedIcons } from '../lucide-icons';
 @Component({
   selector: 'app-breadcrumb',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     @if (items().length > 1) {
       <nav class="breadcrumb-shell" aria-label="Breadcrumb">

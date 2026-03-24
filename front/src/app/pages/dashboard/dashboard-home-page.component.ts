@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { api } from '../../core/services/api';
@@ -10,7 +10,7 @@ import { AnimatedCounterComponent } from '../../shared/components/animated-count
 @Component({
   selector: 'app-dashboard-home-page',
   standalone: true,
-  imports: [CommonModule, AnimatedCounterComponent],
+  imports: [AnimatedCounterComponent],
   template: `
     <div class="space-y-8">
       <section class="summary-highlight">

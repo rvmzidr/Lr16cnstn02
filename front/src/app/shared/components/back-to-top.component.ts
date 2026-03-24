@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, HostListener, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { sharedIcons } from '../lucide-icons';
@@ -6,7 +6,7 @@ import { sharedIcons } from '../lucide-icons';
 @Component({
   selector: 'app-back-to-top',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   template: `
     @if (visible()) {
       <button type="button" class="back-to-top-button" (click)="scrollTop()">

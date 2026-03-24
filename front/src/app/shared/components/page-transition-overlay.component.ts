@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -8,7 +8,7 @@ import { sharedIcons } from '../lucide-icons';
 @Component({
   selector: 'app-page-transition-overlay',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   template: `
     @if (visible()) {
       <div class="page-transition-overlay" aria-hidden="true">

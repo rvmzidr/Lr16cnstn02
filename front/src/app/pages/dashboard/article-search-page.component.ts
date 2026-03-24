@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Article, ArticleSearchFilters, RegistrationReferences, UtilisateurComplet } from '../../core/models/models';
@@ -9,7 +9,7 @@ import { formatDate } from '../../core/utils/format';
 @Component({
   selector: 'app-article-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="space-y-6">
       <div>

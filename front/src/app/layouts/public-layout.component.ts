@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -17,7 +17,6 @@ import { sharedIcons } from '../shared/lucide-icons';
   selector: 'app-public-layout',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -26,7 +25,7 @@ import { sharedIcons } from '../shared/lucide-icons';
     CnstnLogoComponent,
     ToolbarControlsComponent,
     UserMenuComponent
-  ],
+],
   template: `
     <div class="min-h-screen flex flex-col">
       <nav class="toolbar-foil-surface toolbar-foil-surface--public sticky top-0 z-50 border-b border-border/25 text-primary-foreground backdrop-blur-xl">

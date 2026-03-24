@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, inject, signal } from '@angular/core';
+
+import { Injectable, computed, inject, signal, DOCUMENT } from '@angular/core';
 
 export type SiteLanguage = 'fr' | 'en' | 'ar';
 

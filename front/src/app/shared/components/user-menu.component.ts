@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -10,7 +10,7 @@ import { sharedIcons } from '../lucide-icons';
 @Component({
   selector: 'app-user-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule],
   template: `
     @if (auth.isAuthenticated()) {
       <div class="relative">

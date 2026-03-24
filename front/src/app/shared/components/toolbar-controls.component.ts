@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { SiteLanguage, SitePreferencesService } from '../../core/services/site-preferences.service';
@@ -7,7 +7,7 @@ import { sharedIcons } from '../lucide-icons';
 @Component({
   selector: 'app-toolbar-controls',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   template: `
     <div class="relative flex items-center gap-2">
       <button

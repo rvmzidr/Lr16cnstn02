@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { AdminAccountsList, AdminRegistrationList, Role, UtilisateurComplet } from '../../core/models/models';
@@ -8,7 +8,7 @@ import { api } from '../../core/services/api';
 @Component({
   selector: 'app-admin-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="space-y-8">
       <div>

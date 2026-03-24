@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,7 +9,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [FormsModule, RouterLink, LucideAngularModule],
   template: `
     <section class="page-shell flex min-h-[calc(100vh-9rem)] items-center justify-center py-10">
       <div class="surface-card w-full max-w-xl p-8 lg:p-10">

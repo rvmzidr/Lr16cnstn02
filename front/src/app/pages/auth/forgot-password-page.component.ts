@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,7 +7,7 @@ import { api } from '../../core/services/api';
 @Component({
   selector: 'app-forgot-password-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   template: `
     <section class="page-shell flex min-h-[calc(100vh-9rem)] items-center justify-center py-10">
       <div class="surface-card w-full max-w-xl p-8 lg:p-10">

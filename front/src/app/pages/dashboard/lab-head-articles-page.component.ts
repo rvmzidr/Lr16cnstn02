@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Article, LabHeadArticlesData } from '../../core/models/models';
@@ -9,7 +9,7 @@ import { formatDate } from '../../core/utils/format';
 @Component({
   selector: 'app-lab-head-articles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="space-y-8">
       <div>

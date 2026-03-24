@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -9,7 +9,7 @@ import { sharedIcons } from '../shared/lucide-icons';
 @Component({
   selector: 'app-contact-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule],
   template: `
     <section class="page-shell py-8">
       <div class="hero-banner--light surface-card px-8 py-12 lg:px-12">

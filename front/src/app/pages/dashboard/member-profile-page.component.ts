@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { createRegistrationPayloadFromUser, appendRegistrationPayloadToFormData, validateRegistrationPayload, type DossierErrorMap } from '../../core/member/dossier';
@@ -9,7 +9,7 @@ import { api } from '../../core/services/api';
 @Component({
   selector: 'app-member-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="space-y-6">
       <div>

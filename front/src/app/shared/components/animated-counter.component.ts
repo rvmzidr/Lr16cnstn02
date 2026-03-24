@@ -1,10 +1,10 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
 
 @Component({
   selector: 'app-animated-counter',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `{{ displayValue() }}`
 })
 export class AnimatedCounterComponent implements OnChanges {
