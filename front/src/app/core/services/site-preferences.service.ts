@@ -36,6 +36,8 @@ export class SitePreferencesService {
       const storedLanguage = window.localStorage.getItem(STORAGE_LANGUAGE_KEY) as SiteLanguage | null;
       if (storedLanguage && this.languages.some((option) => option.code === storedLanguage)) {
         this.language.set(storedLanguage);
+      } else if (storedLanguage) {
+        window.localStorage.setItem(STORAGE_LANGUAGE_KEY, 'fr');
       }
 
       const storedTheme = window.localStorage.getItem(STORAGE_THEME_KEY);

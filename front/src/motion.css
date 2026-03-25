@@ -1,17 +1,3 @@
-body {
-  margin: 0;
-  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: 'Merriweather', serif;
-}
-
 .hero-dynamic-background {
   background-size: cover;
   background-position: center;
@@ -21,8 +7,8 @@ h4 {
 .nuclear-motif {
   position: absolute;
   top: 48%;
-  right: -6rem;
-  width: clamp(30rem, 62vw, 58rem);
+  right: -7rem;
+  width: clamp(22rem, 48vw, 42rem);
   aspect-ratio: 1;
   transform: translate3d(0, -50%, 0);
   opacity: var(--motif-opacity);
@@ -112,8 +98,8 @@ h4 {
 
 @media (max-width: 767px) {
   .nuclear-motif {
-    right: -11rem;
-    width: min(32rem, 96vw);
+    right: -9rem;
+    width: min(24rem, 94vw);
     opacity: calc(var(--motif-opacity) * 0.74);
     animation-duration: 22s;
   }

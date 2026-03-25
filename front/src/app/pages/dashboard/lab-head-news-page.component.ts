@@ -11,39 +11,44 @@ import { formatDate } from '../../core/utils/format';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="space-y-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="space-y-8">
+      <div class="app-page-header">
         <div>
-          <h2 class="text-4xl font-bold text-foreground">Gestion des actualites</h2>
-          <p class="text-lg text-muted-foreground">Creer, modifier ou supprimer les actualites du laboratoire.</p>
+          <h2 class="app-page-title">Gestion des actualites</h2>
+          <p class="app-page-description">Creer, modifier ou supprimer les actualites du laboratoire en conservant le meme cycle brouillon / publication.</p>
         </div>
         <button type="button" class="btn-secondary" (click)="startNew()">Nouvelle actualite</button>
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="app-split-layout">
         <div class="space-y-4">
           @for (item of data()?.actualites || []; track item.id) {
-            <button type="button" class="surface-card block w-full p-6 text-left transition hover:border-primary/35" (click)="edit(item)">
+            <button type="button" class="surface-card surface-card--interactive block w-full p-6 text-left" (click)="edit(item)">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <span class="badge-soft">{{ item.statut }}</span>
                 <span class="text-sm text-muted-foreground">{{ formatDate(item.modifieLe) }}</span>
               </div>
-              <h3 class="mt-4 text-2xl font-bold text-foreground">{{ item.titre }}</h3>
-              <p class="mt-3 text-base leading-7 text-muted-foreground">{{ item.resume || item.contenu }}</p>
+              <h3 class="mt-4 text-2xl font-semibold text-foreground">{{ item.titre }}</h3>
+              <p class="mt-3 text-sm text-muted-foreground">{{ item.resume || item.contenu }}</p>
             </button>
+          } @empty {
+            <div class="empty-state">Aucune actualite disponible.</div>
           }
         </div>
 
-        <form class="surface-card p-8 space-y-5" (ngSubmit)="save()">
-          <h3 class="text-3xl font-bold text-foreground">{{ editingNews() ? 'Modifier l\\'actualite' : 'Nouvelle actualite' }}</h3>
-          <div><label class="mb-2 block font-semibold">Titre</label><input [(ngModel)]="form.titre" name="titre" class="input-shell" /></div>
-          <div><label class="mb-2 block font-semibold">Resume</label><textarea [(ngModel)]="form.resume" name="resume" class="textarea-shell"></textarea></div>
-          <div><label class="mb-2 block font-semibold">Contenu</label><textarea [(ngModel)]="form.contenu" name="contenu" class="textarea-shell min-h-44"></textarea></div>
-          <div><label class="mb-2 block font-semibold">Statut</label><select [(ngModel)]="form.statut" name="statut" class="select-shell"><option value="BROUILLON">BROUILLON</option><option value="PUBLIEE">PUBLIEE</option><option value="ARCHIVEE">ARCHIVEE</option></select></div>
+        <form class="surface-card space-y-5 p-6 lg:p-8" (ngSubmit)="save()">
+          <div>
+            <div class="tag-chip">{{ editingNews() ? 'Edition' : 'Publication' }}</div>
+            <h3 class="mt-4 text-3xl font-semibold text-foreground">{{ editingNews() ? 'Modifier l\\'actualite' : 'Nouvelle actualite' }}</h3>
+          </div>
+          <div><label class="mb-2 block">Titre</label><input [(ngModel)]="form.titre" name="titre" class="input-shell" /></div>
+          <div><label class="mb-2 block">Resume</label><textarea [(ngModel)]="form.resume" name="resume" class="textarea-shell"></textarea></div>
+          <div><label class="mb-2 block">Contenu</label><textarea [(ngModel)]="form.contenu" name="contenu" class="textarea-shell min-h-44"></textarea></div>
+          <div><label class="mb-2 block">Statut</label><select [(ngModel)]="form.statut" name="statut" class="select-shell"><option value="BROUILLON">BROUILLON</option><option value="PUBLIEE">PUBLIEE</option><option value="ARCHIVEE">ARCHIVEE</option></select></div>
           @if (errorMessage()) { <div class="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">{{ errorMessage() }}</div> }
           @if (statusMessage()) { <div class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">{{ statusMessage() }}</div> }
           <div class="flex flex-wrap gap-3">
-            <button type="submit" class="btn-secondary">{{ editingNews() ? 'Enregistrer les modifications' : 'Creer l\\'actualite' }}</button>
+            <button type="submit" class="btn-secondary flex-1 justify-center sm:flex-none">{{ editingNews() ? 'Enregistrer les modifications' : 'Creer l\\'actualite' }}</button>
             @if (editingNews()) { <button type="button" class="btn-outline" (click)="remove(editingNews()!.id)">Supprimer</button> }
           </div>
         </form>

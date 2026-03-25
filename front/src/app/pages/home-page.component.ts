@@ -8,25 +8,35 @@ import { api } from '../core/services/api';
 import { SitePreferencesService } from '../core/services/site-preferences.service';
 import { estimateReadTime, formatDate } from '../core/utils/format';
 import { stripReleaseMention } from '../core/utils/text';
+import { CnstnLogoComponent } from '../shared/components/cnstn-logo.component';
 import { sharedIcons } from '../shared/lucide-icons';
 import { AnimatedCounterComponent } from '../shared/components/animated-counter.component';
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule, AnimatedCounterComponent],
+  imports: [RouterLink, LucideAngularModule, AnimatedCounterComponent, CnstnLogoComponent],
   template: `
     <section class="page-shell py-8 lg:py-10">
-      <div class="hero-banner hero-banner--campus hero-dynamic-background px-8 py-10 lg:px-12 lg:py-14">
+      <div class="hero-banner hero-banner--home hero-dynamic-background px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
         <div class="grid gap-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)] xl:items-start">
           <div class="space-y-6">
+            <div class="hero-brand-strip">
+              <span class="hero-brand-strip__logo">
+                <app-cnstn-logo [width]="84"></app-cnstn-logo>
+              </span>
+              <div>
+                <div class="text-sm font-semibold uppercase tracking-[0.24em] text-white/80">{{ site.localize(heroBrandTitle) }}</div>
+                <div class="mt-1 text-sm text-white/66">{{ site.localize(heroBrandSubtitle) }}</div>
+              </div>
+            </div>
             <div class="tag-chip border-white/20 bg-white/8 text-white/80">{{ site.localize(releaseLabel) }}</div>
-            <h1 class="hero-contrast-title max-w-4xl text-5xl font-bold leading-tight text-white lg:text-7xl">{{ heroTitle() }}</h1>
-            <p class="max-w-3xl text-lg text-white/88 lg:text-2xl">{{ heroSubtitle() }}</p>
+            <h1 class="hero-contrast-title max-w-4xl text-5xl font-bold leading-tight text-white lg:text-7xl">{{ heroTitle() || site.localize(defaultHeroTitle) }}</h1>
+            <p class="max-w-3xl text-lg text-white/88 lg:text-2xl">{{ heroSubtitle() || site.localize(defaultHeroSubtitle) }}</p>
             <p class="max-w-2xl text-base text-white/76 lg:text-lg">{{ heroTagline() }}</p>
             <div class="flex flex-wrap gap-3">
-              <a routerLink="/articles" class="btn-secondary">{{ site.localize(viewArticlesLabel) }}</a>
-              <a routerLink="/inscription" class="btn-outline border-white/30 bg-white/5 text-white hover:bg-white/10">{{ site.localize(createAccountLabel) }}</a>
+              <a routerLink="/articles" class="btn-secondary hero-banner__primary-action">{{ site.localize(viewArticlesLabel) }}</a>
+              <a routerLink="/inscription" class="btn-outline hero-banner__ghost-action">{{ site.localize(createAccountLabel) }}</a>
             </div>
           </div>
 
@@ -149,7 +159,7 @@ import { AnimatedCounterComponent } from '../shared/components/animated-counter.
           <div class="tag-chip">{{ site.localize(recommendedLabel) }}</div>
           <h2 class="mt-4 text-5xl font-bold text-foreground">{{ site.localize(recommendedTitle) }}</h2>
         </div>
-        <a routerLink="/articles" class="btn-outline">{{ site.localize(viewAllLabel) }}</a>
+        <a routerLink="/articles" class="btn-outline btn-outline--contrast">{{ site.localize(viewAllLabel) }}</a>
       </div>
       <div class="grid gap-6 lg:grid-cols-3">
         @for (article of localizedCuratedArticles().slice(0, 3); track article.id) {
@@ -198,7 +208,23 @@ export class HomePageComponent implements OnInit {
     { year: 2024, publications: 70, collaborations: 42 },
     { year: 2025, publications: 86, collaborations: 56 }
   ];
+  readonly heroBrandTitle = { fr: 'CNSTN', en: 'CNSTN', ar: 'CNSTN' };
+  readonly heroBrandSubtitle = {
+    fr: 'Centre National des Sciences et Technologies Nucleaires',
+    en: 'National Center for Nuclear Sciences and Technologies',
+    ar: 'National Center for Nuclear Sciences and Technologies'
+  };
   readonly releaseLabel = { fr: 'Release 1', en: 'Release 1', ar: 'الإصدار 1' };
+  readonly defaultHeroTitle = {
+    fr: 'Portail scientifique institutionnel du LR16CNSTN02',
+    en: 'Institutional scientific portal of LR16CNSTN02',
+    ar: 'البوابة العلمية المؤسسية لـ LR16CNSTN02'
+  };
+  readonly defaultHeroSubtitle = {
+    fr: 'Un espace unifie pour la recherche, la publication et la valorisation scientifique.',
+    en: 'A unified space for research, publication, and scientific outreach.',
+    ar: 'فضاء موحد للبحث والنشر والتثمين العلمي.'
+  };
   readonly viewArticlesLabel = { fr: 'Voir les articles', en: 'View articles', ar: 'عرض المقالات' };
   readonly createAccountLabel = { fr: 'Creer un compte', en: 'Create account', ar: 'إنشاء حساب' };
   readonly indicatorsLabel = { fr: 'Indicateurs', en: 'Indicators', ar: 'المؤشرات' };
@@ -266,7 +292,15 @@ export class HomePageComponent implements OnInit {
 
   readonly heroTitle = computed(() => stripReleaseMention(this.homeData()?.hero.titre));
   readonly heroSubtitle = computed(() => stripReleaseMention(this.homeData()?.hero.sousTitre));
-  readonly heroTagline = computed(() => stripReleaseMention(this.homeData()?.hero.accroche));
+  readonly heroTagline = computed(
+    () =>
+      stripReleaseMention(this.homeData()?.hero.accroche) ||
+      this.site.localize({
+        fr: 'Une plateforme premium pour piloter les activites scientifiques et les collaborations du laboratoire.',
+        en: 'A premium platform to orchestrate scientific activities and collaborations across the laboratory.',
+        ar: 'منصة متميزة لتنظيم الأنشطة العلمية والتعاون داخل المختبر.'
+      })
+  );
 
   async ngOnInit() {
     try {

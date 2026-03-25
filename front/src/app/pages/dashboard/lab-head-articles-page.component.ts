@@ -1,52 +1,112 @@
-
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import type { Article, LabHeadArticlesData } from '../../core/models/models';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { api } from '../../core/services/api';
+import type { LabHeadArticlesData } from '../../core/models/models';
 import { formatDate } from '../../core/utils/format';
 
 @Component({
   selector: 'app-lab-head-articles-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [],
   template: `
     <div class="space-y-8">
-      <div>
-        <h2 class="text-4xl font-bold text-foreground">Moderation des articles</h2>
-        <p class="text-lg text-muted-foreground">Valider, refuser ou publier les soumissions scientifiques.</p>
+      <div class="app-page-header">
+        <div>
+          <h2 class="app-page-title">Moderation des articles</h2>
+          <p class="app-page-description">Valider, refuser ou publier les soumissions scientifiques deja exposees par l'API actuelle.</p>
+        </div>
       </div>
 
-      <section class="surface-card p-8">
-        <h3 class="text-3xl font-bold text-foreground">Articles en attente</h3>
-        <div class="mt-6 space-y-4">
-          @for (article of data()?.articles || []; track article.id) {
-            <div class="rounded-2xl border border-border/50 p-5">
-              <div class="text-2xl font-bold text-foreground">{{ article.titre }}</div>
-              <div class="mt-2 text-sm text-muted-foreground">{{ article.deposant?.nomComplet || 'LR16CNSTN02' }} • {{ formatDate(article.modifieLe) }}</div>
-              <p class="mt-4 text-muted-foreground">{{ article.resume }}</p>
-              <div class="mt-5 flex flex-wrap gap-3">
-                <button type="button" class="btn-secondary" (click)="validate(article.id)">Valider</button>
-                <button type="button" class="btn-outline" (click)="refuse(article.id)">Refuser</button>
-              </div>
-            </div>
-          }
+      <section class="app-kpi-grid">
+        @for (card of summaryCards(); track card.label) {
+          <div class="app-kpi-card">
+            <div class="app-kpi-card__label">{{ card.label }}</div>
+            <div class="app-kpi-card__value">{{ card.value }}</div>
+            <div class="app-kpi-card__meta">{{ card.meta }}</div>
+          </div>
+        }
+      </section>
+
+      <section class="surface-card overflow-hidden">
+        <div class="border-b border-border px-6 py-5">
+          <h3 class="text-xl font-semibold text-foreground">Articles en attente</h3>
+        </div>
+        <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+          <table class="table-shell">
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th>Deposant</th>
+                <th>Maj</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (article of data()?.articles || []; track article.id) {
+                <tr>
+                  <td>
+                    <div class="font-semibold text-foreground">{{ article.titre }}</div>
+                    <div class="mt-1 text-xs text-muted-foreground">{{ article.resume }}</div>
+                  </td>
+                  <td>{{ article.deposant?.nomComplet || 'LR16CNSTN02' }}</td>
+                  <td>{{ formatDate(article.modifieLe) }}</td>
+                  <td>
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <button type="button" class="btn-secondary" (click)="validate(article.id)">Valider</button>
+                      <button type="button" class="btn-outline" (click)="refuse(article.id)">Refuser</button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-state m-4">Aucun article en attente de moderation.</div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <section class="surface-card p-8">
-        <h3 class="text-3xl font-bold text-foreground">Articles valides</h3>
-        <div class="mt-6 space-y-4">
-          @for (article of data()?.articlesValides || []; track article.id) {
-            <div class="rounded-2xl border border-border/50 p-5">
-              <div class="text-2xl font-bold text-foreground">{{ article.titre }}</div>
-              <div class="mt-2 text-sm text-muted-foreground">{{ article.deposant?.nomComplet || 'LR16CNSTN02' }} • {{ formatDate(article.modifieLe) }}</div>
-              <p class="mt-4 text-muted-foreground">{{ article.resume }}</p>
-              <div class="mt-5 flex flex-wrap gap-3">
-                <button type="button" class="btn-secondary" (click)="publish(article.id)">Publier</button>
-              </div>
-            </div>
-          }
+      <section class="surface-card overflow-hidden">
+        <div class="border-b border-border px-6 py-5">
+          <h3 class="text-xl font-semibold text-foreground">Articles valides</h3>
+        </div>
+        <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+          <table class="table-shell">
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th>Deposant</th>
+                <th>Maj</th>
+                <th class="text-right">Publication</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (article of data()?.articlesValides || []; track article.id) {
+                <tr>
+                  <td>
+                    <div class="font-semibold text-foreground">{{ article.titre }}</div>
+                    <div class="mt-1 text-xs text-muted-foreground">{{ article.resume }}</div>
+                  </td>
+                  <td>{{ article.deposant?.nomComplet || 'LR16CNSTN02' }}</td>
+                  <td>{{ formatDate(article.modifieLe) }}</td>
+                  <td>
+                    <div class="flex justify-end">
+                      <button type="button" class="btn-secondary" (click)="publish(article.id)">Publier</button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-state m-4">Aucun article valide en attente de publication.</div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -61,6 +121,13 @@ export class LabHeadArticlesPageComponent implements OnInit {
   readonly statusMessage = signal('');
   readonly errorMessage = signal('');
   readonly formatDate = formatDate;
+
+  readonly summaryCards = computed(() => [
+    { label: 'En attente', value: this.data()?.statistiques.enAttente || 0, meta: 'A arbitrer' },
+    { label: 'Valides', value: this.data()?.statistiques.valides || 0, meta: 'Pretes pour publication' },
+    { label: 'Rejetes', value: this.data()?.statistiques.rejetes || 0, meta: 'Retournes aux auteurs' },
+    { label: 'Publies', value: this.data()?.statistiques.publies || 0, meta: 'Deja visibles publiquement' }
+  ]);
 
   async ngOnInit() {
     const token = this.auth.session()?.accessToken;

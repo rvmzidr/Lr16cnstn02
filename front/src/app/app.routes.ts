@@ -32,6 +32,7 @@ export const routes: Routes = [
     component: PublicLayoutComponent,
     children: [
       { path: '', component: HomePageComponent },
+      { path: 'accueil', component: HomePageComponent },
       { path: 'articles', component: ArticlesPageComponent },
       { path: 'articles/:articleId', component: ArticleDetailPageComponent },
       { path: 'news', component: NewsPageComponent },

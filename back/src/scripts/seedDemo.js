@@ -34,6 +34,8 @@ const DEMO_ARTICLE_TITLES = [
   "Etude collaborative sur la radioanalyse des echantillons complexes",
   "Plan de qualification pour instrumentation neutronique portable",
   "Synthese technique sur la metrologie appliquee aux campagnes terrain",
+  "Evaluation multi-sites de la stabilite des capteurs en environnement industriel",
+  "Cadre methodologique pour la tracabilite numerique des essais radiochimiques",
 ];
 
 const DEMO_NEWS_ITEMS = [
@@ -1238,6 +1240,26 @@ async function main() {
     deposantId: supportMember.id,
     validateurId: secondaryLabHead.id,
     categorieId: categoryByLabel.METROLOGIE,
+    coAuthorIds: [secondMember.id],
+  });
+
+  await createArticle({
+    title:
+      "Evaluation multi-sites de la stabilite des capteurs en environnement industriel",
+    status: ARTICLE_STATUS.PUBLIE,
+    deposantId: secondMember.id,
+    validateurId: labHead.id,
+    categorieId: categoryByLabel.ENVIRONNEMENT,
+    coAuthorIds: [member.id, coAuthorMember.id],
+  });
+
+  await createArticle({
+    title:
+      "Cadre methodologique pour la tracabilite numerique des essais radiochimiques",
+    status: ARTICLE_STATUS.SOUMIS,
+    deposantId: supportMember.id,
+    validateurId: secondaryLabHead.id,
+    categorieId: categoryByLabel.RADIO_ANALYSE,
     coAuthorIds: [secondMember.id],
   });
 

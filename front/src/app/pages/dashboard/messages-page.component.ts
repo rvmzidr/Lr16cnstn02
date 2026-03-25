@@ -8,10 +8,10 @@ import { sharedIcons } from '../../shared/lucide-icons';
   imports: [LucideAngularModule],
   template: `
     <div class="space-y-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="app-page-header">
         <div>
-          <h2 class="text-4xl font-bold text-foreground">Messagerie</h2>
-          <p class="text-lg text-muted-foreground">La messagerie complete sera activee dans une evolution ulterieure</p>
+          <h2 class="app-page-title">Messagerie</h2>
+          <p class="app-page-description">La messagerie complete sera activee dans une evolution ulterieure.</p>
         </div>
         <button class="btn-primary" disabled>
           <lucide-icon [img]="icons.Send" class="h-4 w-4"></lucide-icon>
@@ -26,12 +26,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
         </div>
       </div>
 
-      <div class="surface-card p-8">
-        <h3 class="text-2xl font-semibold text-foreground">Fonctionnalite non active</h3>
-        <p class="mt-3 text-muted-foreground">
-          La messagerie complete est reservee aux evolutions ulterieures.
-        </p>
-      </div>
+      <div class="empty-state">La messagerie complete est reservee aux evolutions ulterieures.</div>
     </div>
   `
 })

@@ -1,5 +1,4 @@
-
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, Input, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { SiteLanguage, SitePreferencesService } from '../../core/services/site-preferences.service';
 import { sharedIcons } from '../lucide-icons';
@@ -9,19 +8,22 @@ import { sharedIcons } from '../lucide-icons';
   standalone: true,
   imports: [LucideAngularModule],
   template: `
-    <div class="relative flex items-center gap-2">
+    <div class="relative flex items-center gap-2" [class.flex-col]="compact" [class.items-stretch]="compact">
       <button
         type="button"
         class="toolbar-icon-button"
+        [class.toolbar-icon-button--compact]="compact"
         [attr.aria-label]="site.localize(languageButtonLabel)"
         (click)="toggleLanguageMenu()"
       >
         <lucide-icon [img]="icons.Globe" class="h-4 w-4"></lucide-icon>
-        <span class="text-xs font-semibold tracking-[0.2em]">{{ languageCode() }}</span>
+        @if (!compact) {
+          <span class="text-xs font-semibold tracking-[0.2em]">{{ languageCode() }}</span>
+        }
       </button>
 
       @if (languageMenuOpen()) {
-        <div class="toolbar-dropdown">
+        <div class="toolbar-dropdown" [class.toolbar-dropdown--from-rail]="compact">
           @for (option of primaryLanguages; track option.code) {
             <button
               type="button"
@@ -39,6 +41,7 @@ import { sharedIcons } from '../lucide-icons';
       <button
         type="button"
         class="toolbar-icon-button"
+        [class.toolbar-icon-button--compact]="compact"
         [attr.aria-label]="site.isDarkMode() ? site.localize(lightModeLabel) : site.localize(darkModeLabel)"
         (click)="site.toggleDarkMode()"
       >
@@ -48,6 +51,7 @@ import { sharedIcons } from '../lucide-icons';
   `
 })
 export class ToolbarControlsComponent {
+  @Input() compact = false;
   readonly icons = sharedIcons;
   readonly site = inject(SitePreferencesService);
   readonly languageMenuOpen = signal(false);

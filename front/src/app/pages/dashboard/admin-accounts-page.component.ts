@@ -1,5 +1,4 @@
-
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { AdminAccountsList, AdminRegistrationList, Role, UtilisateurComplet } from '../../core/models/models';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,68 +10,131 @@ import { api } from '../../core/services/api';
   imports: [FormsModule],
   template: `
     <div class="space-y-8">
-      <div>
-        <h2 class="text-4xl font-bold text-foreground">Administration</h2>
-        <p class="text-lg text-muted-foreground">Valider les inscriptions, ajuster les roles et gerer les comptes.</p>
+      <div class="app-page-header">
+        <div>
+          <h2 class="app-page-title">Administration</h2>
+          <p class="app-page-description">Valider les inscriptions, ajuster les roles et gerer l'activation des comptes.</p>
+        </div>
       </div>
 
-      <section class="surface-card p-8">
-        <div class="mb-5 flex items-center justify-between gap-4">
-          <div>
-            <h3 class="text-3xl font-bold text-foreground">Inscriptions en attente</h3>
-            <p class="text-muted-foreground">{{ registrations()?.statistiques?.enAttente || 0 }} dossier(s) a traiter</p>
+      <section class="app-kpi-grid">
+        @for (card of summaryCards(); track card.label) {
+          <div class="app-kpi-card">
+            <div class="app-kpi-card__label">{{ card.label }}</div>
+            <div class="app-kpi-card__value">{{ card.value }}</div>
+            <div class="app-kpi-card__meta">{{ card.meta }}</div>
           </div>
+        }
+      </section>
+
+      <section class="surface-card overflow-hidden">
+        <div class="border-b border-border px-6 py-5">
+          <h3 class="text-xl font-semibold text-foreground">Inscriptions en attente</h3>
+          <p class="mt-1 text-sm text-muted-foreground">{{ registrations()?.statistiques?.enAttente || 0 }} dossier(s) a traiter</p>
         </div>
-        <div class="space-y-4">
-          @for (item of registrations()?.inscriptions || []; track item.id) {
-            <div class="rounded-2xl border border-border/50 p-5">
-              <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <div class="text-xl font-semibold text-foreground">{{ item.nomComplet }}</div>
-                  <div class="text-sm text-muted-foreground">{{ item.emailInstitutionnel }}</div>
-                </div>
-                <div class="flex flex-wrap gap-3">
-                  <select [(ngModel)]="selectedRoles[item.id]" [name]="'role-' + item.id" class="select-shell min-w-44">
-                    @for (role of registrations()?.rolesDisponibles || []; track role) { <option [value]="role">{{ role }}</option> }
-                  </select>
-                  <button type="button" class="btn-secondary" (click)="validate(item)">Valider</button>
-                  <button type="button" class="btn-outline" (click)="refuse(item)">Refuser</button>
-                  @if (item.doctorat?.attestation?.disponible) {
-                    <button type="button" class="btn-outline" (click)="downloadAttestation(item.id)">Attestation</button>
-                  }
-                </div>
-              </div>
-            </div>
-          }
+
+        <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+          <table class="table-shell">
+            <thead>
+              <tr>
+                <th>Candidat</th>
+                <th>Role cible</th>
+                <th>Dossier</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of registrations()?.inscriptions || []; track item.id) {
+                <tr>
+                  <td>
+                    <div class="font-semibold text-foreground">{{ item.nomComplet }}</div>
+                    <div class="mt-1 text-xs text-muted-foreground">{{ item.emailInstitutionnel }}</div>
+                  </td>
+                  <td class="w-52">
+                    <select [(ngModel)]="selectedRoles[item.id]" [name]="'role-' + item.id" class="select-shell min-w-44">
+                      @for (role of registrations()?.rolesDisponibles || []; track role) { <option [value]="role">{{ role }}</option> }
+                    </select>
+                  </td>
+                  <td>
+                    <div class="badge-soft">{{ item.doctorat?.attestation?.disponible ? 'Attestation disponible' : 'Sans attestation' }}</div>
+                    <div class="mt-2 text-xs text-muted-foreground">{{ item.statut }}</div>
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <button type="button" class="btn-secondary" (click)="validate(item)">Valider</button>
+                      <button type="button" class="btn-outline" (click)="refuse(item)">Refuser</button>
+                      @if (item.doctorat?.attestation?.disponible) {
+                        <button type="button" class="btn-outline" (click)="downloadAttestation(item.id)">Attestation</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-state m-4">Aucune inscription en attente pour le moment.</div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <section class="surface-card p-8">
-        <h3 class="text-3xl font-bold text-foreground">Comptes actifs</h3>
-        <div class="mt-6 space-y-4">
-          @for (item of accounts()?.comptes || []; track item.id) {
-            <div class="rounded-2xl border border-border/50 p-5">
-              <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <div class="text-xl font-semibold text-foreground">{{ item.nomComplet }}</div>
-                  <div class="text-sm text-muted-foreground">{{ item.emailInstitutionnel }} • {{ item.role || 'AUCUN' }} • {{ item.statut }}</div>
-                </div>
-                <div class="flex flex-wrap gap-3">
-                  <select [(ngModel)]="selectedRoles[item.id]" [name]="'account-role-' + item.id" class="select-shell min-w-44">
-                    <option value="MEMBRE">MEMBRE</option>
-                    <option value="ADMINISTRATEUR">ADMINISTRATEUR</option>
-                    <option value="CHEF_LABO">CHEF_LABO</option>
-                  </select>
-                  <button type="button" class="btn-outline" (click)="changeRole(item)">Changer le role</button>
-                  @if (item.actif) {
-                    <button type="button" class="btn-outline" (click)="deactivate(item.id)">Desactiver</button>
-                  } @else {
-                    <button type="button" class="btn-secondary" (click)="activate(item.id)">Activer</button>
-                  }
-                </div>
-              </div>
-            </div>
-          }
+      <section class="surface-card overflow-hidden">
+        <div class="border-b border-border px-6 py-5">
+          <h3 class="text-xl font-semibold text-foreground">Comptes du laboratoire</h3>
+          <p class="mt-1 text-sm text-muted-foreground">{{ accounts()?.statistiques?.total || 0 }} compte(s) synchronises avec la plateforme.</p>
+        </div>
+
+        <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+          <table class="table-shell">
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>Role</th>
+                <th>Etat</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of accounts()?.comptes || []; track item.id) {
+                <tr>
+                  <td>
+                    <div class="font-semibold text-foreground">{{ item.nomComplet }}</div>
+                    <div class="mt-1 text-xs text-muted-foreground">{{ item.emailInstitutionnel }}</div>
+                  </td>
+                  <td class="w-56">
+                    <select [(ngModel)]="selectedRoles[item.id]" [name]="'account-role-' + item.id" class="select-shell min-w-44">
+                      <option value="MEMBRE">MEMBRE</option>
+                      <option value="ADMINISTRATEUR">ADMINISTRATEUR</option>
+                      <option value="CHEF_LABO">CHEF_LABO</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="badge-soft">{{ item.statut }}</div>
+                    <div class="mt-2 text-xs text-muted-foreground">{{ item.actif ? 'Compte actif' : 'Compte inactif' }}</div>
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <button type="button" class="btn-outline" (click)="changeRole(item)">Changer le role</button>
+                      @if (item.actif) {
+                        <button type="button" class="btn-outline" (click)="deactivate(item.id)">Desactiver</button>
+                      } @else {
+                        <button type="button" class="btn-secondary" (click)="activate(item.id)">Activer</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-state m-4">Aucun compte disponible.</div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -88,6 +150,29 @@ export class AdminAccountsPageComponent implements OnInit {
   readonly statusMessage = signal('');
   readonly errorMessage = signal('');
   readonly selectedRoles: Record<string, Role> = {};
+
+  readonly summaryCards = computed(() => [
+    {
+      label: 'Inscriptions en attente',
+      value: this.registrations()?.statistiques.enAttente || 0,
+      meta: 'Flux de validation courant'
+    },
+    {
+      label: 'Doctorants a verifier',
+      value: this.registrations()?.statistiques.doctorantsEnAttente || 0,
+      meta: 'Dossiers doctorants en attente'
+    },
+    {
+      label: 'Attestations disponibles',
+      value: this.registrations()?.statistiques.attestationsDisponibles || 0,
+      meta: 'Pieces jointes telechargeables'
+    },
+    {
+      label: 'Comptes actifs',
+      value: this.accounts()?.statistiques.actifs || 0,
+      meta: `${this.accounts()?.statistiques.total || 0} compte(s) au total`
+    }
+  ]);
 
   async ngOnInit() {
     const token = this.auth.session()?.accessToken;
