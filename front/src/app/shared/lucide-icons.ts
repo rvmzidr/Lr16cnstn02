@@ -25,7 +25,7 @@ import {
   TrendingUp,
   UserCircle2,
   Users,
-  X
+  X,
 } from 'lucide-angular';
 
 export const sharedIcons = {
@@ -55,5 +55,5 @@ export const sharedIcons = {
   TrendingUp,
   UserCircle2,
   Users,
-  X
+  X,
 };

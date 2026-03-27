@@ -10,7 +10,7 @@ const listArticlesModeration = asyncHandler(async (_req, res) => {
 const validerArticle = asyncHandler(async (req, res) => {
   const donnees = await labHeadService.validerArticle(
     req.auth.userId,
-    req.params.id
+    req.params.id,
   );
   successResponse(res, "Article valide avec succes.", donnees);
 });
@@ -19,7 +19,7 @@ const refuserArticle = asyncHandler(async (req, res) => {
   const donnees = await labHeadService.refuserArticle(
     req.auth.userId,
     req.params.id,
-    req.body
+    req.body,
   );
   successResponse(res, "Article refuse avec succes.", donnees);
 });
@@ -27,23 +27,33 @@ const refuserArticle = asyncHandler(async (req, res) => {
 const publierArticle = asyncHandler(async (req, res) => {
   const donnees = await labHeadService.publierArticle(
     req.auth.userId,
-    req.params.id
+    req.params.id,
   );
   successResponse(res, "Article publie avec succes.", donnees);
 });
 
 const listActualites = asyncHandler(async (req, res) => {
   const donnees = await labHeadService.listerActualites(req.query);
-  successResponse(res, "Actualites du chef du laboratoire recuperees.", donnees);
+  successResponse(
+    res,
+    "Actualites du chef du laboratoire recuperees.",
+    donnees,
+  );
 });
 
 const createActualite = asyncHandler(async (req, res) => {
-  const donnees = await labHeadService.creerActualite(req.auth.userId, req.body);
+  const donnees = await labHeadService.creerActualite(
+    req.auth.userId,
+    req.body,
+  );
   successResponse(res, "Actualite creee avec succes.", donnees, 201);
 });
 
 const updateActualite = asyncHandler(async (req, res) => {
-  const donnees = await labHeadService.modifierActualite(req.params.id, req.body);
+  const donnees = await labHeadService.modifierActualite(
+    req.params.id,
+    req.body,
+  );
   successResponse(res, "Actualite mise a jour avec succes.", donnees);
 });
 

@@ -71,7 +71,7 @@ async function mettreAJourProfilMembre(userId, rawPayload, attestationFile) {
       cin: payload.cin,
       passeport: payload.passeport,
     },
-    { excludeUserId: userId }
+    { excludeUserId: userId },
   );
 
   const existingUser = await prisma.utilisateurs.findUnique({
@@ -98,7 +98,7 @@ async function mettreAJourProfilMembre(userId, rawPayload, attestationFile) {
         userId,
         payload,
         existingUser,
-        stagedAttestation
+        stagedAttestation,
       );
       filesToDeleteAfterCommit = dossierResult.filesToDeleteAfterCommit;
 
@@ -159,7 +159,10 @@ async function listerMembresActifs(filters = {}) {
 }
 
 async function listerActualitesMembre(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const where = {
     AND: [
       { statut: NEWS_STATUS.PUBLIEE },
@@ -214,7 +217,7 @@ function verifierArticleEditable(article) {
   if (!EDITABLE_ARTICLE_STATUSES.includes(article.statut)) {
     throw new AppError(
       "Cet article n'est plus modifiable a ce stade du workflow.",
-      409
+      409,
     );
   }
 }
@@ -236,7 +239,7 @@ async function listerMesArticles(userId) {
         (accumulator.parStatut[article.statut] || 0) + 1;
       return accumulator;
     },
-    { total: 0, parStatut: {} }
+    { total: 0, parStatut: {} },
   );
 
   return {
@@ -284,11 +287,14 @@ async function rechercherArticlesMembre(userId, filters) {
   ) {
     throw new AppError(
       "La date de debut doit etre anterieure ou egale a la date de fin.",
-      400
+      400,
     );
   }
 
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const conditions = [
     {
       OR: [
@@ -394,7 +400,13 @@ async function rechercherArticlesMembre(userId, filters) {
   };
 }
 
-async function creerVersionArticle(tx, articleId, utilisateurId, article, numeroVersion) {
+async function creerVersionArticle(
+  tx,
+  articleId,
+  utilisateurId,
+  article,
+  numeroVersion,
+) {
   await tx.versions_article.create({
     data: {
       article_id: articleId,
@@ -414,8 +426,7 @@ async function creerArticleMembre(userId, payload) {
     payload.action === "SOUMETTRE"
       ? ARTICLE_STATUS.SOUMIS
       : ARTICLE_STATUS.BROUILLON;
-  const dateSoumission =
-    statut === ARTICLE_STATUS.SOUMIS ? new Date() : null;
+  const dateSoumission = statut === ARTICLE_STATUS.SOUMIS ? new Date() : null;
 
   const article = await prisma.$transaction(async (tx) => {
     const created = await tx.articles.create({
@@ -456,7 +467,7 @@ async function modifierArticleMembre(userId, articleId, payload) {
 
   const articleExistant = await recupererArticleDuDeposantOuErreur(
     userId,
-    articleId
+    articleId,
   );
   verifierArticleEditable(articleExistant);
 
@@ -481,7 +492,7 @@ async function modifierArticleMembre(userId, articleId, payload) {
         contenu: payload.contenu,
         categorie_id:
           payload.categorieId !== undefined
-            ? toBigInt(payload.categorieId) ?? null
+            ? (toBigInt(payload.categorieId) ?? null)
             : articleExistant.categorie_id,
         statut,
         date_soumission: dateSoumission,
@@ -500,7 +511,7 @@ async function modifierArticleMembre(userId, articleId, payload) {
       updated.id,
       userId,
       payload,
-      (versionMax._max.numero_version || 0) + 1
+      (versionMax._max.numero_version || 0) + 1,
     );
 
     return tx.articles.findUnique({
@@ -519,7 +530,7 @@ async function ajouterCoAuteur(userId, articleId, payload) {
   if (payload.utilisateurId === userId) {
     throw new AppError(
       "Le deposant principal est deja reference comme auteur principal.",
-      400
+      400,
     );
   }
 
@@ -534,12 +545,12 @@ async function ajouterCoAuteur(userId, articleId, payload) {
   ) {
     throw new AppError(
       "Le co-auteur doit etre un utilisateur actif existant.",
-      400
+      400,
     );
   }
 
   const dejaLie = article.auteurs_article.some(
-    (item) => item.utilisateur_id === payload.utilisateurId
+    (item) => item.utilisateur_id === payload.utilisateurId,
   );
 
   if (dejaLie) {
@@ -548,10 +559,11 @@ async function ajouterCoAuteur(userId, articleId, payload) {
 
   const ordreAuteur =
     payload.ordreAuteur ||
-    Math.max(...article.auteurs_article.map((item) => item.ordre_auteur), 0) + 1;
+    Math.max(...article.auteurs_article.map((item) => item.ordre_auteur), 0) +
+      1;
 
   const ordreOccupe = article.auteurs_article.some(
-    (item) => item.ordre_auteur === ordreAuteur
+    (item) => item.ordre_auteur === ordreAuteur,
   );
 
   if (ordreOccupe) {
@@ -567,7 +579,10 @@ async function ajouterCoAuteur(userId, articleId, payload) {
     },
   });
 
-  const articleMisAJour = await recupererArticleDuDeposantOuErreur(userId, articleId);
+  const articleMisAJour = await recupererArticleDuDeposantOuErreur(
+    userId,
+    articleId,
+  );
 
   return serializeArticle(articleMisAJour);
 }
@@ -579,12 +594,12 @@ async function supprimerCoAuteur(userId, articleId, targetUserId) {
   if (targetUserId === userId) {
     throw new AppError(
       "Le deposant principal ne peut pas etre retire de la liste des auteurs.",
-      400
+      400,
     );
   }
 
   const association = article.auteurs_article.find(
-    (item) => item.utilisateur_id === targetUserId
+    (item) => item.utilisateur_id === targetUserId,
   );
 
   if (!association) {
@@ -600,7 +615,10 @@ async function supprimerCoAuteur(userId, articleId, targetUserId) {
     },
   });
 
-  const articleMisAJour = await recupererArticleDuDeposantOuErreur(userId, articleId);
+  const articleMisAJour = await recupererArticleDuDeposantOuErreur(
+    userId,
+    articleId,
+  );
 
   return serializeArticle(articleMisAJour);
 }

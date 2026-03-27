@@ -38,7 +38,7 @@ function normalizeAcademicYear(value, legacyYear) {
     if (!match) {
       throw new AppError(
         "L'annee universitaire est invalide. Format attendu: YYYY/YYYY.",
-        400
+        400,
       );
     }
 
@@ -48,7 +48,7 @@ function normalizeAcademicYear(value, legacyYear) {
     if (end !== start + 1) {
       throw new AppError(
         "L'annee universitaire doit couvrir deux annees consecutives.",
-        400
+        400,
       );
     }
 
@@ -73,7 +73,7 @@ function academicYearToLegacyStart(academicYear) {
 function normalizeMemberDossierPayload(payload) {
   const academicYear = normalizeAcademicYear(
     payload.anneeUniversitairePremiereInscription,
-    payload.anneePremiereInscription
+    payload.anneePremiereInscription,
   );
 
   return {
@@ -100,7 +100,7 @@ async function verifierReferencesProfil(payload, client = prisma) {
     checks.push(
       client.institutions.findUnique({
         where: { id: toBigInt(payload.institutionAffectationId) },
-      })
+      }),
     );
   }
 
@@ -108,7 +108,7 @@ async function verifierReferencesProfil(payload, client = prisma) {
     checks.push(
       client.niveaux_diplome.findUnique({
         where: { id: toBigInt(payload.niveauDiplomeId) },
-      })
+      }),
     );
   }
 
@@ -116,7 +116,7 @@ async function verifierReferencesProfil(payload, client = prisma) {
     checks.push(
       client.equipes_recherche.findUnique({
         where: { id: toBigInt(payload.equipeRechercheId) },
-      })
+      }),
     );
   }
 
@@ -178,7 +178,7 @@ async function recupererReferencesMembre(client = prisma) {
 async function verifierDisponibiliteIdentifiants(
   payload,
   { excludeUserId } = {},
-  client = prisma
+  client = prisma,
 ) {
   if (
     payload.emailInstitutionnel &&
@@ -187,7 +187,7 @@ async function verifierDisponibiliteIdentifiants(
   ) {
     throw new AppError(
       "L'email secondaire doit etre different de l'email principal.",
-      400
+      400,
     );
   }
 
@@ -196,14 +196,14 @@ async function verifierDisponibiliteIdentifiants(
   if (payload.emailInstitutionnel) {
     conditions.push(
       { email_institutionnel: payload.emailInstitutionnel },
-      { email_secondaire: payload.emailInstitutionnel }
+      { email_secondaire: payload.emailInstitutionnel },
     );
   }
 
   if (payload.emailSecondaire) {
     conditions.push(
       { email_institutionnel: payload.emailSecondaire },
-      { email_secondaire: payload.emailSecondaire }
+      { email_secondaire: payload.emailSecondaire },
     );
   }
 
@@ -265,25 +265,27 @@ async function verifierDisponibiliteIdentifiants(
   if (existingUser) {
     if (
       payload.emailInstitutionnel &&
-      [existingUser.email_institutionnel, existingUser.email_secondaire].includes(
-        payload.emailInstitutionnel
-      )
+      [
+        existingUser.email_institutionnel,
+        existingUser.email_secondaire,
+      ].includes(payload.emailInstitutionnel)
     ) {
       throw new AppError(
         "Une autre fiche utilise deja cette adresse email principale.",
-        409
+        409,
       );
     }
 
     if (
       payload.emailSecondaire &&
-      [existingUser.email_institutionnel, existingUser.email_secondaire].includes(
-        payload.emailSecondaire
-      )
+      [
+        existingUser.email_institutionnel,
+        existingUser.email_secondaire,
+      ].includes(payload.emailSecondaire)
     ) {
       throw new AppError(
         "Une autre fiche utilise deja cette adresse email secondaire.",
-        409
+        409,
       );
     }
 
@@ -294,7 +296,7 @@ async function verifierDisponibiliteIdentifiants(
     if (payload.passeport && existingUser.passeport === payload.passeport) {
       throw new AppError(
         "Ce numero de passeport est deja associe a un autre compte.",
-        409
+        409,
       );
     }
   }
@@ -302,7 +304,7 @@ async function verifierDisponibiliteIdentifiants(
   if (payload.orcid && existingProfile) {
     throw new AppError(
       "Cet identifiant ORCID est deja associe a un autre compte.",
-      409
+      409,
     );
   }
 }
@@ -346,7 +348,7 @@ async function stageDoctorantAttestation(file) {
   if (!DOCTORANT_ATTESTATION_MIME_TYPES.includes(file.mimetype)) {
     throw new AppError(
       "Le format de l'attestation doit etre PDF, JPG ou PNG.",
-      400
+      400,
     );
   }
 
@@ -385,7 +387,9 @@ function buildUtilisateurData(payload) {
     nom: payload.nom,
     prenom: payload.prenom,
     nom_jeune_fille: payload.nomJeuneFille || null,
-    date_naissance: payload.dateNaissance ? new Date(payload.dateNaissance) : null,
+    date_naissance: payload.dateNaissance
+      ? new Date(payload.dateNaissance)
+      : null,
     lieu_naissance: payload.lieuNaissance || null,
     genre: payload.sexe || null,
     cin: payload.cin || null,
@@ -400,7 +404,8 @@ function buildUtilisateurData(payload) {
 function buildProfilData(payload) {
   return {
     grade: payload.grade || null,
-    institution_affectation_id: toBigInt(payload.institutionAffectationId) ?? null,
+    institution_affectation_id:
+      toBigInt(payload.institutionAffectationId) ?? null,
     est_doctorant: Boolean(payload.estDoctorant),
     dernier_diplome_libre: payload.dernierDiplomeLibre || null,
     niveau_diplome_id: toBigInt(payload.niveauDiplomeId) ?? null,
@@ -443,7 +448,7 @@ async function enregistrerDossierMembre(
   userId,
   payload,
   existingUser,
-  stagedAttestation
+  stagedAttestation,
 ) {
   const filesToDeleteAfterCommit = [];
 
@@ -474,7 +479,7 @@ async function enregistrerDossierMembre(
     if (!attestationMeta?.chemin) {
       throw new AppError(
         "L'attestation d'inscription est obligatoire pour un doctorant.",
-        400
+        400,
       );
     }
 
@@ -497,7 +502,7 @@ async function enregistrerDossierMembre(
   if (stagedAttestation) {
     throw new AppError(
       "L'attestation doctorant ne peut etre envoyee que pour une fiche doctorant.",
-      400
+      400,
     );
   }
 
@@ -545,7 +550,7 @@ async function recupererAttestationDoctorantOuErreur(userId, client = prisma) {
   } catch (_error) {
     throw new AppError(
       "Le fichier d'attestation est introuvable sur le serveur.",
-      404
+      404,
     );
   }
 

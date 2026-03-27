@@ -16,7 +16,7 @@ function validate(schemas) {
           ...result.error.issues.map((issue) => ({
             champ: `${target}.${issue.path.join(".") || "racine"}`,
             message: issue.message,
-          }))
+          })),
         );
       } else {
         req[target] = result.data;
@@ -25,7 +25,7 @@ function validate(schemas) {
 
     if (erreurs.length > 0) {
       return next(
-        new AppError("Les donnees fournies sont invalides.", 400, erreurs)
+        new AppError("Les donnees fournies sont invalides.", 400, erreurs),
       );
     }
 

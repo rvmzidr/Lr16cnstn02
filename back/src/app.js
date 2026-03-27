@@ -22,7 +22,7 @@ app.use(
       callback(null, false);
     },
     credentials: true,
-  })
+  }),
 );
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));

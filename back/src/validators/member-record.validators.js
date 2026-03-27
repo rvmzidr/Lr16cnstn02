@@ -28,11 +28,16 @@ function requiredDateField() {
 function requiredPositiveIntField(message) {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    z.coerce.number().int().positive(message ? { message } : undefined)
+    z.coerce
+      .number()
+      .int()
+      .positive(message ? { message } : undefined),
   );
 }
 
-function createMemberDossierSchema({ includeEmailInstitutionnel = false } = {}) {
+function createMemberDossierSchema({
+  includeEmailInstitutionnel = false,
+} = {}) {
   const base = z.object({
     nom: cleanString(120),
     prenom: cleanString(120),
@@ -48,7 +53,7 @@ function createMemberDossierSchema({ includeEmailInstitutionnel = false } = {}) 
     adresse: optionalString(500),
     grade: cleanString(150),
     institutionAffectationId: requiredPositiveIntField(
-      "L'etablissement est obligatoire."
+      "L'etablissement est obligatoire.",
     ),
     dernierDiplomeLibre: cleanString(255),
     niveauDiplomeId: optionalPositiveInt(),
@@ -62,11 +67,11 @@ function createMemberDossierSchema({ includeEmailInstitutionnel = false } = {}) 
     sujetRecherche: optionalString(2000),
     pourcentageAvancement: z.preprocess(
       (value) => (value === "" || value === null ? undefined : value),
-      z.coerce.number().min(0).max(100).optional()
+      z.coerce.number().min(0).max(100).optional(),
     ),
     anneePremiereInscription: z.preprocess(
       (value) => (value === "" || value === null ? undefined : value),
-      z.coerce.number().int().min(1900).max(2100).optional()
+      z.coerce.number().int().min(1900).max(2100).optional(),
     ),
     anneeUniversitairePremiereInscription: optionalAcademicYear(),
     universiteInscription: optionalString(255),

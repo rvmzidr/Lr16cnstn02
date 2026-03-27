@@ -1,6 +1,11 @@
-
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router,
+} from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { sharedIcons } from '../lucide-icons';
@@ -18,7 +23,7 @@ import { sharedIcons } from '../lucide-icons';
         <div class="page-transition-overlay__label">LR16CNSTN02</div>
       </div>
     }
-  `
+  `,
 })
 export class PageTransitionOverlayComponent implements OnInit, OnDestroy {
   readonly icons = sharedIcons;

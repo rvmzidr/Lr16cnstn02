@@ -62,7 +62,7 @@ async function inscrireUtilisateur(rawPayload, attestationFile) {
         created.id,
         payload,
         null,
-        stagedAttestation
+        stagedAttestation,
       );
       filesToDeleteAfterCommit = dossierResult.filesToDeleteAfterCommit;
 
@@ -95,7 +95,7 @@ async function connecterUtilisateur(payload) {
 
   const motDePasseValide = await bcrypt.compare(
     payload.motDePasse,
-    utilisateur.mot_de_passe_hash
+    utilisateur.mot_de_passe_hash,
   );
 
   if (!motDePasseValide) {
@@ -105,14 +105,14 @@ async function connecterUtilisateur(payload) {
   if (utilisateur.statut === ACCOUNT_STATUS.EN_ATTENTE) {
     throw new AppError(
       "Votre compte est en attente de validation par l'administration.",
-      403
+      403,
     );
   }
 
   if (utilisateur.statut === ACCOUNT_STATUS.REJETE) {
     throw new AppError(
       "Votre demande d'inscription a ete refusee. Contactez l'administration du laboratoire.",
-      403
+      403,
     );
   }
 
@@ -123,7 +123,7 @@ async function connecterUtilisateur(payload) {
   ) {
     throw new AppError(
       "Votre compte est desactive ou non autorise a se connecter.",
-      403
+      403,
     );
   }
 
@@ -156,7 +156,7 @@ async function demanderReinitialisationMotDePasse(payload) {
     !utilisateur ||
     !utilisateur.role ||
     [ACCOUNT_STATUS.EN_ATTENTE, ACCOUNT_STATUS.REJETE].includes(
-      utilisateur.statut
+      utilisateur.statut,
     )
   ) {
     return {
@@ -171,7 +171,7 @@ async function demanderReinitialisationMotDePasse(payload) {
   return {
     resetToken,
     resetUrl: `${env.frontendUrl}/reinitialiser-mot-de-passe?token=${encodeURIComponent(
-      resetToken
+      resetToken,
     )}`,
     expireDansMinutes: 30,
   };
@@ -185,7 +185,7 @@ async function reinitialiserMotDePasse(payload) {
   } catch (_error) {
     throw new AppError(
       "Le token de reinitialisation est invalide ou a expire.",
-      400
+      400,
     );
   }
 
@@ -200,7 +200,7 @@ async function reinitialiserMotDePasse(payload) {
   if (utilisateur.mot_de_passe_hash !== tokenPayload.version) {
     throw new AppError(
       "Le token de reinitialisation n'est plus valide. Veuillez recommencer la procedure.",
-      400
+      400,
     );
   }
 

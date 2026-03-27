@@ -7,9 +7,7 @@ function requireRole(...rolesAutorises) {
     }
 
     if (!rolesAutorises.includes(req.auth.role)) {
-      return next(
-        new AppError("Vous n'avez pas les droits necessaires.", 403)
-      );
+      return next(new AppError("Vous n'avez pas les droits necessaires.", 403));
     }
 
     return next();

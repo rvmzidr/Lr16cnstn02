@@ -1,13 +1,13 @@
-export type Role = "MEMBRE" | "ADMINISTRATEUR" | "CHEF_LABO";
-export type AccountStatus = "EN_ATTENTE" | "ACTIF" | "REJETE" | "DESACTIVE";
-export type Genre = "HOMME" | "FEMME" | "AUTRE";
+export type Role = 'MEMBRE' | 'ADMINISTRATEUR' | 'CHEF_LABO';
+export type AccountStatus = 'EN_ATTENTE' | 'ACTIF' | 'REJETE' | 'DESACTIVE';
+export type Genre = 'HOMME' | 'FEMME' | 'AUTRE';
 export type ArticleStatus =
-  | "BROUILLON"
-  | "SOUMIS"
-  | "VALIDE"
-  | "REJETE"
-  | "PUBLIE";
-export type NewsStatus = "BROUILLON" | "PUBLIEE" | "ARCHIVEE";
+  | 'BROUILLON'
+  | 'SOUMIS'
+  | 'VALIDE'
+  | 'REJETE'
+  | 'PUBLIE';
+export type NewsStatus = 'BROUILLON' | 'PUBLIEE' | 'ARCHIVEE';
 
 export interface ApiEnvelope<T> {
   succes: boolean;
@@ -207,12 +207,12 @@ export interface RegistrationPayload {
   telephone: string;
   adresse: string;
   grade: string;
-  institutionAffectationId: number | "";
+  institutionAffectationId: number | '';
   dernierDiplomeLibre: string;
   dateObtentionDiplome: string;
   etablissementDiplome: string;
   orcid: string;
-  equipeRechercheId: number | "";
+  equipeRechercheId: number | '';
   laboratoireDenomination: string;
   laboratoireEtablissement: string;
   laboratoireUniversite: string;
@@ -233,15 +233,15 @@ export interface ArticlePayload {
   resume: string;
   contenu: string;
   categorieId?: number | null;
-  action?: "BROUILLON" | "SOUMETTRE";
+  action?: 'BROUILLON' | 'SOUMETTRE';
 }
 
 export interface ArticleSearchFilters {
   q?: string;
-  categorieId?: number | "";
-  equipeRechercheId?: number | "";
+  categorieId?: number | '';
+  equipeRechercheId?: number | '';
   auteurId?: string;
-  statut?: ArticleStatus | "";
+  statut?: ArticleStatus | '';
   dateDebut?: string;
   dateFin?: string;
   page?: number;

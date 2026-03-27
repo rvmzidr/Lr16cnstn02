@@ -1,4 +1,7 @@
-export function isSameCalendarMonth(value: string | null | undefined, now = new Date()) {
+export function isSameCalendarMonth(
+  value: string | null | undefined,
+  now = new Date(),
+) {
   if (!value) {
     return false;
   }
@@ -9,10 +12,17 @@ export function isSameCalendarMonth(value: string | null | undefined, now = new 
     return false;
   }
 
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth()
+  );
 }
 
-export function isWithinDays(value: string | null | undefined, days: number, now = new Date()) {
+export function isWithinDays(
+  value: string | null | undefined,
+  days: number,
+  now = new Date(),
+) {
   if (!value) {
     return false;
   }
@@ -34,7 +44,7 @@ export function countWithinDays<T>(
   items: T[],
   getDate: (item: T) => string | null | undefined,
   days: number,
-  now = new Date()
+  now = new Date(),
 ) {
   return items.filter((item) => isWithinDays(getDate(item), days, now)).length;
 }
@@ -42,17 +52,20 @@ export function countWithinDays<T>(
 export function countThisMonth<T>(
   items: T[],
   getDate: (item: T) => string | null | undefined,
-  now = new Date()
+  now = new Date(),
 ) {
   return items.filter((item) => isSameCalendarMonth(getDate(item), now)).length;
 }
 
-export function countDistinct<T>(items: T[], getValue: (item: T) => string | number | null | undefined) {
+export function countDistinct<T>(
+  items: T[],
+  getValue: (item: T) => string | number | null | undefined,
+) {
   const values = new Set<string | number>();
 
   items.forEach((item) => {
     const value = getValue(item);
-    if (value !== null && value !== undefined && value !== "") {
+    if (value !== null && value !== undefined && value !== '') {
       values.add(value);
     }
   });

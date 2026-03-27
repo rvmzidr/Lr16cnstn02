@@ -1,11 +1,16 @@
-
-import { Component, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  signal,
+} from '@angular/core';
 
 @Component({
   selector: 'app-animated-counter',
   standalone: true,
   imports: [],
-  template: `{{ displayValue() }}`
+  template: `{{ displayValue() }}`,
 })
 export class AnimatedCounterComponent implements OnChanges {
   @Input() value = 0;

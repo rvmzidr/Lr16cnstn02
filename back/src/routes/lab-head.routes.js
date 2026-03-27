@@ -22,38 +22,38 @@ router.get("/articles", labHeadController.listArticlesModeration);
 router.patch(
   "/articles/:id/valider",
   validate({ params: articleIdParamSchema }),
-  labHeadController.validerArticle
+  labHeadController.validerArticle,
 );
 router.patch(
   "/articles/:id/refuser",
   validate({ params: articleIdParamSchema, body: refuserArticleBodySchema }),
-  labHeadController.refuserArticle
+  labHeadController.refuserArticle,
 );
 router.patch(
   "/articles/:id/publier",
   validate({ params: articleIdParamSchema }),
-  labHeadController.publierArticle
+  labHeadController.publierArticle,
 );
 
 router.get(
   "/actualites",
   validate({ query: actualitesQuerySchema }),
-  labHeadController.listActualites
+  labHeadController.listActualites,
 );
 router.post(
   "/actualites",
   validate({ body: actualiteBodySchema }),
-  labHeadController.createActualite
+  labHeadController.createActualite,
 );
 router.put(
   "/actualites/:id",
   validate({ params: actualiteIdParamSchema, body: actualiteUpdateBodySchema }),
-  labHeadController.updateActualite
+  labHeadController.updateActualite,
 );
 router.delete(
   "/actualites/:id",
   validate({ params: actualiteIdParamSchema }),
-  labHeadController.deleteActualite
+  labHeadController.deleteActualite,
 );
 
 module.exports = router;

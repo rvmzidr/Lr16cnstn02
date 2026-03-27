@@ -1,4 +1,3 @@
-
 import { Injectable, computed, inject, signal, DOCUMENT } from '@angular/core';
 
 export type SiteLanguage = 'fr' | 'en' | 'ar';
@@ -21,20 +20,27 @@ export class SitePreferencesService {
   readonly languages = [
     { code: 'fr' as const, label: 'Francais' },
     { code: 'en' as const, label: 'English' },
-    { code: 'ar' as const, label: 'العربية' }
+    { code: 'ar' as const, label: 'العربية' },
   ];
 
   readonly language = signal<SiteLanguage>('fr');
   readonly isDarkMode = signal(false);
   readonly isRtl = computed(() => this.language() === 'ar');
   readonly languageLabel = computed(
-    () => this.languages.find((item) => item.code === this.language())?.label ?? 'Francais'
+    () =>
+      this.languages.find((item) => item.code === this.language())?.label ??
+      'Francais',
   );
 
   constructor() {
     if (typeof window !== 'undefined') {
-      const storedLanguage = window.localStorage.getItem(STORAGE_LANGUAGE_KEY) as SiteLanguage | null;
-      if (storedLanguage && this.languages.some((option) => option.code === storedLanguage)) {
+      const storedLanguage = window.localStorage.getItem(
+        STORAGE_LANGUAGE_KEY,
+      ) as SiteLanguage | null;
+      if (
+        storedLanguage &&
+        this.languages.some((option) => option.code === storedLanguage)
+      ) {
         this.language.set(storedLanguage);
       } else if (storedLanguage) {
         window.localStorage.setItem(STORAGE_LANGUAGE_KEY, 'fr');
@@ -46,7 +52,9 @@ export class SitePreferencesService {
       } else if (storedTheme === 'light') {
         this.isDarkMode.set(false);
       } else {
-        this.isDarkMode.set(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        this.isDarkMode.set(
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
+        );
       }
     }
 
@@ -64,7 +72,10 @@ export class SitePreferencesService {
   toggleDarkMode() {
     this.isDarkMode.update((value) => !value);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_THEME_KEY, this.isDarkMode() ? 'dark' : 'light');
+      window.localStorage.setItem(
+        STORAGE_THEME_KEY,
+        this.isDarkMode() ? 'dark' : 'light',
+      );
     }
     this.syncDom();
   }
@@ -78,6 +89,8 @@ export class SitePreferencesService {
     this.document.documentElement.lang = this.language();
     this.document.documentElement.dir = this.isRtl() ? 'rtl' : 'ltr';
     this.document.documentElement.classList.toggle('dark', this.isDarkMode());
-    this.document.documentElement.style.colorScheme = this.isDarkMode() ? 'dark' : 'light';
+    this.document.documentElement.style.colorScheme = this.isDarkMode()
+      ? 'dark'
+      : 'light';
   }
 }

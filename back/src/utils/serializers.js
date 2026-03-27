@@ -206,7 +206,8 @@ function serializeArticle(article) {
       ? article.auteurs_article.map(serializeAuteurArticle)
       : [],
     derniereVersion:
-      Array.isArray(article.versions_article) && article.versions_article.length > 0
+      Array.isArray(article.versions_article) &&
+      article.versions_article.length > 0
         ? {
             numeroVersion: article.versions_article[0].numero_version,
             creeLe: article.versions_article[0].cree_le,

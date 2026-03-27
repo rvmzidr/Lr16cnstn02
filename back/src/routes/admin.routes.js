@@ -22,7 +22,7 @@ router.use(requireRole(...ADMIN_ROLES));
 router.get(
   "/inscriptions",
   validate({ query: inscriptionsQuerySchema }),
-  adminController.listInscriptions
+  adminController.listInscriptions,
 );
 router.patch(
   "/inscriptions/:id/valider",
@@ -30,7 +30,7 @@ router.patch(
     params: inscriptionIdParamSchema,
     body: validerInscriptionBodySchema,
   }),
-  adminController.validerInscription
+  adminController.validerInscription,
 );
 router.patch(
   "/inscriptions/:id/refuser",
@@ -38,33 +38,33 @@ router.patch(
     params: inscriptionIdParamSchema,
     body: refuserInscriptionBodySchema,
   }),
-  adminController.refuserInscription
+  adminController.refuserInscription,
 );
 
 router.get(
   "/comptes",
   validate({ query: comptesQuerySchema }),
-  adminController.listComptes
+  adminController.listComptes,
 );
 router.patch(
   "/comptes/:id/activer",
   validate({ params: compteIdParamSchema }),
-  adminController.activerCompte
+  adminController.activerCompte,
 );
 router.patch(
   "/comptes/:id/desactiver",
   validate({ params: compteIdParamSchema }),
-  adminController.desactiverCompte
+  adminController.desactiverCompte,
 );
 router.patch(
   "/comptes/:id/role",
   validate({ params: compteIdParamSchema, body: changerRoleBodySchema }),
-  adminController.changerRole
+  adminController.changerRole,
 );
 router.get(
   "/comptes/:id/attestation-doctorant",
   validate({ params: compteIdParamSchema }),
-  adminController.downloadDoctorantAttestation
+  adminController.downloadDoctorantAttestation,
 );
 
 module.exports = router;

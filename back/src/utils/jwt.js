@@ -11,7 +11,7 @@ function signAccessToken(user) {
       prenom: user.prenom,
     },
     env.jwtSecret,
-    { expiresIn: env.jwtExpiresIn }
+    { expiresIn: env.jwtExpiresIn },
   );
 }
 
@@ -23,7 +23,7 @@ function signResetToken(user) {
       version: user.mot_de_passe_hash,
     },
     env.jwtSecret,
-    { expiresIn: "30m" }
+    { expiresIn: "30m" },
   );
 }
 

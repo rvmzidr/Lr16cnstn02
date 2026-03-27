@@ -11,7 +11,9 @@ export class AuthService {
   private hydrationPromise: Promise<void> | null = null;
   readonly session = signal<AuthSession | null>(loadAuthSession());
   readonly isReady = computed(() => this.hydrated());
-  readonly isAuthenticated = computed(() => Boolean(this.session()?.accessToken));
+  readonly isAuthenticated = computed(() =>
+    Boolean(this.session()?.accessToken),
+  );
 
   constructor() {
     this.hydrate();
@@ -36,8 +38,8 @@ export class AuthService {
           accessToken: currentSession.accessToken,
           utilisateur: {
             ...currentSession.utilisateur,
-            ...profile.utilisateur
-          }
+            ...profile.utilisateur,
+          },
         };
         this.session.set(nextSession);
         saveAuthSession(nextSession);
@@ -56,7 +58,7 @@ export class AuthService {
     const response = await api.login({ emailInstitutionnel, motDePasse });
     const nextSession: AuthSession = {
       accessToken: response.accessToken,
-      utilisateur: response.utilisateur
+      utilisateur: response.utilisateur,
     };
     this.session.set(nextSession);
     saveAuthSession(nextSession);
@@ -79,8 +81,8 @@ export class AuthService {
         accessToken: currentSession.accessToken,
         utilisateur: {
           ...currentSession.utilisateur,
-          ...profile.utilisateur
-        }
+          ...profile.utilisateur,
+        },
       };
       this.session.set(nextSession);
       saveAuthSession(nextSession);
@@ -108,8 +110,8 @@ export const authGuard: CanActivateFn = async (route, state) => {
 
   return router.createUrlTree(['/connexion'], {
     queryParams: {
-      next: `${state.url || route.routeConfig?.path || '/dashboard'}`
-    }
+      next: `${state.url || route.routeConfig?.path || '/dashboard'}`,
+    },
   });
 };
 
@@ -131,6 +133,8 @@ export function roleGuard(allowedRoles: Role[]): CanActivateFn {
     }
 
     const role = auth.session()?.utilisateur.role;
-    return role && allowedRoles.includes(role) ? true : router.createUrlTree(['/dashboard']);
+    return role && allowedRoles.includes(role)
+      ? true
+      : router.createUrlTree(['/dashboard']);
   };
 }

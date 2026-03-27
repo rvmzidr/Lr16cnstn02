@@ -13,7 +13,7 @@ const inscription = asyncHandler(async (req, res) => {
     res,
     "Demande d'inscription enregistree avec succes.",
     donnees,
-    201
+    201,
   );
 });
 
@@ -23,11 +23,13 @@ const connexion = asyncHandler(async (req, res) => {
 });
 
 const motDePasseOublie = asyncHandler(async (req, res) => {
-  const donnees = await authService.demanderReinitialisationMotDePasse(req.body);
+  const donnees = await authService.demanderReinitialisationMotDePasse(
+    req.body,
+  );
   successResponse(
     res,
     "Si un compte valide correspond a cette adresse, un lien de reinitialisation est genere.",
-    donnees
+    donnees,
   );
 });
 

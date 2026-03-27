@@ -11,7 +11,7 @@ const DOCTORANT_ATTESTATION_FIELD = "attestationDoctorant";
 const DOCTORANT_ATTESTATION_STORAGE_DIR = path.resolve(
   process.cwd(),
   "storage",
-  "doctorant-attestations"
+  "doctorant-attestations",
 );
 
 const LABORATOIRE_DEFAULTS = Object.freeze({

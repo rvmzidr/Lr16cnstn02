@@ -6,9 +6,7 @@ async function bootstrap() {
   await prisma.$connect();
 
   app.listen(env.port, () => {
-    console.log(
-      `${env.appName} demarree sur http://localhost:${env.port}/api`
-    );
+    console.log(`${env.appName} demarree sur http://localhost:${env.port}/api`);
   });
 }
 

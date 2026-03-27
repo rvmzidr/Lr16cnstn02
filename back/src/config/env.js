@@ -24,7 +24,7 @@ const configuredFrontendOrigins = (process.env.FRONTEND_URL || "")
   .filter(Boolean);
 
 const frontendOrigins = Array.from(
-  new Set([...configuredFrontendOrigins, ...LOCAL_FRONTEND_ORIGINS])
+  new Set([...configuredFrontendOrigins, ...LOCAL_FRONTEND_ORIGINS]),
 );
 
 const env = Object.freeze({

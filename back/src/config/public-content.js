@@ -31,7 +31,8 @@ module.exports = {
   contact: {
     email: "contact@lr16cnstn02.tn",
     telephone: "+216 71 000 000",
-    adresse: "Centre National des Sciences et Technologies Nucleaires, Tunis, Tunisie",
+    adresse:
+      "Centre National des Sciences et Technologies Nucleaires, Tunis, Tunisie",
     horaires: "Lundi au vendredi, 08:30 - 16:30",
   },
 };

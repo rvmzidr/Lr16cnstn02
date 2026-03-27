@@ -6,14 +6,16 @@ function parseMysqlUrl(databaseUrl) {
 
   if (url.protocol !== "mysql:") {
     throw new Error(
-      `DATABASE_URL doit utiliser mysql:// pour Laragon/MySQL. Valeur recue: ${url.protocol}`
+      `DATABASE_URL doit utiliser mysql:// pour Laragon/MySQL. Valeur recue: ${url.protocol}`,
     );
   }
 
   const database = url.pathname.replace(/^\//, "");
 
   if (!database) {
-    throw new Error("DATABASE_URL doit contenir un nom de base de donnees MySQL.");
+    throw new Error(
+      "DATABASE_URL doit contenir un nom de base de donnees MySQL.",
+    );
   }
 
   return {
@@ -37,7 +39,7 @@ async function main() {
 
   try {
     await connection.query(
-      `CREATE DATABASE IF NOT EXISTS \`${config.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`
+      `CREATE DATABASE IF NOT EXISTS \`${config.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`,
     );
     console.log(`Base MySQL prete: ${config.database}`);
   } finally {

@@ -49,7 +49,7 @@ const requireAuth = asyncHandler(async (req, _res, next) => {
   ) {
     throw new AppError(
       "Votre compte n'est pas autorise a acceder a cet espace.",
-      403
+      403,
     );
   }
 

@@ -58,37 +58,33 @@ const actualiteUpdateBodySchema = z.object({
 
 const comptesQuerySchema = z.object({
   q: optionalString(120),
-  statut: z
-    .preprocess(
-      (value) => (value === "" || value === null ? undefined : value),
-      z.enum(["EN_ATTENTE", "ACTIF", "REJETE", "DESACTIVE"]).optional()
-    ),
-  role: z
-    .preprocess(
-      (value) => (value === "" || value === null ? undefined : value),
-      z.enum(["MEMBRE", "ADMINISTRATEUR", "CHEF_LABO"]).optional()
-    ),
+  statut: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["EN_ATTENTE", "ACTIF", "REJETE", "DESACTIVE"]).optional(),
+  ),
+  role: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["MEMBRE", "ADMINISTRATEUR", "CHEF_LABO"]).optional(),
+  ),
   page: paginationSchema.page,
   limit: paginationSchema.limit,
 });
 
 const inscriptionsQuerySchema = z.object({
-  statut: z
-    .preprocess(
-      (value) => (value === "" || value === null ? undefined : value),
-      z.enum(["EN_ATTENTE", "REJETE", "ACTIF", "DESACTIVE"]).optional()
-    ),
+  statut: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["EN_ATTENTE", "REJETE", "ACTIF", "DESACTIVE"]).optional(),
+  ),
   page: paginationSchema.page,
   limit: paginationSchema.limit,
 });
 
 const actualitesQuerySchema = z.object({
   q: optionalString(200),
-  statut: z
-    .preprocess(
-      (value) => (value === "" || value === null ? undefined : value),
-      z.enum(["BROUILLON", "PUBLIEE", "ARCHIVEE"]).optional()
-    ),
+  statut: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["BROUILLON", "PUBLIEE", "ARCHIVEE"]).optional(),
+  ),
   page: paginationSchema.page,
   limit: paginationSchema.limit,
 });

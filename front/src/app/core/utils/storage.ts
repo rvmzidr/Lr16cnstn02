@@ -1,9 +1,9 @@
-import type { AuthSession } from "../models/models";
+import type { AuthSession } from '../models/models';
 
-const AUTH_SESSION_KEY = "lr16cnstn02.auth";
+const AUTH_SESSION_KEY = 'lr16cnstn02.auth';
 
 export function loadAuthSession(): AuthSession | null {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return null;
   }
 
@@ -21,7 +21,7 @@ export function loadAuthSession(): AuthSession | null {
 }
 
 export function saveAuthSession(session: AuthSession | null) {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return;
   }
 

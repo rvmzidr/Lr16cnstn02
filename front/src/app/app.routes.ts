@@ -1,90 +1,224 @@
 import { Routes } from '@angular/router';
-import { authGuard, publicOnlyGuard, roleGuard } from './core/services/auth.service';
-import { DashboardLayoutComponent } from './layouts/dashboard-layout.component';
-import { PublicLayoutComponent } from './layouts/public-layout.component';
-import { AboutPageComponent } from './pages/about-page.component';
-import { ArticleDetailPageComponent } from './pages/article-detail-page.component';
-import { ArticlesPageComponent } from './pages/articles-page.component';
-import { ContactPageComponent } from './pages/contact-page.component';
-import { HomePageComponent } from './pages/home-page.component';
-import { NewsDetailPageComponent } from './pages/news-detail-page.component';
-import { NewsPageComponent } from './pages/news-page.component';
-import { NotFoundPageComponent } from './pages/not-found-page.component';
-import { ForgotPasswordPageComponent } from './pages/auth/forgot-password-page.component';
-import { LoginPageComponent } from './pages/auth/login-page.component';
-import { RegistrationPageComponent } from './pages/auth/registration-page.component';
-import { ResetPasswordPageComponent } from './pages/auth/reset-password-page.component';
-import { AdminAccountsPageComponent } from './pages/dashboard/admin-accounts-page.component';
-import { ArticleSearchPageComponent } from './pages/dashboard/article-search-page.component';
-import { ArticlesManagementPageComponent } from './pages/dashboard/articles-management-page.component';
-import { DashboardHomePageComponent } from './pages/dashboard/dashboard-home-page.component';
-import { LabHeadArticlesPageComponent } from './pages/dashboard/lab-head-articles-page.component';
-import { LabHeadNewsPageComponent } from './pages/dashboard/lab-head-news-page.component';
-import { MemberNewsPageComponent } from './pages/dashboard/member-news-page.component';
-import { MemberProfilePageComponent } from './pages/dashboard/member-profile-page.component';
-import { MessagesPageComponent } from './pages/dashboard/messages-page.component';
-import { ProjectsPageComponent } from './pages/dashboard/projects-page.component';
-import { PurchasesPageComponent } from './pages/dashboard/purchases-page.component';
+import {
+  authGuard,
+  publicOnlyGuard,
+  roleGuard,
+} from './core/services/auth.service';
 
 export const routes: Routes = [
   {
     path: '',
-    component: PublicLayoutComponent,
+    loadComponent: () =>
+      import('./layouts/public-layout.component').then(
+        (m) => m.PublicLayoutComponent,
+      ),
     children: [
-      { path: '', component: HomePageComponent },
-      { path: 'accueil', component: HomePageComponent },
-      { path: 'articles', component: ArticlesPageComponent },
-      { path: 'articles/:articleId', component: ArticleDetailPageComponent },
-      { path: 'news', component: NewsPageComponent },
-      { path: 'news/:newsId', component: NewsDetailPageComponent },
-      { path: 'actualites', component: NewsPageComponent },
-      { path: 'actualites/:newsId', component: NewsDetailPageComponent },
-      { path: 'about', component: AboutPageComponent },
-      { path: 'a-propos', component: AboutPageComponent },
-      { path: 'contact', component: ContactPageComponent },
-      { path: 'inscription', component: RegistrationPageComponent, canActivate: [publicOnlyGuard] },
-      { path: 'connexion', component: LoginPageComponent, canActivate: [publicOnlyGuard] },
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/public/home-page.component').then(
+            (m) => m.HomePageComponent,
+          ),
+      },
+      {
+        path: 'accueil',
+        loadComponent: () =>
+          import('./pages/public/home-page.component').then(
+            (m) => m.HomePageComponent,
+          ),
+      },
+      {
+        path: 'articles',
+        loadComponent: () =>
+          import('./pages/public/articles-page.component').then(
+            (m) => m.ArticlesPageComponent,
+          ),
+      },
+      {
+        path: 'articles/:articleId',
+        loadComponent: () =>
+          import('./pages/public/article-detail-page.component').then(
+            (m) => m.ArticleDetailPageComponent,
+          ),
+      },
+      {
+        path: 'news',
+        loadComponent: () =>
+          import('./pages/public/news-page.component').then(
+            (m) => m.NewsPageComponent,
+          ),
+      },
+      {
+        path: 'news/:newsId',
+        loadComponent: () =>
+          import('./pages/public/news-detail-page.component').then(
+            (m) => m.NewsDetailPageComponent,
+          ),
+      },
+      {
+        path: 'actualites',
+        loadComponent: () =>
+          import('./pages/public/news-page.component').then(
+            (m) => m.NewsPageComponent,
+          ),
+      },
+      {
+        path: 'actualites/:newsId',
+        loadComponent: () =>
+          import('./pages/public/news-detail-page.component').then(
+            (m) => m.NewsDetailPageComponent,
+          ),
+      },
+      {
+        path: 'about',
+        loadComponent: () =>
+          import('./pages/public/about-page.component').then(
+            (m) => m.AboutPageComponent,
+          ),
+      },
+      {
+        path: 'a-propos',
+        loadComponent: () =>
+          import('./pages/public/about-page.component').then(
+            (m) => m.AboutPageComponent,
+          ),
+      },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./pages/public/contact-page.component').then(
+            (m) => m.ContactPageComponent,
+          ),
+      },
+      {
+        path: 'inscription',
+        loadComponent: () =>
+          import('./pages/auth/registration-page.component').then(
+            (m) => m.RegistrationPageComponent,
+          ),
+        canActivate: [publicOnlyGuard],
+      },
+      {
+        path: 'connexion',
+        loadComponent: () =>
+          import('./pages/auth/login-page.component').then(
+            (m) => m.LoginPageComponent,
+          ),
+        canActivate: [publicOnlyGuard],
+      },
       {
         path: 'mot-de-passe-oublie',
-        component: ForgotPasswordPageComponent,
-        canActivate: [publicOnlyGuard]
+        loadComponent: () =>
+          import('./pages/auth/forgot-password-page.component').then(
+            (m) => m.ForgotPasswordPageComponent,
+          ),
+        canActivate: [publicOnlyGuard],
       },
       {
         path: 'reinitialiser-mot-de-passe',
-        component: ResetPasswordPageComponent,
-        canActivate: [publicOnlyGuard]
-      }
-    ]
+        loadComponent: () =>
+          import('./pages/auth/reset-password-page.component').then(
+            (m) => m.ResetPasswordPageComponent,
+          ),
+        canActivate: [publicOnlyGuard],
+      },
+    ],
   },
   {
     path: 'dashboard',
-    component: DashboardLayoutComponent,
+    loadComponent: () =>
+      import('./layouts/dashboard-layout.component').then(
+        (m) => m.DashboardLayoutComponent,
+      ),
     canActivate: [authGuard],
     children: [
-      { path: '', component: DashboardHomePageComponent },
-      { path: 'profil', component: MemberProfilePageComponent },
-      { path: 'articles', component: ArticlesManagementPageComponent },
-      { path: 'articles/recherche', component: ArticleSearchPageComponent },
-      { path: 'actualites', component: MemberNewsPageComponent },
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard-home-page.component').then(
+            (m) => m.DashboardHomePageComponent,
+          ),
+      },
+      {
+        path: 'profil',
+        loadComponent: () =>
+          import('./pages/dashboard/member-profile-page.component').then(
+            (m) => m.MemberProfilePageComponent,
+          ),
+      },
+      {
+        path: 'articles',
+        loadComponent: () =>
+          import('./pages/dashboard/articles-management-page.component').then(
+            (m) => m.ArticlesManagementPageComponent,
+          ),
+      },
+      {
+        path: 'articles/recherche',
+        loadComponent: () =>
+          import('./pages/dashboard/article-search-page.component').then(
+            (m) => m.ArticleSearchPageComponent,
+          ),
+      },
+      {
+        path: 'actualites',
+        loadComponent: () =>
+          import('./pages/dashboard/member-news-page.component').then(
+            (m) => m.MemberNewsPageComponent,
+          ),
+      },
       {
         path: 'admin/comptes',
-        component: AdminAccountsPageComponent,
-        canActivate: [roleGuard(['ADMINISTRATEUR'])]
+        loadComponent: () =>
+          import('./pages/dashboard/admin-accounts-page.component').then(
+            (m) => m.AdminAccountsPageComponent,
+          ),
+        canActivate: [roleGuard(['ADMINISTRATEUR'])],
       },
       {
         path: 'chef/articles',
-        component: LabHeadArticlesPageComponent,
-        canActivate: [roleGuard(['CHEF_LABO'])]
+        loadComponent: () =>
+          import('./pages/dashboard/lab-head-articles-page.component').then(
+            (m) => m.LabHeadArticlesPageComponent,
+          ),
+        canActivate: [roleGuard(['CHEF_LABO'])],
       },
       {
         path: 'chef/actualites',
-        component: LabHeadNewsPageComponent,
-        canActivate: [roleGuard(['CHEF_LABO'])]
+        loadComponent: () =>
+          import('./pages/dashboard/lab-head-news-page.component').then(
+            (m) => m.LabHeadNewsPageComponent,
+          ),
+        canActivate: [roleGuard(['CHEF_LABO'])],
       },
-      { path: 'projects', component: ProjectsPageComponent },
-      { path: 'messages', component: MessagesPageComponent },
-      { path: 'purchases', component: PurchasesPageComponent }
-    ]
+      {
+        path: 'projects',
+        loadComponent: () =>
+          import('./pages/dashboard/projects-page.component').then(
+            (m) => m.ProjectsPageComponent,
+          ),
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./pages/dashboard/messages-page.component').then(
+            (m) => m.MessagesPageComponent,
+          ),
+      },
+      {
+        path: 'purchases',
+        loadComponent: () =>
+          import('./pages/dashboard/purchases-page.component').then(
+            (m) => m.PurchasesPageComponent,
+          ),
+      },
+    ],
   },
-  { path: '**', component: NotFoundPageComponent }
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/public/not-found-page.component').then(
+        (m) => m.NotFoundPageComponent,
+      ),
+  },
 ];

@@ -7,10 +7,7 @@ const {
 } = require("../config/constants");
 const { toBigInt } = require("../utils/bigint");
 const { buildMeta, getPagination } = require("../utils/pagination");
-const {
-  articleInclude,
-  actualiteInclude,
-} = require("../utils/prisma-selects");
+const { articleInclude, actualiteInclude } = require("../utils/prisma-selects");
 const AppError = require("../utils/app-error");
 const {
   serializeActualite,
@@ -57,33 +54,38 @@ function buildPublishedActualitesWhere(filters = {}) {
 }
 
 async function recupererAccueilPublic() {
-  const [articlesPublies, actualitesPubliees, membresActifs, articlesRecents, actualitesRecentes] =
-    await prisma.$transaction([
-      prisma.articles.count({
-        where: { statut: ARTICLE_STATUS.PUBLIE },
-      }),
-      prisma.actualites.count({
-        where: { statut: NEWS_STATUS.PUBLIEE },
-      }),
-      prisma.utilisateurs.count({
-        where: {
-          statut: ACCOUNT_STATUS.ACTIF,
-          actif: true,
-        },
-      }),
-      prisma.articles.findMany({
-        where: { statut: ARTICLE_STATUS.PUBLIE },
-        include: articleInclude,
-        orderBy: [{ publie_le: "desc" }, { cree_le: "desc" }],
-        take: 3,
-      }),
-      prisma.actualites.findMany({
-        where: { statut: NEWS_STATUS.PUBLIEE },
-        include: actualiteInclude,
-        orderBy: [{ publiee_le: "desc" }, { cree_le: "desc" }],
-        take: 3,
-      }),
-    ]);
+  const [
+    articlesPublies,
+    actualitesPubliees,
+    membresActifs,
+    articlesRecents,
+    actualitesRecentes,
+  ] = await prisma.$transaction([
+    prisma.articles.count({
+      where: { statut: ARTICLE_STATUS.PUBLIE },
+    }),
+    prisma.actualites.count({
+      where: { statut: NEWS_STATUS.PUBLIEE },
+    }),
+    prisma.utilisateurs.count({
+      where: {
+        statut: ACCOUNT_STATUS.ACTIF,
+        actif: true,
+      },
+    }),
+    prisma.articles.findMany({
+      where: { statut: ARTICLE_STATUS.PUBLIE },
+      include: articleInclude,
+      orderBy: [{ publie_le: "desc" }, { cree_le: "desc" }],
+      take: 3,
+    }),
+    prisma.actualites.findMany({
+      where: { statut: NEWS_STATUS.PUBLIEE },
+      include: actualiteInclude,
+      orderBy: [{ publiee_le: "desc" }, { cree_le: "desc" }],
+      take: 3,
+    }),
+  ]);
 
   return {
     hero: publicContent.hero,
@@ -155,7 +157,10 @@ async function enregistrerMessageContact(payload) {
 }
 
 async function listerArticlesPublics(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const where = buildPublishedArticlesWhere(filters);
 
   const [total, articles] = await prisma.$transaction([
@@ -192,7 +197,10 @@ async function recupererArticlePublic(articleId) {
 }
 
 async function listerActualitesPubliques(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const where = buildPublishedActualitesWhere(filters);
 
   const [total, actualites] = await prisma.$transaction([

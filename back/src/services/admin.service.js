@@ -27,7 +27,7 @@ async function creerHistoriqueCompte(
   tx,
   utilisateur,
   adminId,
-  { nouveauStatut, nouveauRole, commentaire }
+  { nouveauStatut, nouveauRole, commentaire },
 ) {
   return tx.historiques_compte.create({
     data: {
@@ -36,7 +36,7 @@ async function creerHistoriqueCompte(
       nouveau_statut: nouveauStatut ?? utilisateur.statut,
       ancien_role: utilisateur.role,
       nouveau_role:
-        nouveauRole === undefined ? utilisateur.role : nouveauRole ?? null,
+        nouveauRole === undefined ? utilisateur.role : (nouveauRole ?? null),
       commentaire: commentaire || null,
       modifie_par: adminId,
     },
@@ -84,14 +84,22 @@ async function recupererArticleAdminOuErreur(articleId) {
 }
 
 async function listerInscriptions(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const statutCible = filters.statut || ACCOUNT_STATUS.EN_ATTENTE;
   const where = {
     statut: statutCible,
   };
 
-  const [total, pendingCount, doctorantsEnAttente, attestationsDisponibles, comptes] =
-    await prisma.$transaction([
+  const [
+    total,
+    pendingCount,
+    doctorantsEnAttente,
+    attestationsDisponibles,
+    comptes,
+  ] = await prisma.$transaction([
     prisma.utilisateurs.count({ where }),
     prisma.utilisateurs.count({
       where: { statut: ACCOUNT_STATUS.EN_ATTENTE },
@@ -138,7 +146,11 @@ async function listerInscriptions(filters) {
 async function validerInscription(adminId, userId, payload) {
   const utilisateur = await recupererCompteOuErreur(userId);
 
-  if (![ACCOUNT_STATUS.EN_ATTENTE, ACCOUNT_STATUS.REJETE].includes(utilisateur.statut)) {
+  if (
+    ![ACCOUNT_STATUS.EN_ATTENTE, ACCOUNT_STATUS.REJETE].includes(
+      utilisateur.statut,
+    )
+  ) {
     throw new AppError("Ce compte n'est pas dans un etat validable.", 409);
   }
 
@@ -160,8 +172,7 @@ async function validerInscription(adminId, userId, payload) {
     await creerHistoriqueCompte(tx, utilisateur, adminId, {
       nouveauStatut: ACCOUNT_STATUS.ACTIF,
       nouveauRole: role,
-      commentaire:
-        payload.commentaire || "Compte valide par l'administration.",
+      commentaire: payload.commentaire || "Compte valide par l'administration.",
     });
 
     return tx.utilisateurs.findUnique({
@@ -179,7 +190,7 @@ async function refuserInscription(adminId, userId, payload) {
   if (utilisateur.statut !== ACCOUNT_STATUS.EN_ATTENTE) {
     throw new AppError(
       "Seules les inscriptions en attente peuvent etre refusees.",
-      409
+      409,
     );
   }
 
@@ -212,7 +223,10 @@ async function refuserInscription(adminId, userId, payload) {
 }
 
 async function listerComptes(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const conditions = [];
 
   if (filters.q) {
@@ -239,30 +253,31 @@ async function listerComptes(filters) {
 
   const where = conditions.length > 0 ? { AND: conditions } : {};
 
-  const [total, actifs, desactives, doctorants, comptes] = await prisma.$transaction([
-    prisma.utilisateurs.count({ where }),
-    prisma.utilisateurs.count({
-      where: { statut: ACCOUNT_STATUS.ACTIF },
-    }),
-    prisma.utilisateurs.count({
-      where: { statut: ACCOUNT_STATUS.DESACTIVE },
-    }),
-    prisma.profils_utilisateur.count({
-      where: {
-        est_doctorant: true,
-        utilisateur: {
-          statut: ACCOUNT_STATUS.ACTIF,
+  const [total, actifs, desactives, doctorants, comptes] =
+    await prisma.$transaction([
+      prisma.utilisateurs.count({ where }),
+      prisma.utilisateurs.count({
+        where: { statut: ACCOUNT_STATUS.ACTIF },
+      }),
+      prisma.utilisateurs.count({
+        where: { statut: ACCOUNT_STATUS.DESACTIVE },
+      }),
+      prisma.profils_utilisateur.count({
+        where: {
+          est_doctorant: true,
+          utilisateur: {
+            statut: ACCOUNT_STATUS.ACTIF,
+          },
         },
-      },
-    }),
-    prisma.utilisateurs.findMany({
-      where,
-      include: utilisateurCompletInclude,
-      orderBy: [{ cree_le: "desc" }],
-      skip,
-      take,
-    }),
-  ]);
+      }),
+      prisma.utilisateurs.findMany({
+        where,
+        include: utilisateurCompletInclude,
+        orderBy: [{ cree_le: "desc" }],
+        skip,
+        take,
+      }),
+    ]);
 
   return {
     comptes: comptes.map(serializeUtilisateur),
@@ -282,7 +297,7 @@ async function activerCompte(adminId, userId) {
   if (!utilisateur.role) {
     throw new AppError(
       "Un role doit etre attribue avant l'activation du compte.",
-      409
+      409,
     );
   }
 
@@ -343,10 +358,14 @@ async function desactiverCompte(adminId, userId) {
 async function changerRoleCompte(adminId, userId, payload) {
   const utilisateur = await recupererCompteOuErreur(userId);
 
-  if (![ACCOUNT_STATUS.ACTIF, ACCOUNT_STATUS.DESACTIVE].includes(utilisateur.statut)) {
+  if (
+    ![ACCOUNT_STATUS.ACTIF, ACCOUNT_STATUS.DESACTIVE].includes(
+      utilisateur.statut,
+    )
+  ) {
     throw new AppError(
       "Le role ne peut etre modifie que pour un compte valide.",
-      409
+      409,
     );
   }
 
@@ -360,7 +379,8 @@ async function changerRoleCompte(adminId, userId, payload) {
 
     await creerHistoriqueCompte(tx, utilisateur, adminId, {
       nouveauRole: payload.role,
-      commentaire: payload.commentaire || "Role mis a jour par l'administration.",
+      commentaire:
+        payload.commentaire || "Role mis a jour par l'administration.",
     });
 
     return tx.utilisateurs.findUnique({
@@ -375,29 +395,29 @@ async function changerRoleCompte(adminId, userId, payload) {
 async function listerArticlesEnAttente() {
   const [enAttente, valides, rejetes, publies, articles, articlesValides] =
     await prisma.$transaction([
-    prisma.articles.count({
-      where: { statut: ARTICLE_STATUS.SOUMIS },
-    }),
-    prisma.articles.count({
-      where: { statut: ARTICLE_STATUS.VALIDE },
-    }),
-    prisma.articles.count({
-      where: { statut: ARTICLE_STATUS.REJETE },
-    }),
-    prisma.articles.count({
-      where: { statut: ARTICLE_STATUS.PUBLIE },
-    }),
-    prisma.articles.findMany({
-      where: { statut: ARTICLE_STATUS.SOUMIS },
-      include: articleInclude,
-      orderBy: [{ date_soumission: "asc" }, { cree_le: "asc" }],
-    }),
-    prisma.articles.findMany({
-      where: { statut: ARTICLE_STATUS.VALIDE },
-      include: articleInclude,
-      orderBy: [{ date_validation: "desc" }, { cree_le: "desc" }],
-    }),
-  ]);
+      prisma.articles.count({
+        where: { statut: ARTICLE_STATUS.SOUMIS },
+      }),
+      prisma.articles.count({
+        where: { statut: ARTICLE_STATUS.VALIDE },
+      }),
+      prisma.articles.count({
+        where: { statut: ARTICLE_STATUS.REJETE },
+      }),
+      prisma.articles.count({
+        where: { statut: ARTICLE_STATUS.PUBLIE },
+      }),
+      prisma.articles.findMany({
+        where: { statut: ARTICLE_STATUS.SOUMIS },
+        include: articleInclude,
+        orderBy: [{ date_soumission: "asc" }, { cree_le: "asc" }],
+      }),
+      prisma.articles.findMany({
+        where: { statut: ARTICLE_STATUS.VALIDE },
+        include: articleInclude,
+        orderBy: [{ date_validation: "desc" }, { cree_le: "desc" }],
+      }),
+    ]);
 
   return {
     articles: articles.map(serializeArticle),
@@ -417,7 +437,7 @@ async function validerArticle(adminId, articleId) {
   if (article.statut !== ARTICLE_STATUS.SOUMIS) {
     throw new AppError(
       "Seuls les articles en attente peuvent etre valides.",
-      409
+      409,
     );
   }
 
@@ -442,7 +462,7 @@ async function refuserArticle(adminId, articleId, payload) {
   if (article.statut !== ARTICLE_STATUS.SOUMIS) {
     throw new AppError(
       "Seuls les articles en attente peuvent etre refuses.",
-      409
+      409,
     );
   }
 
@@ -465,10 +485,7 @@ async function publierArticle(adminId, articleId) {
   const article = await recupererArticleAdminOuErreur(articleId);
 
   if (article.statut !== ARTICLE_STATUS.VALIDE) {
-    throw new AppError(
-      "Seuls les articles valides peuvent etre publies.",
-      409
-    );
+    throw new AppError("Seuls les articles valides peuvent etre publies.", 409);
   }
 
   const articleMisAJour = await prisma.articles.update({
@@ -485,7 +502,10 @@ async function publierArticle(adminId, articleId) {
 }
 
 async function listerActualitesAdmin(filters) {
-  const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
   const conditions = [];
 
   if (filters.q) {
@@ -564,7 +584,7 @@ async function modifierActualite(actualiteId, payload) {
       contenu: payload.contenu ?? actuelle.contenu,
       equipe_recherche_id:
         payload.equipeRechercheId !== undefined
-          ? toBigInt(payload.equipeRechercheId) ?? null
+          ? (toBigInt(payload.equipeRechercheId) ?? null)
           : actuelle.equipe_recherche_id,
       statut,
       publiee_le:

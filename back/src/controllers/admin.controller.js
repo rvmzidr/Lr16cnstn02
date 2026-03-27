@@ -11,7 +11,7 @@ const validerInscription = asyncHandler(async (req, res) => {
   const donnees = await adminService.validerInscription(
     req.auth.userId,
     req.params.id,
-    req.body
+    req.body,
   );
   successResponse(res, "Inscription validee avec succes.", donnees);
 });
@@ -20,7 +20,7 @@ const refuserInscription = asyncHandler(async (req, res) => {
   const donnees = await adminService.refuserInscription(
     req.auth.userId,
     req.params.id,
-    req.body
+    req.body,
   );
   successResponse(res, "Inscription refusee avec succes.", donnees);
 });
@@ -31,14 +31,17 @@ const listComptes = asyncHandler(async (req, res) => {
 });
 
 const activerCompte = asyncHandler(async (req, res) => {
-  const donnees = await adminService.activerCompte(req.auth.userId, req.params.id);
+  const donnees = await adminService.activerCompte(
+    req.auth.userId,
+    req.params.id,
+  );
   successResponse(res, "Compte active avec succes.", donnees);
 });
 
 const desactiverCompte = asyncHandler(async (req, res) => {
   const donnees = await adminService.desactiverCompte(
     req.auth.userId,
-    req.params.id
+    req.params.id,
   );
   successResponse(res, "Compte desactive avec succes.", donnees);
 });
@@ -47,7 +50,7 @@ const changerRole = asyncHandler(async (req, res) => {
   const donnees = await adminService.changerRoleCompte(
     req.auth.userId,
     req.params.id,
-    req.body
+    req.body,
   );
   successResponse(res, "Role du compte mis a jour.", donnees);
 });
@@ -60,7 +63,7 @@ const listArticlesEnAttente = asyncHandler(async (_req, res) => {
 const validerArticle = asyncHandler(async (req, res) => {
   const donnees = await adminService.validerArticle(
     req.auth.userId,
-    req.params.id
+    req.params.id,
   );
   successResponse(res, "Article valide avec succes.", donnees);
 });
@@ -69,7 +72,7 @@ const refuserArticle = asyncHandler(async (req, res) => {
   const donnees = await adminService.refuserArticle(
     req.auth.userId,
     req.params.id,
-    req.body
+    req.body,
   );
   successResponse(res, "Article refuse avec succes.", donnees);
 });
@@ -77,7 +80,7 @@ const refuserArticle = asyncHandler(async (req, res) => {
 const publierArticle = asyncHandler(async (req, res) => {
   const donnees = await adminService.publierArticle(
     req.auth.userId,
-    req.params.id
+    req.params.id,
   );
   successResponse(res, "Article publie avec succes.", donnees);
 });
@@ -104,7 +107,7 @@ const deleteActualite = asyncHandler(async (req, res) => {
 
 const downloadDoctorantAttestation = asyncHandler(async (req, res) => {
   const file = await adminService.telechargerAttestationDoctorantAdmin(
-    req.params.id
+    req.params.id,
   );
   res.type(file.mimeType);
   res.download(file.path, file.downloadName);

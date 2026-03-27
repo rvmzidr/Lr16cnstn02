@@ -8,7 +8,9 @@ const {
   NEWS_STATUS,
   ROLES,
 } = require("../config/constants");
-const { DOCTORANT_ATTESTATION_STORAGE_DIR } = require("../config/member-profile");
+const {
+  DOCTORANT_ATTESTATION_STORAGE_DIR,
+} = require("../config/member-profile");
 
 const DEMO_PASSWORD = "Lab2026!";
 const DEMO_EMAILS = [
@@ -60,7 +62,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2026-03-12T10:00:00.000Z",
   },
   {
-    titre: "Atelier methodologique sur la spectrometrie gamma a haute resolution",
+    titre:
+      "Atelier methodologique sur la spectrometrie gamma a haute resolution",
     resume:
       "Les equipes ont partage leurs retours d'experience pour harmoniser les procedures de mesure.",
     contenu:
@@ -70,7 +73,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2026-03-03T08:45:00.000Z",
   },
   {
-    titre: "Nouvelle serie d'analyses radiochimiques pour la securite alimentaire",
+    titre:
+      "Nouvelle serie d'analyses radiochimiques pour la securite alimentaire",
     resume:
       "Une campagne ciblee renforce la surveillance de plusieurs matrices alimentaires et environnementales.",
     contenu:
@@ -80,7 +84,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2026-02-20T11:15:00.000Z",
   },
   {
-    titre: "Cooperation renforcee avec les equipes de modelisation nucleaire appliquee",
+    titre:
+      "Cooperation renforcee avec les equipes de modelisation nucleaire appliquee",
     resume:
       "Un cycle de travail transversal accelere le rapprochement entre simulation et experimentation.",
     contenu:
@@ -110,7 +115,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2026-01-17T13:20:00.000Z",
   },
   {
-    titre: "Renforcement du protocole de suivi des echantillons environnementaux",
+    titre:
+      "Renforcement du protocole de suivi des echantillons environnementaux",
     resume:
       "De nouvelles etapes de controle qualite sont integrees au circuit de suivi des echantillons.",
     contenu:
@@ -120,7 +126,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2025-12-11T10:40:00.000Z",
   },
   {
-    titre: "Validation interne d'un nouveau flux de mesures pour la dosimetrie mobile",
+    titre:
+      "Validation interne d'un nouveau flux de mesures pour la dosimetrie mobile",
     resume:
       "Le laboratoire a termine une phase de validation interne sur un flux de mesures mobile.",
     contenu:
@@ -130,7 +137,8 @@ const DEMO_NEWS_ITEMS = [
     publieeLe: "2025-11-21T08:30:00.000Z",
   },
   {
-    titre: "Session scientifique consacree aux applications energetiques des materiaux irradies",
+    titre:
+      "Session scientifique consacree aux applications energetiques des materiaux irradies",
     resume:
       "Une session thematique a permis de recadrer plusieurs pistes de travail sur les usages energetiques.",
     contenu:
@@ -191,47 +199,49 @@ async function ensureReferenceData() {
     },
   });
 
-  const teams = await Promise.all([
-    {
-      code: "EQ1",
-      nom: "Developpements des techniques radiochimiques dans la securite alimentaire et environnementale",
-      description:
-        "Equipe axee sur les approches radiochimiques et radio-analytiques appliquees a la securite alimentaire et environnementale.",
-    },
-    {
-      code: "EQ2",
-      nom: "Materiaux irradies pour la dosimetrie, la detection, l'environnement et l'energie",
-      description:
-        "Equipe dediee aux materiaux irradies, a la dosimetrie et a la detection pour l'energie et l'environnement.",
-    },
-    {
-      code: "EQ3",
-      nom: "Modelisation physique, applications et developpement experimental pour les systemes nucleaires et les grands instruments",
-      description:
-        "Equipe de modelisation physique et de developpement experimental pour les systemes nucleaires.",
-    },
-    {
-      code: "EQ4",
-      nom: "Instrumentation et modelisation nucleaire pour la dosimetrie, la metrologie, la spectrometrie et la spectroscopie de haute resolution",
-      description:
-        "Equipe d'instrumentation et de modelisation nucleaire pour la metrologie et la spectrometrie.",
-    },
-  ].map((team) =>
-    prisma.equipes_recherche.upsert({
-      where: { code: team.code },
-      update: {
-        nom: team.nom,
-        description: team.description,
-        actif: true,
+  const teams = await Promise.all(
+    [
+      {
+        code: "EQ1",
+        nom: "Developpements des techniques radiochimiques dans la securite alimentaire et environnementale",
+        description:
+          "Equipe axee sur les approches radiochimiques et radio-analytiques appliquees a la securite alimentaire et environnementale.",
       },
-      create: {
-        code: team.code,
-        nom: team.nom,
-        description: team.description,
-        actif: true,
+      {
+        code: "EQ2",
+        nom: "Materiaux irradies pour la dosimetrie, la detection, l'environnement et l'energie",
+        description:
+          "Equipe dediee aux materiaux irradies, a la dosimetrie et a la detection pour l'energie et l'environnement.",
       },
-    })
-  ));
+      {
+        code: "EQ3",
+        nom: "Modelisation physique, applications et developpement experimental pour les systemes nucleaires et les grands instruments",
+        description:
+          "Equipe de modelisation physique et de developpement experimental pour les systemes nucleaires.",
+      },
+      {
+        code: "EQ4",
+        nom: "Instrumentation et modelisation nucleaire pour la dosimetrie, la metrologie, la spectrometrie et la spectroscopie de haute resolution",
+        description:
+          "Equipe d'instrumentation et de modelisation nucleaire pour la metrologie et la spectrometrie.",
+      },
+    ].map((team) =>
+      prisma.equipes_recherche.upsert({
+        where: { code: team.code },
+        update: {
+          nom: team.nom,
+          description: team.description,
+          actif: true,
+        },
+        create: {
+          code: team.code,
+          nom: team.nom,
+          description: team.description,
+          actif: true,
+        },
+      }),
+    ),
+  );
 
   const degrees = await Promise.all(
     ["Licence", "Master", "Ingenieur", "Doctorat", "HDR"].map((libelle) =>
@@ -239,8 +249,8 @@ async function ensureReferenceData() {
         where: { libelle },
         update: {},
         create: { libelle },
-      })
-    )
+      }),
+    ),
   );
 
   const categories = await Promise.all(
@@ -261,8 +271,8 @@ async function ensureReferenceData() {
         where: { libelle },
         update: {},
         create: { libelle },
-      })
-    )
+      }),
+    ),
   );
 
   return {
@@ -624,8 +634,7 @@ async function createArticle({
       deposant_id: deposantId,
       categorie_id: categorieId,
       statut: status,
-      date_soumission:
-        status === ARTICLE_STATUS.BROUILLON ? null : now,
+      date_soumission: status === ARTICLE_STATUS.BROUILLON ? null : now,
       valide_par:
         status === ARTICLE_STATUS.VALIDE ||
         status === ARTICLE_STATUS.PUBLIE ||
@@ -695,24 +704,24 @@ async function createActualite({
       auteur_id: auteurId,
       equipe_recherche_id: equipeRechercheId,
       statut,
-      publiee_le: statut === NEWS_STATUS.PUBLIEE ? publieeLe || new Date() : null,
+      publiee_le:
+        statut === NEWS_STATUS.PUBLIEE ? publieeLe || new Date() : null,
     },
   });
 }
 
 async function main() {
-  const { institution, teams, degrees, categories } = await ensureReferenceData();
+  const { institution, teams, degrees, categories } =
+    await ensureReferenceData();
   await cleanupDemoData();
 
   const degreeByLabel = Object.fromEntries(
-    degrees.map((degree) => [degree.libelle, degree.id])
+    degrees.map((degree) => [degree.libelle, degree.id]),
   );
   const categoryByLabel = Object.fromEntries(
-    categories.map((category) => [category.libelle, category.id])
+    categories.map((category) => [category.libelle, category.id]),
   );
-  const teamByCode = Object.fromEntries(
-    teams.map((team) => [team.code, team])
-  );
+  const teamByCode = Object.fromEntries(teams.map((team) => [team.code, team]));
 
   const admin = await createUser({
     email: "admin@lr16cnstn02.tn",
@@ -900,7 +909,8 @@ async function main() {
     actif: false,
     validePar: admin.id,
     valideLe: new Date("2026-02-10T09:00:00.000Z"),
-    motifRejet: "Compte desactive temporairement suite a un changement d'affectation.",
+    motifRejet:
+      "Compte desactive temporairement suite a un changement d'affectation.",
   });
 
   await upsertProfile(admin.id, {
@@ -1081,19 +1091,19 @@ async function main() {
 
   const memberAttestation = await writeDoctorantAttestation(
     "attestation-member-lr16cnstn02.pdf",
-    "Amina Trabelsi"
+    "Amina Trabelsi",
   );
   const pendingAttestation = await writeDoctorantAttestation(
     "attestation-pending-lr16cnstn02.pdf",
-    "Ines Cherif"
+    "Ines Cherif",
   );
   const pendingSecondAttestation = await writeDoctorantAttestation(
     "attestation-pending-second-lr16cnstn02.pdf",
-    "Nour Bouazizi"
+    "Nour Bouazizi",
   );
   const rejectedAttestation = await writeDoctorantAttestation(
     "attestation-rejected-lr16cnstn02.pdf",
-    "Sami Gharbi"
+    "Sami Gharbi",
   );
 
   await upsertDoctorat(member.id, {
@@ -1165,7 +1175,8 @@ async function main() {
       titre: actualite.titre,
       resume: actualite.resume,
       contenu: actualite.contenu,
-      auteurId: actualite.equipeCode === "EQ4" ? secondaryLabHead.id : labHead.id,
+      auteurId:
+        actualite.equipeCode === "EQ4" ? secondaryLabHead.id : labHead.id,
       equipeRechercheId: teamByCode[actualite.equipeCode].id,
       statut: actualite.statut,
       publieeLe: actualite.publieeLe ? new Date(actualite.publieeLe) : null,
@@ -1235,7 +1246,8 @@ async function main() {
   });
 
   await createArticle({
-    title: "Synthese technique sur la metrologie appliquee aux campagnes terrain",
+    title:
+      "Synthese technique sur la metrologie appliquee aux campagnes terrain",
     status: ARTICLE_STATUS.VALIDE,
     deposantId: supportMember.id,
     validateurId: secondaryLabHead.id,
@@ -1265,7 +1277,9 @@ async function main() {
 
   console.log("Jeu de demonstration Release 1 initialise.");
   console.log("Visiteur : routes publiques uniquement.");
-  console.log("Pending applicant : pending.researcher@lr16cnstn02.tn / Lab2026!");
+  console.log(
+    "Pending applicant : pending.researcher@lr16cnstn02.tn / Lab2026!",
+  );
   console.log("Pending applicant 2 : pending@lr16cnstn02.tn / Lab2026!");
   console.log("Member : member@lr16cnstn02.tn / Lab2026!");
   console.log("Member 2 : membre@lr16cnstn02.tn / Lab2026!");
@@ -1274,7 +1288,9 @@ async function main() {
   console.log("Lab Head 2 : chef@lr16cnstn02.tn / Lab2026!");
   console.log("Support member : support.member@lr16cnstn02.tn / Lab2026!");
   console.log("Co-author member : coauteur@lr16cnstn02.tn / Lab2026!");
-  console.log("Rejected applicant : rejected.researcher@lr16cnstn02.tn / Lab2026!");
+  console.log(
+    "Rejected applicant : rejected.researcher@lr16cnstn02.tn / Lab2026!",
+  );
   console.log("Inactive member : inactive.member@lr16cnstn02.tn / Lab2026!");
 }
 

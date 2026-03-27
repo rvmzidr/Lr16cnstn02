@@ -50,7 +50,10 @@ test("Release 1 smoke suite", async () => {
     assert.equal(publicHome.response.status, 200);
     assert.equal(publicHome.body.donnees.actualitesRecentes.length, 3);
 
-    const publicNews = await requestJson(baseUrl, "/api/public/actualites?limit=24");
+    const publicNews = await requestJson(
+      baseUrl,
+      "/api/public/actualites?limit=24",
+    );
     assert.equal(publicNews.response.status, 200);
     assert.ok(publicNews.body.donnees.elements.length >= 10);
 
@@ -68,7 +71,10 @@ test("Release 1 smoke suite", async () => {
     });
     assert.equal(publicContact.response.status, 201);
 
-    const registrationRefs = await requestJson(baseUrl, "/api/auth/inscription/references");
+    const registrationRefs = await requestJson(
+      baseUrl,
+      "/api/auth/inscription/references",
+    );
     assert.equal(registrationRefs.response.status, 200);
 
     const registrationForm = new FormData();
@@ -86,31 +92,38 @@ test("Release 1 smoke suite", async () => {
     registrationForm.set("grade", "Chercheur");
     registrationForm.set(
       "institutionAffectationId",
-      String(registrationRefs.body.donnees.references.institutions[0].id)
+      String(registrationRefs.body.donnees.references.institutions[0].id),
     );
     registrationForm.set("dernierDiplomeLibre", "Master en physique");
     registrationForm.set("dateObtentionDiplome", "2024-06-30");
-    registrationForm.set("etablissementDiplome", "Faculte des Sciences de Tunis");
+    registrationForm.set(
+      "etablissementDiplome",
+      "Faculte des Sciences de Tunis",
+    );
     registrationForm.set("orcid", "");
     registrationForm.set(
       "equipeRechercheId",
-      String(registrationRefs.body.donnees.references.equipesRecherche[0].id)
+      String(registrationRefs.body.donnees.references.equipesRecherche[0].id),
     );
     registrationForm.set(
       "laboratoireDenomination",
-      registrationRefs.body.donnees.references.laboratoireParDefaut.denomination || "LR16CNSTN02"
+      registrationRefs.body.donnees.references.laboratoireParDefaut
+        .denomination || "LR16CNSTN02",
     );
     registrationForm.set(
       "laboratoireEtablissement",
-      registrationRefs.body.donnees.references.laboratoireParDefaut.etablissement || ""
+      registrationRefs.body.donnees.references.laboratoireParDefaut
+        .etablissement || "",
     );
     registrationForm.set(
       "laboratoireUniversite",
-      registrationRefs.body.donnees.references.laboratoireParDefaut.universite || ""
+      registrationRefs.body.donnees.references.laboratoireParDefaut
+        .universite || "",
     );
     registrationForm.set(
       "laboratoireResponsable",
-      registrationRefs.body.donnees.references.laboratoireParDefaut.responsable || ""
+      registrationRefs.body.donnees.references.laboratoireParDefaut
+        .responsable || "",
     );
     registrationForm.set("estDoctorant", "false");
     registrationForm.set("sujetRecherche", "");
@@ -122,10 +135,13 @@ test("Release 1 smoke suite", async () => {
     registrationForm.set("confirmationMotDePasse", "Lab2026!");
     registrationForm.set("conditionsAcceptees", "true");
 
-    const registrationResponse = await fetch(buildUrl(baseUrl, "/api/auth/inscription"), {
-      method: "POST",
-      body: registrationForm,
-    });
+    const registrationResponse = await fetch(
+      buildUrl(baseUrl, "/api/auth/inscription"),
+      {
+        method: "POST",
+        body: registrationForm,
+      },
+    );
     assert.equal(registrationResponse.status, 201);
 
     const pendingLogin = await requestJson(baseUrl, "/api/auth/connexion", {
@@ -140,23 +156,38 @@ test("Release 1 smoke suite", async () => {
     });
     assert.equal(pendingLogin.response.status, 403);
 
-    const forgotPassword = await requestJson(baseUrl, "/api/auth/mot-de-passe-oublie", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const forgotPassword = await requestJson(
+      baseUrl,
+      "/api/auth/mot-de-passe-oublie",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailInstitutionnel: "member@lr16cnstn02.tn",
+        }),
       },
-      body: JSON.stringify({
-        emailInstitutionnel: "member@lr16cnstn02.tn",
-      }),
-    });
+    );
     assert.equal(forgotPassword.response.status, 200);
     assert.ok(forgotPassword.body.donnees.resetUrl);
 
-    const memberToken = await login(baseUrl, "member@lr16cnstn02.tn", "Lab2026!");
+    const memberToken = await login(
+      baseUrl,
+      "member@lr16cnstn02.tn",
+      "Lab2026!",
+    );
     const adminToken = await login(baseUrl, "admin@lr16cnstn02.tn", "Lab2026!");
-    const labHeadToken = await login(baseUrl, "labhead@lr16cnstn02.tn", "Lab2026!");
+    const labHeadToken = await login(
+      baseUrl,
+      "labhead@lr16cnstn02.tn",
+      "Lab2026!",
+    );
 
-    const unauthorizedMemberProfile = await requestJson(baseUrl, "/api/membre/profil");
+    const unauthorizedMemberProfile = await requestJson(
+      baseUrl,
+      "/api/membre/profil",
+    );
     assert.equal(unauthorizedMemberProfile.response.status, 401);
 
     const forbiddenAdmin = await requestJson(baseUrl, "/api/admin/comptes", {
@@ -166,11 +197,15 @@ test("Release 1 smoke suite", async () => {
     });
     assert.equal(forbiddenAdmin.response.status, 403);
 
-    const forbiddenChefRoute = await requestJson(baseUrl, "/api/chef-labo/articles", {
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
+    const forbiddenChefRoute = await requestJson(
+      baseUrl,
+      "/api/chef-labo/articles",
+      {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
       },
-    });
+    );
     assert.equal(forbiddenChefRoute.response.status, 403);
 
     const memberProfile = await requestJson(baseUrl, "/api/membre/profil", {
@@ -180,11 +215,15 @@ test("Release 1 smoke suite", async () => {
     });
     assert.equal(memberProfile.response.status, 200);
 
-    const memberArticles = await requestJson(baseUrl, "/api/membre/articles/mes-articles", {
-      headers: {
-        Authorization: `Bearer ${memberToken}`,
+    const memberArticles = await requestJson(
+      baseUrl,
+      "/api/membre/articles/mes-articles",
+      {
+        headers: {
+          Authorization: `Bearer ${memberToken}`,
+        },
       },
-    });
+    );
     assert.equal(memberArticles.response.status, 200);
     assert.ok(memberArticles.body.donnees.articles.length >= 4);
 
@@ -196,22 +235,31 @@ test("Release 1 smoke suite", async () => {
     assert.equal(memberLookup.response.status, 200);
     assert.ok(memberLookup.body.donnees.elements.length >= 2);
 
-    const articleSearch = await requestJson(baseUrl, "/api/membre/articles/recherche?q=Release%201", {
-      headers: {
-        Authorization: `Bearer ${memberToken}`,
+    const articleSearch = await requestJson(
+      baseUrl,
+      "/api/membre/articles/recherche?q=Release%201",
+      {
+        headers: {
+          Authorization: `Bearer ${memberToken}`,
+        },
       },
-    });
+    );
     assert.equal(articleSearch.response.status, 200);
 
-    const adminRegistrations = await requestJson(baseUrl, "/api/admin/inscriptions", {
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
+    const adminRegistrations = await requestJson(
+      baseUrl,
+      "/api/admin/inscriptions",
+      {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
       },
-    });
-    assert.equal(adminRegistrations.response.status, 200);
-    const pendingRegistration = adminRegistrations.body.donnees.inscriptions.find(
-      (item) => item.emailInstitutionnel === registrationEmail
     );
+    assert.equal(adminRegistrations.response.status, 200);
+    const pendingRegistration =
+      adminRegistrations.body.donnees.inscriptions.find(
+        (item) => item.emailInstitutionnel === registrationEmail,
+      );
     assert.ok(pendingRegistration);
 
     const validateRegistration = await requestJson(
@@ -226,7 +274,7 @@ test("Release 1 smoke suite", async () => {
         body: JSON.stringify({
           role: "MEMBRE",
         }),
-      }
+      },
     );
     assert.equal(validateRegistration.response.status, 200);
 
@@ -249,11 +297,15 @@ test("Release 1 smoke suite", async () => {
     });
     assert.equal(adminAccounts.response.status, 200);
 
-    const labHeadArticles = await requestJson(baseUrl, "/api/chef-labo/articles", {
-      headers: {
-        Authorization: `Bearer ${labHeadToken}`,
+    const labHeadArticles = await requestJson(
+      baseUrl,
+      "/api/chef-labo/articles",
+      {
+        headers: {
+          Authorization: `Bearer ${labHeadToken}`,
+        },
       },
-    });
+    );
     assert.equal(labHeadArticles.response.status, 200);
     assert.ok(labHeadArticles.body.donnees.articles.length >= 1);
     assert.ok(labHeadArticles.body.donnees.articlesValides.length >= 1);
@@ -267,7 +319,7 @@ test("Release 1 smoke suite", async () => {
         headers: {
           Authorization: `Bearer ${labHeadToken}`,
         },
-      }
+      },
     );
     assert.equal(articleValidation.response.status, 200);
 
@@ -280,7 +332,7 @@ test("Release 1 smoke suite", async () => {
         headers: {
           Authorization: `Bearer ${labHeadToken}`,
         },
-      }
+      },
     );
     assert.equal(articlePublication.response.status, 200);
 

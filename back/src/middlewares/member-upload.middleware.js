@@ -16,8 +16,8 @@ const upload = multer({
       callback(
         new AppError(
           "Le fichier d'attestation doit etre un PDF, JPG ou PNG.",
-          400
-        )
+          400,
+        ),
       );
       return;
     }
@@ -27,7 +27,7 @@ const upload = multer({
 });
 
 const parseOptionalDoctorantAttestation = upload.single(
-  DOCTORANT_ATTESTATION_FIELD
+  DOCTORANT_ATTESTATION_FIELD,
 );
 
 module.exports = {

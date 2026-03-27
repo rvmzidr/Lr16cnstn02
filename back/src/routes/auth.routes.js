@@ -1,6 +1,8 @@
 const express = require("express");
 const authController = require("../controllers/auth.controller");
-const { parseOptionalDoctorantAttestation } = require("../middlewares/member-upload.middleware");
+const {
+  parseOptionalDoctorantAttestation,
+} = require("../middlewares/member-upload.middleware");
 const validate = require("../middlewares/validate.middleware");
 const {
   connexionBodySchema,
@@ -16,22 +18,22 @@ router.post(
   "/inscription",
   parseOptionalDoctorantAttestation,
   validate({ body: inscriptionBodySchema }),
-  authController.inscription
+  authController.inscription,
 );
 router.post(
   "/connexion",
   validate({ body: connexionBodySchema }),
-  authController.connexion
+  authController.connexion,
 );
 router.post(
   "/mot-de-passe-oublie",
   validate({ body: motDePasseOublieBodySchema }),
-  authController.motDePasseOublie
+  authController.motDePasseOublie,
 );
 router.post(
   "/reinitialiser-mot-de-passe",
   validate({ body: reinitialisationMotDePasseBodySchema }),
-  authController.reinitialiserMotDePasse
+  authController.reinitialiserMotDePasse,
 );
 
 module.exports = router;

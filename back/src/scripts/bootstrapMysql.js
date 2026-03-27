@@ -10,14 +10,16 @@ function parseMysqlUrl(databaseUrl) {
 
   if (url.protocol !== "mysql:") {
     throw new Error(
-      `DATABASE_URL doit utiliser mysql:// pour Laragon/MySQL. Valeur recue: ${url.protocol}`
+      `DATABASE_URL doit utiliser mysql:// pour Laragon/MySQL. Valeur recue: ${url.protocol}`,
     );
   }
 
   const database = url.pathname.replace(/^\//, "");
 
   if (!database) {
-    throw new Error("DATABASE_URL doit contenir un nom de base de donnees MySQL.");
+    throw new Error(
+      "DATABASE_URL doit contenir un nom de base de donnees MySQL.",
+    );
   }
 
   return {
@@ -45,7 +47,7 @@ function runCommand(command, args) {
 function ensurePrismaClientGenerated() {
   const prismaClientEntry = path.resolve(
     __dirname,
-    "../../node_modules/.prisma/client/index.js"
+    "../../node_modules/.prisma/client/index.js",
   );
 
   if (fsSync.existsSync(prismaClientEntry)) {
@@ -88,7 +90,13 @@ async function main() {
   runCommand("node", ["src/scripts/createMysqlDatabase.js"]);
   await importSqlDumpIfPresent(config);
   ensurePrismaClientGenerated();
-  runCommand("npx", ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"]);
+  runCommand("npx", [
+    "prisma",
+    "db",
+    "push",
+    "--accept-data-loss",
+    "--skip-generate",
+  ]);
   runCommand("node", ["src/scripts/seedDemo.js"]);
 }
 

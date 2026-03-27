@@ -10,54 +10,54 @@ function cleanString(max = 255, min = 1) {
 function optionalString(max = 255) {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    cleanString(max).optional()
+    cleanString(max).optional(),
   );
 }
 
 function optionalEmail() {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    z.string().trim().email().optional()
+    z.string().trim().email().optional(),
   );
 }
 
 function optionalDate() {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    z.string().regex(dateRegex, "Date invalide. Format attendu: YYYY-MM-DD.").optional()
+    z
+      .string()
+      .regex(dateRegex, "Date invalide. Format attendu: YYYY-MM-DD.")
+      .optional(),
   );
 }
 
 function optionalPositiveInt() {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    z.coerce.number().int().positive().optional()
+    z.coerce.number().int().positive().optional(),
   );
 }
 
 function optionalBoolean() {
-  return z.preprocess(
-    (value) => {
-      if (value === "" || value === null || value === undefined) {
-        return undefined;
+  return z.preprocess((value) => {
+    if (value === "" || value === null || value === undefined) {
+      return undefined;
+    }
+
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+
+      if (normalized === "true") {
+        return true;
       }
 
-      if (typeof value === "string") {
-        const normalized = value.trim().toLowerCase();
-
-        if (normalized === "true") {
-          return true;
-        }
-
-        if (normalized === "false") {
-          return false;
-        }
+      if (normalized === "false") {
+        return false;
       }
+    }
 
-      return value;
-    },
-    z.boolean().optional()
-  );
+    return value;
+  }, z.boolean().optional());
 }
 
 function booleanField() {
@@ -81,7 +81,7 @@ function booleanField() {
 function optionalUuid() {
   return z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
-    z.string().uuid().optional()
+    z.string().uuid().optional(),
   );
 }
 
@@ -93,9 +93,9 @@ function optionalAcademicYear() {
       .trim()
       .regex(
         academicYearRegex,
-        "Annee universitaire invalide. Format attendu: YYYY/YYYY."
+        "Annee universitaire invalide. Format attendu: YYYY/YYYY.",
       )
-      .optional()
+      .optional(),
   );
 }
 

@@ -41,11 +41,10 @@ const rechercheArticleQuerySchema = z.object({
   q: optionalString(200),
   categorieId: optionalPositiveInt(),
   equipeRechercheId: optionalPositiveInt(),
-  statut: z
-    .preprocess(
-      (value) => (value === "" || value === null ? undefined : value),
-      z.enum(["BROUILLON", "SOUMIS", "VALIDE", "REJETE", "PUBLIE"]).optional()
-    ),
+  statut: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["BROUILLON", "SOUMIS", "VALIDE", "REJETE", "PUBLIE"]).optional(),
+  ),
   auteurId: optionalUuid(),
   dateDebut: optionalDate(),
   dateFin: optionalDate(),

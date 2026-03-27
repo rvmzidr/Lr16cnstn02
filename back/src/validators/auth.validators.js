@@ -31,13 +31,10 @@ const reinitialisationMotDePasseBodySchema = z
     nouveauMotDePasse: z.string().min(8).max(128),
     confirmationMotDePasse: z.string().min(8).max(128),
   })
-  .refine(
-    (data) => data.nouveauMotDePasse === data.confirmationMotDePasse,
-    {
-      path: ["confirmationMotDePasse"],
-      message: "La confirmation du mot de passe ne correspond pas.",
-    }
-  );
+  .refine((data) => data.nouveauMotDePasse === data.confirmationMotDePasse, {
+    path: ["confirmationMotDePasse"],
+    message: "La confirmation du mot de passe ne correspond pas.",
+  });
 
 module.exports = {
   inscriptionBodySchema,
