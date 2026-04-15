@@ -2,8 +2,8 @@ import { Routes } from '@angular/router';
 import {
   authGuard,
   publicOnlyGuard,
-  roleGuard,
 } from './core/services/auth.service';
+import { dashboardRoleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -140,56 +140,50 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'profil',
+        path: 'overview',
         loadComponent: () =>
-          import('./pages/dashboard/member-profile-page.component').then(
-            (m) => m.MemberProfilePageComponent,
+          import('./pages/dashboard/dashboard-home-page.component').then(
+            (m) => m.DashboardHomePageComponent,
           ),
       },
       {
         path: 'articles',
+        loadComponent: () =>
+          import('./pages/dashboard/articles-page.component').then(
+            (m) => m.ArticlesPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
+      },
+      {
+        path: 'articles/editor',
         loadComponent: () =>
           import('./pages/dashboard/articles-management-page.component').then(
             (m) => m.ArticlesManagementPageComponent,
           ),
       },
       {
-        path: 'articles/recherche',
+        path: 'users',
         loadComponent: () =>
-          import('./pages/dashboard/article-search-page.component').then(
-            (m) => m.ArticleSearchPageComponent,
+          import('./pages/dashboard/admin-users-page.component').then(
+            (m) => m.AdminUsersPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin'])],
       },
       {
-        path: 'actualites',
+        path: 'registrations',
         loadComponent: () =>
-          import('./pages/dashboard/member-news-page.component').then(
-            (m) => m.MemberNewsPageComponent,
+          import('./pages/dashboard/admin-registrations-page.component').then(
+            (m) => m.AdminRegistrationsPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin'])],
       },
       {
-        path: 'admin/comptes',
+        path: 'roles',
         loadComponent: () =>
-          import('./pages/dashboard/admin-accounts-page.component').then(
-            (m) => m.AdminAccountsPageComponent,
+          import('./pages/dashboard/admin-roles-page.component').then(
+            (m) => m.AdminRolesPageComponent,
           ),
-        canActivate: [roleGuard(['ADMINISTRATEUR'])],
-      },
-      {
-        path: 'chef/articles',
-        loadComponent: () =>
-          import('./pages/dashboard/lab-head-articles-page.component').then(
-            (m) => m.LabHeadArticlesPageComponent,
-          ),
-        canActivate: [roleGuard(['CHEF_LABO'])],
-      },
-      {
-        path: 'chef/actualites',
-        loadComponent: () =>
-          import('./pages/dashboard/lab-head-news-page.component').then(
-            (m) => m.LabHeadNewsPageComponent,
-          ),
-        canActivate: [roleGuard(['CHEF_LABO'])],
+        canActivate: [dashboardRoleGuard(['admin'])],
       },
       {
         path: 'projects',
@@ -197,6 +191,7 @@ export const routes: Routes = [
           import('./pages/dashboard/projects-page.component').then(
             (m) => m.ProjectsPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
       },
       {
         path: 'messages',
@@ -211,6 +206,76 @@ export const routes: Routes = [
           import('./pages/dashboard/purchases-page.component').then(
             (m) => m.PurchasesPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
+      },
+      {
+        path: 'budget',
+        loadComponent: () =>
+          import('./pages/dashboard/budget-page.component').then(
+            (m) => m.BudgetPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['chef'])],
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./pages/dashboard/notifications-page.component').then(
+            (m) => m.NotificationsPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['admin'])],
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/dashboard/admin-settings-page.component').then(
+            (m) => m.AdminSettingsPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['admin'])],
+      },
+      {
+        path: 'articles-view',
+        redirectTo: 'articles',
+        pathMatch: 'full',
+      },
+      {
+        path: 'articles/recherche',
+        redirectTo: 'articles',
+        pathMatch: 'full',
+      },
+      {
+        path: 'profil',
+        redirectTo: 'settings',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/comptes',
+        redirectTo: 'users',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/inscriptions',
+        redirectTo: 'registrations',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/roles',
+        redirectTo: 'roles',
+        pathMatch: 'full',
+      },
+      {
+        path: 'chef/articles',
+        redirectTo: 'articles',
+        pathMatch: 'full',
+      },
+      {
+        path: 'chef/actualites',
+        redirectTo: '',
+        pathMatch: 'full',
+      },
+      {
+        path: 'actualites',
+        redirectTo: '',
+        pathMatch: 'full',
       },
     ],
   },

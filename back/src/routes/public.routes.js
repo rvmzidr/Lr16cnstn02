@@ -29,6 +29,11 @@ router.get(
   publicController.getArticle,
 );
 router.get(
+  "/articles/:id/pdf",
+  validate({ params: bigIntIdParamSchema }),
+  publicController.downloadArticlePdf,
+);
+router.get(
   "/actualites",
   validate({ query: actualiteListQuerySchema }),
   publicController.listActualites,

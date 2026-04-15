@@ -2,6 +2,11 @@ const labHeadService = require("../services/lab-head.service");
 const { successResponse } = require("../utils/api-response");
 const asyncHandler = require("../utils/async-handler");
 
+const getDashboardKPIs = asyncHandler(async (req, res) => {
+  const donnees = await labHeadService.recupererKPIChefLabo(req.auth.userId);
+  successResponse(res, "KPI du dashboard chef labo recuperes.", donnees);       
+});
+
 const listArticlesModeration = asyncHandler(async (_req, res) => {
   const donnees = await labHeadService.listerArticlesModeration();
   successResponse(res, "File de moderation des articles recuperee.", donnees);
@@ -63,6 +68,7 @@ const deleteActualite = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  getDashboardKPIs,
   listArticlesModeration,
   validerArticle,
   refuserArticle,

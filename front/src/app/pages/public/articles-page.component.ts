@@ -153,6 +153,11 @@ import { sharedIcons } from '../../shared/lucide-icons';
             <p class="mt-5 text-lg leading-8 text-muted-foreground">
               {{ article.resume }}
             </p>
+            @if (article.articlePdf) {
+              <div class="mt-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                PDF disponible
+              </div>
+            }
             <div class="mt-7 text-lg font-semibold text-primary">
               Lire l'article ->
             </div>

@@ -50,6 +50,24 @@ import { sharedIcons } from '../../shared/lucide-icons';
               article()?.deposant?.nomComplet || site.localize(defaultAuthor)
             }}</span>
           </div>
+          @if (article()?.articlePdf) {
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="openPdf()"
+              >
+                Voir PDF
+              </button>
+              <button
+                type="button"
+                class="btn-outline"
+                (click)="downloadPdf()"
+              >
+                Télécharger PDF
+              </button>
+            </div>
+          }
           <div
             class="mt-10 whitespace-pre-line text-lg leading-9 text-foreground"
           >
@@ -97,5 +115,23 @@ export class ArticleDetailPageComponent implements OnInit {
     } catch {
       this.article.set(null);
     }
+  }
+
+  openPdf() {
+    const item = this.article();
+    if (!item?.articlePdf) {
+      return;
+    }
+
+    api.openPublicArticlePdf(item.id);
+  }
+
+  async downloadPdf() {
+    const item = this.article();
+    if (!item?.articlePdf) {
+      return;
+    }
+
+    await api.downloadPublicArticlePdf(item.id);
   }
 }

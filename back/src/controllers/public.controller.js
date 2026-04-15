@@ -31,7 +31,16 @@ const getArticle = asyncHandler(async (req, res) => {
   const donnees = await publicService.recupererArticlePublic(req.params.id);
   successResponse(res, "Detail de l'article public recupere.", donnees);
 });
-
+const downloadArticlePdf = asyncHandler(async (req, res) => {
+  const file = await publicService.telechargerPdfArticlePublic(req.params.id);  
+  res.type(file.mimeType);
+  if (req.query.action === 'view') {
+    res.setHeader("Content-Disposition", "inline; filename=\"" + file.downloadName + "\"");
+    res.sendFile(file.path);
+  } else {
+    res.download(file.path, file.downloadName);
+  }
+});
 const listActualites = asyncHandler(async (req, res) => {
   const donnees = await publicService.listerActualitesPubliques(req.query);
   successResponse(res, "Actualites publiques recuperees.", donnees);
@@ -49,6 +58,7 @@ module.exports = {
   postContact,
   listArticles,
   getArticle,
+  downloadArticlePdf,
   listActualites,
   getActualite,
 };

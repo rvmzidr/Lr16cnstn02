@@ -179,7 +179,7 @@ function serializeAuteurArticle(auteurArticle) {
   };
 }
 
-function serializeArticle(article) {
+function serializeArticle(article, articlePdf = null) {
   if (!article) {
     return null;
   }
@@ -202,6 +202,7 @@ function serializeArticle(article) {
     categorie: serializeCategorie(article.categorie),
     deposant: serializeUtilisateurResume(article.deposant),
     validateur: serializeUtilisateurResume(article.validateur),
+    articlePdf,
     coAuteurs: Array.isArray(article.auteurs_article)
       ? article.auteurs_article.map(serializeAuteurArticle)
       : [],

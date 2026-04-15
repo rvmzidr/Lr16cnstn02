@@ -1,4 +1,4 @@
-@import "./tailwind.css";
+﻿@import "./tailwind.css";
 @import "./fonts.css";
 @import "./theme.css";
 @import "./motion.css";
@@ -36,23 +36,11 @@ textarea {
   @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 xl:px-8;
 }
 
-.surface-card {
-  @apply rounded-2xl border border-border bg-card shadow-sm;
-  box-shadow:
-    0 1px 2px rgba(16, 24, 40, 0.06),
-    0 1px 3px rgba(16, 24, 40, 0.1);
-}
 
-.surface-card--interactive {
-  @apply transition-all duration-200;
-}
 
-.surface-card--interactive:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 12px 18px -4px rgba(16, 24, 40, 0.08),
-    0 4px 6px -2px rgba(16, 24, 40, 0.03);
-}
+
+
+
 
 .surface-panel {
   @apply rounded-xl border border-border bg-card shadow-sm;
@@ -124,14 +112,6 @@ textarea {
 
 .toolbar-dropdown__item--active {
   @apply bg-primary/8 text-primary;
-}
-
-.user-menu-trigger {
-  @apply inline-flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-foreground shadow-sm transition hover:border-primary/20 hover:bg-muted;
-}
-
-.user-menu-trigger__avatar {
-  @apply inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/8 text-sm font-semibold text-primary;
 }
 
 .btn-primary {
@@ -639,8 +619,7 @@ textarea {
 }
 
 .toolbar-action,
-.toolbar-icon-button,
-.user-menu-trigger {
+.toolbar-icon-button {
   background-color: color-mix(in srgb, var(--card) 97%, transparent);
   border-color: color-mix(in srgb, var(--border) 90%, transparent);
   color: var(--foreground);
@@ -648,14 +627,12 @@ textarea {
 }
 
 .toolbar-action:hover,
-.toolbar-icon-button:hover,
-.user-menu-trigger:hover {
+.toolbar-icon-button:hover {
   background-color: color-mix(in srgb, var(--muted) 88%, transparent);
 }
 
 .dark .toolbar-action,
-.dark .toolbar-icon-button,
-.dark .user-menu-trigger {
+.dark .toolbar-icon-button {
   background-color: color-mix(in srgb, #0b1220 74%, var(--card) 26%);
   border-color: color-mix(in srgb, #95a7ff 30%, var(--border));
   color: #ecf2ff;
@@ -804,33 +781,8 @@ textarea {
   }
 }
 
-.breadcrumb-shell {
-  @apply flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground;
-}
-
-.breadcrumb-shell__link {
-  @apply rounded-full px-2 py-1 transition hover:bg-muted hover:text-foreground;
-}
-
-.breadcrumb-shell__current {
-  @apply rounded-full bg-primary/8 px-2.5 py-1 font-semibold text-primary;
-}
-
 .back-to-top-button {
   @apply fixed bottom-6 right-6 z-[65] inline-flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xl backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card;
-}
-
-.page-transition-overlay {
-  @apply fixed inset-0 z-[120] flex flex-col items-center justify-center gap-4 bg-[rgba(16,24,40,0.58)] backdrop-blur-md;
-}
-
-.page-transition-overlay__symbol {
-  @apply flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/8 text-white;
-  animation: route-nuclear-spin 0.5s cubic-bezier(0.2, 0.9, 0.2, 1) infinite;
-}
-
-.page-transition-overlay__label {
-  @apply text-sm font-semibold uppercase tracking-[0.42em] text-white/72;
 }
 
 .text-gradient-gold {
@@ -949,9 +901,7 @@ textarea {
   @apply rounded-2xl border border-white/10 bg-white/8 p-4 backdrop-blur;
 }
 
-html[dir="rtl"] .breadcrumb-shell,
 html[dir="rtl"] .page-shell,
-html[dir="rtl"] .user-menu-trigger,
 html[dir="rtl"] .toolbar-dropdown__item {
   direction: rtl;
 }
@@ -1005,5 +955,56 @@ html[dir="rtl"] .toolbar-dropdown__item {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+
+.shadow-premium {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02),
+              0 14px 24px -10px rgba(29, 47, 79, 0.08),
+              0 24px 48px -12px rgba(29, 47, 79, 0.12),
+              0px 0px 0px 1px rgba(29, 47, 79, 0.04);
+}
+
+
+
+
+
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-xl border border-white  rounded-2xl; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 14px 24px -10px rgba(29, 47, 79, 0.08), 0 24px 48px -12px rgba(29, 47, 79, 0.12), 0px 0px 0px 1px rgba(29, 47, 79, 0.04);
+}
+
+.premium-gradient-text {
+  @apply bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.surface-card {
+  @apply rounded-2xl border border-primary/5 bg-white  transition-all duration-300; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 14px 24px -10px rgba(29, 47, 79, 0.08), 0 24px 48px -12px rgba(29, 47, 79, 0.12), 0px 0px 0px 1px rgba(29, 47, 79, 0.04);
+}
+
+.surface-card--interactive:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.02),
+              0 24px 36px -10px rgba(29, 47, 79, 0.09),
+              0 34px 58px -15px rgba(29, 47, 79, 0.14),
+              0px 0px 0px 1px rgba(29, 47, 79, 0.05);
+}
+
+.surface-card--interactive {
+  @apply transition-all duration-200;
 }
 

@@ -1,10 +1,28 @@
 const {
   z,
   cleanString,
+  optionalBoolean,
   optionalPositiveInt,
   optionalString,
   paginationSchema,
 } = require("./common");
+
+function clampQueryLimit(max = 50, fallback = 10) {
+  return z.preprocess((value) => {
+    if (value === "" || value === null || value === undefined) {
+      return fallback;
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+
+    return Math.min(Math.max(1, Math.trunc(parsed)), max);
+  }, z.number().int().min(1).max(max));
+}
+
+const safeLimitSchema = clampQueryLimit(50, 10);
 
 const inscriptionIdParamSchema = z.object({
   id: z.string().uuid(),
@@ -67,16 +85,25 @@ const comptesQuerySchema = z.object({
     z.enum(["MEMBRE", "ADMINISTRATEUR", "CHEF_LABO"]).optional(),
   ),
   page: paginationSchema.page,
-  limit: paginationSchema.limit,
+  limit: safeLimitSchema,
 });
 
 const inscriptionsQuerySchema = z.object({
+  q: optionalString(120),
   statut: z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
     z.enum(["EN_ATTENTE", "REJETE", "ACTIF", "DESACTIVE"]).optional(),
   ),
+  role: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["MEMBRE", "ADMINISTRATEUR", "CHEF_LABO"]).optional(),
+  ),
+  ordre: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["asc", "desc"]).optional(),
+  ),
   page: paginationSchema.page,
-  limit: paginationSchema.limit,
+  limit: safeLimitSchema,
 });
 
 const actualitesQuerySchema = z.object({
@@ -86,7 +113,54 @@ const actualitesQuerySchema = z.object({
     z.enum(["BROUILLON", "PUBLIEE", "ARCHIVEE"]).optional(),
   ),
   page: paginationSchema.page,
-  limit: paginationSchema.limit,
+  limit: safeLimitSchema,
+});
+
+const adminNotificationsQuerySchema = z.object({
+  type: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? "all" : value),
+    z.enum(["all", "registration", "account", "message", "role"]),
+  ),
+  read: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? "all" : value),
+    z.enum(["all", "read", "unread"]),
+  ),
+  nonLues: optionalBoolean(),
+  page: paginationSchema.page,
+  limit: safeLimitSchema,
+});
+
+const adminProfileUpdateBodySchema = z.object({
+  nomComplet: cleanString(180),
+  emailInstitutionnel: z.string().trim().email().max(190),
+});
+
+const adminPasswordUpdateBodySchema = z
+  .object({
+    motDePasseActuel: z.string().trim().min(1).max(255),
+    nouveauMotDePasse: z.string().trim().min(8).max(255),
+    confirmationMotDePasse: z.string().trim().min(8).max(255),
+  })
+  .superRefine((value, ctx) => {
+    if (value.nouveauMotDePasse !== value.confirmationMotDePasse) {
+      ctx.addIssue({
+        path: ["confirmationMotDePasse"],
+        code: z.ZodIssueCode.custom,
+        message:
+          "La confirmation du nouveau mot de passe doit correspondre.",
+      });
+    }
+  });
+
+const adminPreferencesBodySchema = z.object({
+  canalApplication: optionalBoolean(),
+  canalEmail: optionalBoolean(),
+  notifComptes: optionalBoolean(),
+  notifArticles: optionalBoolean(),
+  notifMessages: optionalBoolean(),
+  notifProjets: optionalBoolean(),
+  notifDemandesAchat: optionalBoolean(),
+  notifLivraisons: optionalBoolean(),
 });
 
 module.exports = {
@@ -103,4 +177,8 @@ module.exports = {
   comptesQuerySchema,
   inscriptionsQuerySchema,
   actualitesQuerySchema,
+  adminNotificationsQuerySchema,
+  adminProfileUpdateBodySchema,
+  adminPasswordUpdateBodySchema,
+  adminPreferencesBodySchema,
 };

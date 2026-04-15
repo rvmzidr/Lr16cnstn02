@@ -14,7 +14,7 @@
     "prisma:pull": "prisma db pull",
     "prisma:generate": "prisma generate",
     "seed:demo": "node src/scripts/seedDemo.js",
-    "test": "npm run db:init && node --test src/tests/release1.smoke.test.js"
+    "test": "npm run db:init && node --test src/tests/*.test.js"
   },
   "keywords": [],
   "author": "",

@@ -82,6 +82,30 @@ const deleteCoAuteur = asyncHandler(async (req, res) => {
   successResponse(res, "Co-auteur supprime avec succes.", donnees);
 });
 
+const uploadArticlePdf = asyncHandler(async (req, res) => {
+  const donnees = await memberService.televerserPdfArticleMembre(
+    req.auth.userId,
+    req.params.id,
+    req.file,
+  );
+  successResponse(res, "PDF de l'article televerse avec succes.", donnees);
+});
+
+const downloadArticlePdf = asyncHandler(async (req, res) => {
+  const file = await memberService.telechargerPdfArticleMembre(
+    req.auth.userId,
+    req.auth.role,
+    req.params.id,
+  );
+  res.type(file.mimeType);
+  if (req.query.action === 'view') {
+    res.setHeader("Content-Disposition", "inline; filename=\"" + file.downloadName + "\"");
+    res.sendFile(file.path);
+  } else {
+    res.download(file.path, file.downloadName);
+  }
+});
+
 module.exports = {
   getProfil,
   updateProfil,
@@ -94,4 +118,6 @@ module.exports = {
   updateArticle,
   addCoAuteur,
   deleteCoAuteur,
+  uploadArticlePdf,
+  downloadArticlePdf,
 };

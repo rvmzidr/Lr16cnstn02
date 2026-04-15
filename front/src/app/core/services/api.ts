@@ -1,8 +1,11 @@
 import { API_URL } from '../utils/env';
 import type {
+  AdminPasswordUpdatePayload,
+  AdminProfileSettings,
   AboutData,
   Actualite,
   AdminAccountsList,
+  AdminDashboardKPIs,
   AdminRegistrationList,
   ApiEnvelope,
   Article,
@@ -13,13 +16,21 @@ import type {
   ForgotPasswordResponse,
   HomeData,
   LabHeadArticlesData,
+  LabHeadDashboardKPIs,
   LoginResponse,
+  MessagingUserSummary,
+  NotificationItem,
+  NotificationPreferences,
   MemberArticlesData,
   MemberLookupData,
   MemberProfileData,
   NewsManagementList,
   PaginationMeta,
+  Project,
+  PurchaseRequest,
   PublicContactResponse,
+  ConversationSummary,
+  ConversationDetail,
   RegistrationReferences,
   Role,
   UtilisateurComplet,
@@ -40,6 +51,97 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   token?: string | null;
   query?: Record<string, string | number | undefined | null>;
 };
+
+type ApiErrorDetail = {
+  champ?: string;
+  message?: string;
+};
+
+type ApiErrorEnvelope = {
+  succes?: boolean;
+  message?: string;
+  erreurs?: ApiErrorDetail[] | null;
+};
+
+const ADMIN_REGISTRATIONS_MAX_LIMIT = 50;
+const ADMIN_NOTIFICATIONS_MAX_LIMIT = 50;
+
+function toPositiveInt(value: string | number | undefined | null) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.max(1, Math.trunc(parsed));
+}
+
+function normalizeAdminRegistrationsQuery(query?: RequestOptions['query']) {
+  if (!query) {
+    return undefined;
+  }
+
+  const limit = toPositiveInt(query['limit']);
+  const page = toPositiveInt(query['page']);
+
+  return {
+    ...query,
+    limit: limit === null ? undefined : Math.min(limit, ADMIN_REGISTRATIONS_MAX_LIMIT),
+    page: page === null ? undefined : page,
+  };
+}
+
+function normalizeAdminNotificationsQuery(query?: RequestOptions['query']) {
+  if (!query) {
+    return undefined;
+  }
+
+  const limit = toPositiveInt(query['limit']);
+  const page = toPositiveInt(query['page']);
+  const type = typeof query['type'] === 'string' ? query['type'].trim().toLowerCase() : undefined;
+  const read = typeof query['read'] === 'string' ? query['read'].trim().toLowerCase() : undefined;
+
+  const normalizedType =
+    type && ['all', 'registration', 'account', 'message', 'role'].includes(type)
+      ? type
+      : undefined;
+
+  const normalizedRead =
+    read && ['all', 'read', 'unread', 'true', 'false'].includes(read)
+      ? read === 'true'
+        ? 'read'
+        : read === 'false'
+          ? 'unread'
+          : read
+      : undefined;
+
+  return {
+    ...query,
+    limit: limit === null ? undefined : Math.min(limit, ADMIN_NOTIFICATIONS_MAX_LIMIT),
+    page: page === null ? undefined : page,
+    type: normalizedType,
+    read: normalizedRead,
+  };
+}
+
+function buildApiErrorMessage(
+  payload: ApiErrorEnvelope | null,
+  fallback: string,
+) {
+  const base = payload?.message || fallback;
+  const firstDetail = payload?.erreurs?.find((detail) =>
+    Boolean(detail?.message),
+  );
+
+  if (!firstDetail?.message) {
+    return base;
+  }
+
+  return `${base} (${firstDetail.message})`;
+}
 
 function buildUrl(path: string, query?: RequestOptions['query']) {
   const url = new URL(`${API_URL}${path}`, window.location.origin);
@@ -85,11 +187,14 @@ async function request<T>(path: string, options: RequestOptions = {}) {
 
   const data = (await response
     .json()
-    .catch(() => null)) as ApiEnvelope<T> | null;
+    .catch(() => null)) as (ApiEnvelope<T> & ApiErrorEnvelope) | null;
 
   if (!response.ok || !data?.succes) {
     throw new ApiError(
-      data?.message || `Request failed with status ${response.status}.`,
+      buildApiErrorMessage(
+        data,
+        `Request failed with status ${response.status}.`,
+      ),
       response.status,
     );
   }
@@ -117,10 +222,8 @@ async function downloadProtectedFile(path: string, token: string) {
     let message = `Request failed with status ${response.status}.`;
 
     try {
-      const data = (await response.json()) as ApiEnvelope<unknown>;
-      if (data?.message) {
-        message = data.message;
-      }
+      const data = (await response.json()) as ApiErrorEnvelope;
+      message = buildApiErrorMessage(data, message);
     } catch (_error) {
       // Ignore non-JSON download failures.
     }
@@ -135,6 +238,89 @@ async function downloadProtectedFile(path: string, token: string) {
   );
   const fileName = decodeURIComponent(
     (match?.[1] || 'document').replace(/"/g, ''),
+  );
+
+  const blobUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = blobUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(blobUrl);
+}
+
+async function openProtectedFile(path: string, token: string) {
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (_error) {
+    throw new ApiError(
+      "Impossible de joindre l'API. Verifiez que le backend est demarre et que l'URL API est correcte.",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}.`;
+
+    try {
+      const data = (await response.json()) as ApiErrorEnvelope;
+      message = buildApiErrorMessage(data, message);
+    } catch (_error) {
+      // Ignore non-JSON download failures.
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+}
+
+function openPublicFile(path: string) {
+  window.open(buildUrl(path), '_blank', 'noopener,noreferrer');
+}
+
+async function downloadPublicFile(path: string) {
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path));
+  } catch (_error) {
+    throw new ApiError(
+      "Impossible de joindre l'API. Verifiez que le backend est demarre et que l'URL API est correcte.",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}.`;
+
+    try {
+      const data = (await response.json()) as ApiErrorEnvelope;
+      message = buildApiErrorMessage(data, message);
+    } catch (_error) {
+      // Ignore non-JSON download failures.
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get('content-disposition') || '';
+  const match = contentDisposition.match(
+    /filename\*?=(?:UTF-8''|")?([^\";]+)/i,
+  );
+  const fileName = decodeURIComponent(
+    (match?.[1] || 'article.pdf').replace(/"/g, ''),
   );
 
   const blobUrl = URL.createObjectURL(blob);
@@ -178,6 +364,12 @@ export const api = {
   },
   getPublicArticle(articleId: string | number) {
     return request<Article>(`/public/articles/${articleId}`);
+  },
+  openPublicArticlePdf(articleId: string | number) {
+    openPublicFile(`/public/articles/${articleId}/pdf?action=view`);
+  },
+  downloadPublicArticlePdf(articleId: string | number) {
+    return downloadPublicFile(`/public/articles/${articleId}/pdf`);
   },
   listPublicNews(query?: RequestOptions['query']) {
     return request<{ elements: Actualite[]; meta: PaginationMeta }>(
@@ -268,6 +460,21 @@ export const api = {
       body: payload,
     });
   },
+  uploadArticlePdf(token: string, articleId: number, file: File) {
+    const payload = new FormData();
+    payload.set('articlePdf', file);
+    return request<Article>(`/membre/articles/${articleId}/pdf`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  openMemberArticlePdf(token: string, articleId: number) {
+    return openProtectedFile(`/membre/articles/${articleId}/pdf?action=view`, token);     
+  },
+  downloadMemberArticlePdf(token: string, articleId: number) {
+    return downloadProtectedFile(`/membre/articles/${articleId}/pdf`, token);
+  },
   addCoAuthor(
     token: string,
     articleId: number,
@@ -301,10 +508,21 @@ export const api = {
       },
     );
   },
+  // ADMIN
+  getAdminDashboardKPIs(token: string) {
+    return request<AdminDashboardKPIs>('/admin/dashboard', {
+      token,
+    });
+  },
   listAdminRegistrations(token: string, query?: RequestOptions['query']) {
     return request<AdminRegistrationList>('/admin/inscriptions', {
       token,
-      query,
+      query: normalizeAdminRegistrationsQuery(query),
+    });
+  },
+  getAdminRegistrationDetail(token: string, userId: string) {
+    return request<UtilisateurComplet>(`/admin/inscriptions/${userId}`, {
+      token,
     });
   },
   validateRegistration(
@@ -373,6 +591,9 @@ export const api = {
   getLabHeadArticles(token: string) {
     return request<LabHeadArticlesData>('/chef-labo/articles', { token });
   },
+  getLabHeadDashboardKPIs(token: string) {
+    return request<LabHeadDashboardKPIs>('/chef-labo/dashboard', { token });
+  },
   validateArticle(token: string, articleId: number) {
     return request<Article>(`/chef-labo/articles/${articleId}/valider`, {
       method: 'PATCH',
@@ -439,6 +660,337 @@ export const api = {
     return request<null>(`/chef-labo/actualites/${newsId}`, {
       method: 'DELETE',
       token,
+    });
+  },
+  listConversations(token: string) {
+    return request<{ elements: ConversationSummary[] }>(
+      '/membre/messages/conversations',
+      { token },
+    );
+  },
+  getConversation(token: string, conversationId: number) {
+    return request<ConversationDetail>(`/membre/messages/conversations/${conversationId}`, {
+      token,
+    });
+  },
+  createConversation(
+    token: string,
+    payload:
+      | FormData
+      | {
+          sujet?: string;
+          description?: string;
+          participantIds: string[];
+          contenu?: string;
+        },
+  ) {
+    return request<ConversationDetail>('/membre/messages/conversations', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  createGroupConversation(
+    token: string,
+    payload:
+      | FormData
+      | {
+          sujet: string;
+          description?: string;
+          participantIds: string[];
+          contenu?: string;
+        },
+  ) {
+    return request<ConversationDetail>('/membre/messages/groups', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  sendMessage(
+    token: string,
+    conversationId: number,
+    payload: FormData | { contenu?: string },
+  ) {
+    return request<ConversationDetail['messages'][number]>(
+      `/membre/messages/conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        token,
+        body: payload,
+      },
+    );
+  },
+  markMessageRead(token: string, messageId: number) {
+    return request<unknown>(`/membre/messages/messages/${messageId}/lire`, {
+      method: 'PATCH',
+      token,
+    });
+  },
+  addGroupMembers(
+    token: string,
+    conversationId: number,
+    payload: { participantIds: string[] },
+  ) {
+    return request<ConversationDetail>(`/membre/messages/groups/${conversationId}/members`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  removeGroupMember(token: string, conversationId: number, userId: string) {
+    return request<{ conversationId: number; removedUserId: string }>(
+      `/membre/messages/groups/${conversationId}/members/${userId}`,
+      {
+        method: 'DELETE',
+        token,
+      },
+    );
+  },
+  leaveGroupConversation(token: string, conversationId: number) {
+    return request<{ conversationId: number; left: boolean }>(
+      `/membre/messages/groups/${conversationId}/leave`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
+  },
+  archiveConversation(token: string, conversationId: number) {
+    return request<{ conversationId: number; archived: boolean }>(
+      `/membre/messages/conversations/${conversationId}/archive`,
+      {
+        method: 'PATCH',
+        token,
+      },
+    );
+  },
+  unarchiveConversation(token: string, conversationId: number) {
+    return request<{ conversationId: number; archived: boolean }>(
+      `/membre/messages/conversations/${conversationId}/unarchive`,
+      {
+        method: 'PATCH',
+        token,
+      },
+    );
+  },
+  downloadMessageAttachment(token: string, attachmentId: number) {
+    return downloadProtectedFile(`/membre/messages/attachments/${attachmentId}`, token);
+  },
+  searchMessageRecipients(
+    token: string,
+    query?: RequestOptions['query'],
+  ) {
+    return request<{ elements: MessagingUserSummary[] }>('/messages/recipients', {
+      token,
+      query,
+    });
+  },
+  listProjects(token: string, query?: RequestOptions['query']) {
+    return request<{ elements: Project[]; meta: PaginationMeta }>('/membre/projets', {
+      token,
+      query,
+    });
+  },
+  createProject(token: string, payload: Record<string, unknown>) {
+    return request<Project>('/chef-labo/projets', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  updateProject(token: string, projectId: number, payload: Record<string, unknown>) {
+    return request<Project>(`/chef-labo/projets/${projectId}`, {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+  },
+  archiveProject(token: string, projectId: number) {
+    return request<Project>(`/chef-labo/projets/${projectId}/archiver`, {
+      method: 'PATCH',
+      token,
+    });
+  },
+  assignProjectMember(
+    token: string,
+    projectId: number,
+    payload: { utilisateurId: string; roleDansProjet?: string },
+  ) {
+    return request<Project>(`/chef-labo/projets/${projectId}/membres`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  removeProjectMember(token: string, projectId: number, userId: string) {
+    return request<Project>(`/chef-labo/projets/${projectId}/membres/${userId}`, {
+      method: 'DELETE',
+      token,
+    });
+  },
+  listPurchaseRequests(token: string, query?: RequestOptions['query']) {
+    return request<{ elements: PurchaseRequest[]; meta: PaginationMeta }>(
+      '/membre/demandes-achat',
+      {
+        token,
+        query,
+      },
+    );
+  },
+  createPurchaseRequest(token: string, payload: FormData) {
+    return request<PurchaseRequest>('/membre/demandes-achat', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+  downloadPurchaseAttachment(token: string, purchaseId: number) {
+    return downloadProtectedFile(
+      `/membre/demandes-achat/${purchaseId}/piece-jointe`,
+      token,
+    );
+  },
+  decidePurchaseRequest(
+    token: string,
+    purchaseId: number,
+    payload: { decision: 'ACCEPTER' | 'REJETER'; commentaire?: string },
+  ) {
+    return request<PurchaseRequest>(`/chef-labo/demandes-achat/${purchaseId}/decision`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+  updatePurchaseStatus(
+    token: string,
+    purchaseId: number,
+    payload: { statut: string; commentaire?: string; dateLivraison?: string },
+  ) {
+    return request<PurchaseRequest>(`/chef-labo/demandes-achat/${purchaseId}/statut`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+  listNotifications(token: string, query?: RequestOptions['query']) {
+    return request<{
+      elements: NotificationItem[];
+      unreadCount: number;
+      meta: PaginationMeta;
+    }>('/membre/notifications', {
+      token,
+      query,
+    });
+  },
+  markNotificationRead(token: string, notificationId: number) {
+    return request<unknown>(`/membre/notifications/${notificationId}/lire`, {
+      method: 'PATCH',
+      token,
+    });
+  },
+  markAllNotificationsRead(token: string) {
+    return request<unknown>('/membre/notifications/lire-toutes', {
+      method: 'PATCH',
+      token,
+    });
+  },
+  getNotificationPreferences(token: string) {
+    return request<NotificationPreferences>('/membre/notifications/preferences', {
+      token,
+    });
+  },
+  updateNotificationPreferences(
+    token: string,
+    payload: Partial<NotificationPreferences>,
+  ) {
+    return request<NotificationPreferences>('/membre/notifications/preferences', {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+  },
+  listAdminNotifications(token: string, query?: RequestOptions['query']) {
+    return request<{
+      elements: NotificationItem[];
+      unreadCount: number;
+      meta: PaginationMeta;
+    }>('/admin/notifications', {
+      token,
+      query: normalizeAdminNotificationsQuery(query),
+    });
+  },
+  getAdminUnreadNotificationsCount(token: string) {
+    return request<{ unreadCount: number }>('/admin/notifications/unread-count', {
+      token,
+    });
+  },
+  markAdminNotificationRead(token: string, notificationId: number) {
+    return request<{ id: number; estLue: boolean }>(
+      `/admin/notifications/${notificationId}/read`,
+      {
+      method: 'PATCH',
+      token,
+      },
+    );
+  },
+  markAllAdminNotificationsRead(token: string) {
+    return request<{ updatedCount: number }>('/admin/notifications/read-all', {
+      method: 'PATCH',
+      token,
+    });
+  },
+  getAdminProfile(token: string) {
+    return request<AdminProfileSettings>('/admin/profile', {
+      token,
+    });
+  },
+  updateAdminProfile(
+    token: string,
+    payload: { nomComplet: string; emailInstitutionnel: string },
+  ) {
+    return request<AdminProfileSettings>('/admin/profile', {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+  updateAdminPassword(token: string, payload: AdminPasswordUpdatePayload) {
+    return request<{ updated: boolean }>('/admin/password', {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+  getAdminPreferences(token: string) {
+    return request<NotificationPreferences>('/admin/preferences', {
+      token,
+    });
+  },
+  updateAdminPreferences(
+    token: string,
+    payload: Partial<NotificationPreferences>,
+  ) {
+    return request<NotificationPreferences>('/admin/preferences', {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+  // Compatibility aliases for existing call-sites.
+  getAdminNotificationPreferences(token: string) {
+    return request<NotificationPreferences>('/admin/preferences', {
+      token,
+    });
+  },
+  updateAdminNotificationPreferences(
+    token: string,
+    payload: Partial<NotificationPreferences>,
+  ) {
+    return request<NotificationPreferences>('/admin/preferences', {
+      method: 'PATCH',
+      token,
+      body: payload,
     });
   },
 };

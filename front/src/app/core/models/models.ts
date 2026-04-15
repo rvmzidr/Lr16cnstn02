@@ -8,6 +8,101 @@ export type ArticleStatus =
   | 'REJETE'
   | 'PUBLIE';
 export type NewsStatus = 'BROUILLON' | 'PUBLIEE' | 'ARCHIVEE';
+export type ProjectStatus = 'EN_COURS' | 'TERMINE' | 'ARCHIVE';
+export type PurchaseRequestStatus =
+  | 'EN_ATTENTE'
+  | 'ACCEPTEE'
+  | 'REJETEE'
+  | 'EN_COURS_TRAITEMENT'
+  | 'COMMANDEE'
+  | 'LIVREE';
+
+export interface AdminDashboardKPIs {
+  inscriptionsEnAttente: number;
+  comptesActifs: number;
+  comptesDesactives: number;
+  totalUtilisateurs: number;
+  alertesSysteme: number;
+  kpis: {
+    pendingRegistrations: number;
+    activeAccounts: number;
+    roleChangesLast30Days: number;
+    unreadNotifications: number;
+    unreadMessages: number;
+  };
+  charts: {
+    accountsByStatus: Array<{
+      status: AccountStatus;
+      label: string;
+      value: number;
+    }>;
+    rolesDistribution: Array<{
+      role: Role | 'SANS_ROLE';
+      label: string;
+      value: number;
+    }>;
+    newAccountsPerMonth: Array<{
+      label: string;
+      value: number;
+    }>;
+  };
+  recentActivity: Array<{
+    id: string;
+    type: 'INSCRIPTION' | 'COMPTE' | 'ROLE' | 'MESSAGE';
+    label: string;
+    timestamp: string;
+    link: string | null;
+  }>;
+  dernieresInscriptions: {
+    elements: UtilisateurComplet[];
+  };
+}
+
+export interface LabHeadDashboardKPIs {
+  articlesEnAttente: number;
+  articlesPublies: number;
+  actualitesPubliees: number;
+  projetsActifs: number;
+  demandesAchatEnAttente: number;
+  kpis: {
+    articlesPendingReview: number;
+    activeManagedProjects: number;
+    purchaseRequestsAwaitingDecision: number;
+    teamMembers: number;
+  };
+  priorityQueue: {
+    articles: Array<{
+      id: number;
+      title: string;
+      author: string;
+      submittedDate: string | null;
+      link: string;
+    }>;
+    purchaseRequests: Array<{
+      id: number;
+      title: string;
+      projectName: string | null;
+      requester: string;
+      amount: number | null;
+      createdAt: string;
+      link: string;
+    }>;
+  };
+  projectStatusOverview: Array<{
+    id: number;
+    name: string;
+    status: ProjectStatus;
+    membersCount: number;
+    endDate: string | null;
+    progress: number;
+  }>;
+  recentArticleDecisions: Array<{
+    id: number;
+    title: string;
+    decision: 'VALIDE' | 'REFUSE' | 'PUBLIE' | 'BROUILLON' | 'SOUMIS' | 'REJETE';
+    date: string | null;
+  }>;
+}
 
 export interface ApiEnvelope<T> {
   succes: boolean;
@@ -153,6 +248,12 @@ export interface Article {
   categorie: Category | null;
   deposant: UtilisateurResume | null;
   validateur: UtilisateurResume | null;
+  articlePdf: {
+    id: number;
+    nomFichier: string;
+    typeMime: string | null;
+    tailleOctets: number | null;
+  } | null;
   coAuteurs: ArticleCoAuthor[];
   derniereVersion: {
     numeroVersion: number;
@@ -328,6 +429,9 @@ export interface AdminRegistrationList {
   meta: PaginationMeta;
   statistiques: {
     enAttente: number;
+    actives: number;
+    refusees: number;
+    total: number;
     doctorantsEnAttente: number;
     attestationsDisponibles: number;
   };
@@ -363,4 +467,162 @@ export interface NewsManagementList {
 export interface AuthSession {
   accessToken: string;
   utilisateur: UtilisateurComplet;
+}
+
+export interface ConversationMessage {
+  id: number;
+  conversationId: number;
+  contenu: string;
+  creeLe: string;
+  expediteur: UtilisateurResume | null;
+  lu: boolean;
+  luLe: string | null;
+  pieceJointe: {
+    id: number;
+    nomFichier: string;
+    typeMime: string | null;
+    tailleOctets: number | null;
+  } | null;
+}
+
+export interface ConversationSummary {
+  id: number;
+  sujet: string | null;
+  estGroupe: boolean;
+  creePar: string;
+  creeLe: string;
+  modifieLe: string;
+  participants: Array<UtilisateurResume | null>;
+  unreadCount: number;
+  dernierMessage: {
+    id: number;
+    contenu: string;
+    creeLe: string;
+    expediteur: UtilisateurResume | null;
+    pieceJointe: {
+      id: number;
+      nomFichier: string;
+      typeMime: string | null;
+      tailleOctets: number | null;
+    } | null;
+  } | null;
+}
+
+export interface ConversationDetail {
+  conversation: {
+    id: number;
+    sujet: string | null;
+    estGroupe: boolean;
+    creePar: string;
+    creeLe: string;
+    modifieLe: string;
+  };
+  participants: Array<{
+    utilisateur: UtilisateurResume | null;
+    rejointLe: string;
+    quitteLe?: string | null;
+  }>;
+  messages: ConversationMessage[];
+}
+
+export interface MessagingUserSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  role: Role;
+}
+
+export interface Project {
+  id: number;
+  titre: string;
+  description: string;
+  objectifs: string | null;
+  dateDebut: string | null;
+  dateFin: string | null;
+  statut: ProjectStatus;
+  archive: boolean;
+  creeLe: string;
+  modifieLe: string;
+  createur: UtilisateurResume | null;
+  equipes: Array<{ id: number }>;
+  membres: Array<{
+    utilisateur: UtilisateurResume | null;
+    roleDansProjet: string | null;
+    ajouteLe: string;
+  }>;
+}
+
+export interface PurchaseRequest {
+  id: number;
+  projetId: number;
+  projetTitre: string | null;
+  creePar: UtilisateurResume | null;
+  decideePar: UtilisateurResume | null;
+  objet: string;
+  description: string;
+  quantite: number;
+  estimationCout: number | null;
+  justificationScientifique: string;
+  statut: PurchaseRequestStatus;
+  urgente: boolean;
+  dateDecision: string | null;
+  motifRejet: string | null;
+  dateLivraison: string | null;
+  creeLe: string;
+  modifieLe: string;
+  pieceJointe: {
+    id: number;
+    nomFichier: string;
+    typeMime: string | null;
+    tailleOctets: number | null;
+  } | null;
+}
+
+export type AdminNotificationCategory =
+  | 'registration'
+  | 'account'
+  | 'message'
+  | 'role';
+
+export interface NotificationItem {
+  id: number;
+  typeNotification: string;
+  categorie?: AdminNotificationCategory | null;
+  titre: string;
+  message: string;
+  projetId: number | null;
+  demandeAchatId: number | null;
+  articleId: number | null;
+  conversationId: number | null;
+  messageId: number | null;
+  estLue: boolean;
+  lueLe: string | null;
+  lienDirect: string | null;
+  creeLe: string;
+}
+
+export interface NotificationPreferences {
+  canalApplication: boolean;
+  canalEmail: boolean;
+  notifComptes: boolean;
+  notifArticles: boolean;
+  notifMessages: boolean;
+  notifProjets: boolean;
+  notifDemandesAchat: boolean;
+  notifLivraisons: boolean;
+  creeLe: string;
+  modifieLe: string;
+}
+
+export interface AdminProfileSettings {
+  id: string;
+  nomComplet: string;
+  emailInstitutionnel: string;
+  role: Role | null;
+}
+
+export interface AdminPasswordUpdatePayload {
+  motDePasseActuel: string;
+  nouveauMotDePasse: string;
+  confirmationMotDePasse: string;
 }

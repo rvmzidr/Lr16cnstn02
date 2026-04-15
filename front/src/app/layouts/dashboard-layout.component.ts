@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   OnDestroy,
   OnInit,
@@ -16,19 +17,25 @@ import {
 import { LucideAngularModule } from 'lucide-angular';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
-import { SitePreferencesService } from '../core/services/site-preferences.service';
-import { formatRole, getInitials } from '../core/utils/format';
-import { BreadcrumbComponent } from '../shared/components/breadcrumb.component';
-import { CnstnLogoComponent } from '../shared/components/cnstn-logo.component';
-import { ToolbarControlsComponent } from '../shared/components/toolbar-controls.component';
-import { UserMenuComponent } from '../shared/components/user-menu.component';
+import { api } from '../core/services/api';
+import {
+  LocalizedCopy,
+  SitePreferencesService,
+} from '../core/services/site-preferences.service';
+import { getInitials } from '../core/utils/format';
+import {
+  DashboardRole,
+  RoleService,
+} from '../shared/services/role.service';
 import { sharedIcons } from '../shared/lucide-icons';
+import { ToolbarControlsComponent } from '../shared/components/toolbar-controls.component';
 
 type DashboardMenuItem = {
+  key: string;
+  label: LocalizedCopy;
   path: string;
-  label: string;
   icon: any;
-  section: 'workspace' | 'governance' | 'roadmap';
+  roles: DashboardRole[];
 };
 
 @Component({
@@ -39,450 +46,461 @@ type DashboardMenuItem = {
     RouterLinkActive,
     RouterOutlet,
     LucideAngularModule,
-    BreadcrumbComponent,
-    CnstnLogoComponent,
     ToolbarControlsComponent,
-    UserMenuComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-screen bg-background">
-      <div class="flex min-h-screen">
-        <aside
-          class="fixed inset-y-0 left-0 z-50 w-[290px] border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 xl:translate-x-0"
-          [class.translate-x-0]="sidebarOpen()"
-          [class.-translate-x-full]="!sidebarOpen()"
-        >
-          <div class="flex h-full flex-col">
-            <div class="border-b border-sidebar-border px-5 py-6">
-              <div class="flex items-center justify-between gap-3">
-                <a routerLink="/" class="flex min-w-0 items-center gap-3">
-                  <span
-                    class="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card shadow-sm"
-                  >
-                    <app-cnstn-logo [width]="34"></app-cnstn-logo>
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div
-                      class="truncate text-lg font-semibold text-sidebar-foreground"
-                    >
-                      LR16CNSTN02
-                    </div>
-                    <div
-                      class="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground"
-                    >
-                      {{ site.localize(memberAreaLabel) }}
-                    </div>
-                  </div>
-                </a>
+    <div class="min-h-screen bg-background text-foreground">
+      <aside
+        class="fixed inset-y-0 left-0 z-50 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300"
+        [class.w-64]="sidebarExpanded()"
+        [class.w-[72px]]="!sidebarExpanded()"
+        [class.translate-x-0]="isDesktop() || mobileSidebarOpen()"
+        [class.-translate-x-full]="!isDesktop() && !mobileSidebarOpen()"
+      >
+        <div class="flex h-full flex-col">
+          <div
+            class="flex h-16 items-center gap-3 border-b border-sidebar-border px-4"
+            [class.justify-center]="!sidebarExpanded()"
+          >
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground"
+            >
+              <span class="text-xs font-bold tracking-wide">LR</span>
+            </div>
 
+            @if (sidebarExpanded()) {
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold tracking-wide">
+                  LR16CNSTN02
+                </p>
+                <p class="text-[11px] text-sidebar-foreground/72">
+                  {{ roleBadgeLabel() }}
+                </p>
+              </div>
+            }
+          </div>
+
+          <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <ul class="space-y-1.5">
+              @for (item of visibleMenuItems(); track item.key) {
+                <li>
+                  <a
+                    [routerLink]="item.path"
+                    routerLinkActive="bg-secondary text-secondary-foreground"
+                    [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+                    class="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    (click)="closeMobileSidebar()"
+                    [title]="site.localize(item.label)"
+                  >
+                    <lucide-icon [img]="item.icon" class="h-4 w-4"></lucide-icon>
+                    @if (sidebarExpanded()) {
+                      <span class="truncate">{{ site.localize(item.label) }}</span>
+                    }
+                  </a>
+                </li>
+              }
+            </ul>
+          </nav>
+
+          <div class="border-t border-sidebar-border px-3 py-4">
+            @if (roleService.isAdmin()) {
+              <a
+                routerLink="/dashboard/settings"
+                class="mb-2 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+                [title]="site.localize(settingsLabel)"
+                (click)="closeMobileSidebar()"
+              >
+                <lucide-icon [img]="icons.Settings" class="h-4 w-4"></lucide-icon>
+                @if (sidebarExpanded()) {
+                  <span>{{ site.localize(settingsLabel) }}</span>
+                }
+              </a>
+            }
+
+            <a
+              routerLink="/"
+              class="flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+                [title]="site.localize(returnToSiteLabel)"
+              (click)="closeMobileSidebar()"
+            >
+              <lucide-icon [img]="icons.ArrowLeft" class="h-4 w-4"></lucide-icon>
+              @if (sidebarExpanded()) {
+                  <span>{{ site.localize(returnToSiteLabel) }}</span>
+              }
+            </a>
+
+            <button
+              type="button"
+              class="mt-2 flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+              [title]="site.localize(logoutLabel)"
+              (click)="logout()"
+            >
+              <lucide-icon [img]="icons.X" class="h-4 w-4"></lucide-icon>
+              @if (sidebarExpanded()) {
+                <span>{{ site.localize(logoutLabel) }}</span>
+              }
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      @if (!isDesktop() && mobileSidebarOpen()) {
+        <button
+          type="button"
+          class="fixed inset-0 z-40 bg-black/45"
+          (click)="mobileSidebarOpen.set(false)"
+          aria-label="Fermer la navigation"
+        ></button>
+      }
+
+      <div
+        class="min-h-screen transition-all duration-300"
+        [style.padding-left.px]="contentOffset()"
+      >
+        <header
+          class="fixed right-0 top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur"
+          [style.left.px]="headerLeftOffset()"
+        >
+          <div class="flex h-full items-center justify-between px-4 lg:px-6">
+            <div class="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
+                (click)="toggleSidebar()"
+                [attr.aria-label]="site.localize(toggleNavigationLabel)"
+              >
+                <lucide-icon
+                  [img]="isDesktop() ? icons.PanelLeftClose : icons.Menu"
+                  class="h-4 w-4"
+                ></lucide-icon>
+              </button>
+
+              <div class="min-w-0">
+                <h1 class="truncate text-xl font-semibold">{{ site.localize(dashboardLabel) }}</h1>
+                <p class="truncate text-xs text-muted-foreground">
+                  {{ currentPageTitle() }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <app-toolbar-controls [showThemeToggle]="false"></app-toolbar-controls>
+
+              @if (roleService.isAdmin()) {
                 <button
                   type="button"
-                  class="toolbar-icon-button xl:hidden"
-                  (click)="sidebarOpen.set(false)"
+                  class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
+                  (click)="goToNotifications()"
+                  [attr.aria-label]="site.localize(notificationsLabel)"
                 >
-                  <lucide-icon [img]="icons.X" class="h-4 w-4"></lucide-icon>
+                  <lucide-icon [img]="icons.Bell" class="h-4 w-4"></lucide-icon>
+                  @if (unreadNotifications() > 0) {
+                    <span
+                      class="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground"
+                    >
+                      {{ unreadNotifications() > 99 ? '99+' : unreadNotifications() }}
+                    </span>
+                  }
                 </button>
-              </div>
-            </div>
-
-            <div class="flex-1 overflow-y-auto px-4 py-6">
-              @for (section of menuSections(); track section.key) {
-                <div class="mb-6">
-                  <div
-                    class="px-3 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-                  >
-                    {{ section.label }}
-                  </div>
-
-                  <nav class="mt-3 space-y-1">
-                    @for (item of section.items; track item.path) {
-                      <a
-                        [routerLink]="item.path"
-                        routerLinkActive="bg-sidebar-primary text-sidebar-primary-foreground"
-                        [routerLinkActiveOptions]="{
-                          exact: item.path === '/dashboard',
-                        }"
-                        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/82 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        (click)="sidebarOpen.set(false)"
-                      >
-                        <span
-                          class="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card"
-                        >
-                          <lucide-icon
-                            [img]="item.icon"
-                            class="h-4 w-4"
-                          ></lucide-icon>
-                        </span>
-                        <span>{{ item.label }}</span>
-                      </a>
-                    }
-                  </nav>
-                </div>
               }
-            </div>
 
-            <div class="border-t border-sidebar-border p-4">
-              <div class="rounded-2xl border border-border bg-muted/60 p-4">
-                <div class="mb-4 flex items-center gap-3">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/8 text-primary font-semibold"
-                  >
-                    {{ initials() }}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="truncate font-semibold text-foreground">
-                      {{ auth.session()?.utilisateur?.nomComplet || 'Membre' }}
-                    </div>
-                    <div class="text-sm text-muted-foreground">
-                      {{ roleLabel() }}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  class="mb-4 rounded-2xl border border-border bg-card px-4 py-3"
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-left transition hover:bg-muted"
+                (click)="goToProfile()"
+                [attr.aria-label]="site.localize(profileLabel)"
+              >
+                <span
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
                 >
-                  <div
-                    class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
-                  >
-                    {{ site.localize(workspaceLabel) }}
-                  </div>
-                  <div class="mt-2 text-sm text-foreground">
-                    {{ currentSectionLabel() }}
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-2">
-                  <a routerLink="/" class="btn-outline justify-center">{{
-                    site.localize(backToSiteLabel)
-                  }}</a>
-                  <button
-                    type="button"
-                    class="btn-secondary justify-center"
-                    (click)="logout()"
-                  >
-                    <lucide-icon [img]="icons.X" class="h-4 w-4"></lucide-icon>
-                    {{ site.localize(logoutLabel) }}
-                  </button>
-                </div>
-              </div>
+                  {{ initials() }}
+                </span>
+                @if (isDesktop()) {
+                  <lucide-icon [img]="icons.ChevronDown" class="h-4 w-4"></lucide-icon>
+                }
+              </button>
             </div>
           </div>
-        </aside>
+        </header>
 
-        @if (sidebarOpen()) {
-          <div
-            class="fixed inset-0 z-40 bg-black/40 xl:hidden"
-            (click)="sidebarOpen.set(false)"
-          ></div>
-        }
-
-        <div class="flex min-w-0 flex-1 flex-col xl:ml-[290px]">
-          <header
-            class="toolbar-foil-surface toolbar-foil-surface--dashboard sticky top-0 z-30 border-b border-border/80 backdrop-blur-xl"
-          >
-            <div class="page-shell py-4">
-              <div
-                class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
-              >
-                <div class="flex min-w-0 items-start gap-3">
-                  <button
-                    type="button"
-                    class="toolbar-icon-button xl:hidden"
-                    (click)="sidebarOpen.set(true)"
-                  >
-                    <lucide-icon
-                      [img]="icons.Menu"
-                      class="h-5 w-5"
-                    ></lucide-icon>
-                  </button>
-                  <div class="min-w-0">
-                    <div
-                      class="truncate text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-                    >
-                      {{ currentSectionLabel() }}
-                    </div>
-                    <div
-                      class="truncate text-2xl font-semibold text-foreground lg:text-[2rem]"
-                    >
-                      {{ currentTitle() }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                  <span
-                    class="hidden rounded-full border border-primary/10 bg-primary/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary lg:inline-flex"
-                  >
-                    Release 1
-                  </span>
-                  <app-toolbar-controls></app-toolbar-controls>
-                  <app-user-menu></app-user-menu>
-                </div>
-              </div>
-
-              <div class="pt-3">
-                <app-breadcrumb></app-breadcrumb>
-              </div>
-            </div>
-          </header>
-
-          <main class="page-shell flex-1 py-6 lg:py-8">
-            <router-outlet></router-outlet>
-          </main>
-        </div>
+        <main class="h-screen overflow-y-auto px-4 pb-8 pt-20 lg:px-6">
+          <router-outlet></router-outlet>
+        </main>
       </div>
     </div>
   `,
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
-  readonly icons = sharedIcons;
   readonly auth = inject(AuthService);
+  readonly roleService = inject(RoleService);
   readonly site = inject(SitePreferencesService);
   readonly router = inject(Router);
-  readonly sidebarOpen = signal(false);
-  readonly currentUrl = signal(this.router.url);
-  private subscription?: Subscription;
+  readonly icons = sharedIcons;
 
-  readonly memberAreaLabel = {
-    fr: 'Espace membre',
-    en: 'Member area',
-    ar: 'فضاء الأعضاء',
+  readonly settingsLabel: LocalizedCopy = {
+    fr: 'Parametres',
+    en: 'Settings',
+    ar: 'الإعدادات',
   };
-  readonly workspaceLabel = {
-    fr: 'Section active',
-    en: 'Active section',
-    ar: 'القسم النشط',
-  };
-  readonly backToSiteLabel = {
+  readonly returnToSiteLabel: LocalizedCopy = {
     fr: 'Retour au site',
     en: 'Back to site',
     ar: 'العودة إلى الموقع',
   };
-  readonly logoutLabel = {
-    fr: 'Se deconnecter',
+  readonly logoutLabel: LocalizedCopy = {
+    fr: 'Deconnexion',
     en: 'Sign out',
     ar: 'تسجيل الخروج',
   };
+  readonly dashboardLabel: LocalizedCopy = {
+    fr: 'Dashboard',
+    en: 'Dashboard',
+    ar: 'لوحة التحكم',
+  };
+  readonly notificationsLabel: LocalizedCopy = {
+    fr: 'Notifications',
+    en: 'Notifications',
+    ar: 'الإشعارات',
+  };
+  readonly profileLabel: LocalizedCopy = {
+    fr: 'Profil',
+    en: 'Profile',
+    ar: 'الملف الشخصي',
+  };
+  readonly toggleNavigationLabel: LocalizedCopy = {
+    fr: 'Basculer la navigation',
+    en: 'Toggle navigation',
+    ar: 'تبديل التنقل',
+  };
+  readonly overviewFallbackLabel: LocalizedCopy = {
+    fr: "Vue d'ensemble",
+    en: 'Overview',
+    ar: 'نظرة عامة',
+  };
 
-  readonly menuItems = computed<DashboardMenuItem[]>(() => {
-    const role = this.auth.session()?.utilisateur.role;
-    const items: DashboardMenuItem[] = [
-      {
-        path: '/dashboard',
-        label: this.site.localize({
-          fr: 'Accueil',
-          en: 'Home',
-          ar: 'الرئيسية',
-        }),
-        icon: this.icons.Home,
-        section: 'workspace',
-      },
-      {
-        path: '/dashboard/profil',
-        label: this.site.localize({
-          fr: 'Mon profil',
-          en: 'My profile',
-          ar: 'ملفي',
-        }),
-        icon: this.icons.UserCircle2,
-        section: 'workspace',
-      },
-      {
-        path: '/dashboard/articles',
-        label: this.site.localize({
-          fr: 'Mes articles',
-          en: 'My articles',
-          ar: 'مقالاتي',
-        }),
-        icon: this.icons.FileText,
-        section: 'workspace',
-      },
-      {
-        path: '/dashboard/articles/recherche',
-        label: this.site.localize({
-          fr: 'Recherche articles',
-          en: 'Search articles',
-          ar: 'بحث المقالات',
-        }),
-        icon: this.icons.FileSearch,
-        section: 'workspace',
-      },
-      {
-        path: '/dashboard/actualites',
-        label: this.site.localize({
-          fr: 'Actualites membres',
-          en: 'Member news',
-          ar: 'أخبار الأعضاء',
-        }),
-        icon: this.icons.Newspaper,
-        section: 'workspace',
-      },
-      {
-        path: '/dashboard/projects',
-        label: this.site.localize({
-          fr: 'Projets',
-          en: 'Projects',
-          ar: 'المشاريع',
-        }),
-        icon: this.icons.Users,
-        section: 'roadmap',
-      },
-      {
-        path: '/dashboard/messages',
-        label: this.site.localize({
-          fr: 'Messagerie',
-          en: 'Messages',
-          ar: 'الرسائل',
-        }),
-        icon: this.icons.Mail,
-        section: 'roadmap',
-      },
-      {
-        path: '/dashboard/purchases',
-        label: this.site.localize({
-          fr: "Demandes d'achat",
-          en: 'Purchase requests',
-          ar: 'طلبات الشراء',
-        }),
-        icon: this.icons.Settings,
-        section: 'roadmap',
-      },
-    ];
+  readonly sidebarExpanded = signal(true);
+  readonly mobileSidebarOpen = signal(false);
+  readonly viewportWidth = signal(
+    typeof window === 'undefined' ? 1280 : window.innerWidth,
+  );
+  readonly currentUrl = signal(this.router.url);
+  readonly unreadNotifications = signal(0);
 
-    if (role === 'ADMINISTRATEUR') {
-      items.push({
-        path: '/dashboard/admin/comptes',
-        label: this.site.localize({
-          fr: 'Administration',
-          en: 'Administration',
-          ar: 'الإدارة',
-        }),
-        icon: this.icons.Settings,
-        section: 'governance',
-      });
-    }
+  private navigationSubscription?: Subscription;
+  private resizeHandler?: () => void;
 
-    if (role === 'CHEF_LABO') {
-      items.push(
-        {
-          path: '/dashboard/chef/articles',
-          label: this.site.localize({
-            fr: 'Moderation articles',
-            en: 'Article moderation',
-            ar: 'مراجعة المقالات',
-          }),
-          icon: this.icons.Shield,
-          section: 'governance',
-        },
-        {
-          path: '/dashboard/chef/actualites',
-          label: this.site.localize({
-            fr: 'Gestion actualites',
-            en: 'News management',
-            ar: 'إدارة الأخبار',
-          }),
-          icon: this.icons.Newspaper,
-          section: 'governance',
-        },
-      );
-    }
+  readonly allMenuItems: DashboardMenuItem[] = [
+    {
+      key: 'overview',
+      label: { fr: "Vue d'ensemble", en: 'Overview', ar: 'نظرة عامة' },
+      path: '/dashboard',
+      icon: this.icons.LayoutDashboard,
+      roles: ['admin', 'chef', 'membre'],
+    },
+    {
+      key: 'articles',
+      label: { fr: 'Articles', en: 'Articles', ar: 'المقالات' },
+      path: '/dashboard/articles',
+      icon: this.icons.FileText,
+      roles: ['chef', 'membre'],
+    },
+    {
+      key: 'projects',
+      label: { fr: 'Projets', en: 'Projects', ar: 'المشاريع' },
+      path: '/dashboard/projects',
+      icon: this.icons.FolderKanban,
+      roles: ['chef', 'membre'],
+    },
+    {
+      key: 'users',
+      label: { fr: 'Utilisateurs', en: 'Users', ar: 'المستخدمون' },
+      path: '/dashboard/users',
+      icon: this.icons.Users,
+      roles: ['admin'],
+    },
+    {
+      key: 'registrations',
+      label: { fr: 'Inscriptions', en: 'Registrations', ar: 'طلبات التسجيل' },
+      path: '/dashboard/registrations',
+      icon: this.icons.FileSearch,
+      roles: ['admin'],
+    },
+    {
+      key: 'roles',
+      label: { fr: 'Roles', en: 'Roles', ar: 'الأدوار' },
+      path: '/dashboard/roles',
+      icon: this.icons.KeyRound,
+      roles: ['admin'],
+    },
+    {
+      key: 'purchases',
+      label: { fr: 'Achats', en: 'Purchases', ar: 'المشتريات' },
+      path: '/dashboard/purchases',
+      icon: this.icons.ShoppingCart,
+      roles: ['chef', 'membre'],
+    },
+    {
+      key: 'budget',
+      label: { fr: 'Budget', en: 'Budget', ar: 'الميزانية' },
+      path: '/dashboard/budget',
+      icon: this.icons.Wallet,
+      roles: ['chef'],
+    },
+    {
+      key: 'messages',
+      label: { fr: 'Messagerie', en: 'Messaging', ar: 'الرسائل' },
+      path: '/dashboard/messages',
+      icon: this.icons.MessagesSquare,
+      roles: ['admin', 'chef', 'membre'],
+    },
+    {
+      key: 'notifications',
+      label: { fr: 'Notifications', en: 'Notifications', ar: 'الإشعارات' },
+      path: '/dashboard/notifications',
+      icon: this.icons.Bell,
+      roles: ['admin'],
+    },
+  ];
 
-    return items;
-  });
-
-  readonly menuSections = computed(() => {
-    const labels = {
-      workspace: this.site.localize({
-        fr: 'Espace de travail',
-        en: 'Workspace',
-        ar: 'مساحة العمل',
-      }),
-      governance: this.site.localize({
-        fr: 'Gouvernance',
-        en: 'Governance',
-        ar: 'الحوكمة',
-      }),
-      roadmap: this.site.localize({
-        fr: 'Fonctions futures',
-        en: 'Future functions',
-        ar: 'الوظائف المستقبلية',
-      }),
-    };
-
-    return (['workspace', 'governance', 'roadmap'] as const)
-      .map((key) => ({
-        key,
-        label: labels[key],
-        items: this.menuItems().filter((item) => item.section === key),
-      }))
-      .filter((section) => section.items.length > 0);
+  readonly isDesktop = computed(() => this.viewportWidth() >= 1024);
+  readonly currentRole = computed(() => this.roleService.dashboardRole());
+  readonly visibleMenuItems = computed(() => {
+    const role = this.currentRole();
+    return this.allMenuItems.filter((item) => item.roles.includes(role));
   });
 
   readonly initials = computed(() =>
-    getInitials(this.auth.session()?.utilisateur.nomComplet),
+    getInitials(this.auth.session()?.utilisateur?.nomComplet || ''),
   );
-  readonly roleLabel = computed(() =>
-    formatRole(this.auth.session()?.utilisateur.role),
-  );
-  readonly currentSectionLabel = computed(() => {
-    const current = this.menuItems().find(
-      (item) => this.currentUrl() === item.path,
-    );
-    const labels = {
-      workspace: this.site.localize({
-        fr: 'Espace de travail',
-        en: 'Workspace',
-        ar: 'مساحة العمل',
-      }),
-      governance: this.site.localize({
-        fr: 'Gouvernance',
-        en: 'Governance',
-        ar: 'الحوكمة',
-      }),
-      roadmap: this.site.localize({
-        fr: 'Fonctions futures',
-        en: 'Future functions',
-        ar: 'الوظائف المستقبلية',
-      }),
-    };
 
-    return current
-      ? labels[current.section]
-      : this.site.localize({
-          fr: 'Tableau de bord',
-          en: 'Dashboard',
-          ar: 'لوحة التحكم',
-        });
+  readonly roleBadgeLabel = computed(() => {
+    const role = this.currentRole();
+
+    if (role === 'admin') {
+      return this.site.localize({
+        fr: 'Administrateur technique',
+        en: 'Technical Admin',
+        ar: 'مشرف تقني',
+      });
+    }
+
+    if (role === 'chef') {
+      return this.site.localize({
+        fr: 'Chef de labo',
+        en: 'Lab Head',
+        ar: 'رئيس المختبر',
+      });
+    }
+
+    return this.site.localize({ fr: 'Membre', en: 'Member', ar: 'عضو' });
   });
-  readonly currentTitle = computed(() => {
-    const match = this.menuItems().find(
-      (item) => this.currentUrl() === item.path,
+
+  readonly currentPageTitle = computed(() => {
+    const url = this.currentUrl();
+
+    if (url.startsWith('/dashboard/settings')) {
+      return 'Parametres';
+    }
+
+    const match = this.visibleMenuItems().find((item) =>
+      url === '/dashboard' ? item.path === '/dashboard' : url.startsWith(item.path),
     );
-    return (
-      match?.label ||
-      this.site.localize({
-        fr: 'Tableau de bord',
-        en: 'Dashboard',
-        ar: 'لوحة التحكم',
-      })
-    );
+
+    return match
+      ? this.site.localize(match.label)
+      : this.site.localize(this.overviewFallbackLabel);
   });
+
+  readonly contentOffset = computed(() => {
+    if (!this.isDesktop()) {
+      return 0;
+    }
+
+    return this.sidebarExpanded() ? 256 : 72;
+  });
+
+  readonly headerLeftOffset = computed(() => this.contentOffset());
 
   ngOnInit() {
-    this.subscription = this.router.events
+    this.navigationSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.currentUrl.set((event as NavigationEnd).urlAfterRedirects);
+        this.closeMobileSidebar();
+        void this.refreshUnreadCounter();
       });
+
+    this.resizeHandler = () => {
+      this.viewportWidth.set(window.innerWidth);
+      if (window.innerWidth >= 1024) {
+        this.mobileSidebarOpen.set(false);
+      }
+    };
+
+    window.addEventListener('resize', this.resizeHandler);
+    void this.refreshUnreadCounter();
   }
 
   ngOnDestroy() {
-    this.subscription?.unsubscribe();
+    this.navigationSubscription?.unsubscribe();
+
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
+  }
+
+  toggleSidebar() {
+    if (this.isDesktop()) {
+      this.sidebarExpanded.update((value) => !value);
+      return;
+    }
+
+    this.mobileSidebarOpen.update((value) => !value);
+  }
+
+  closeMobileSidebar() {
+    if (!this.isDesktop()) {
+      this.mobileSidebarOpen.set(false);
+    }
+  }
+
+  goToNotifications() {
+    if (!this.roleService.isAdmin()) {
+      void this.router.navigateByUrl('/dashboard');
+      return;
+    }
+
+    void this.router.navigateByUrl('/dashboard/notifications');
+  }
+
+  goToProfile() {
+    if (this.roleService.isAdmin()) {
+      void this.router.navigateByUrl('/dashboard/settings');
+      return;
+    }
+
+    void this.router.navigateByUrl('/dashboard');
   }
 
   logout() {
+    this.closeMobileSidebar();
     this.auth.logout();
     void this.router.navigateByUrl('/connexion');
+  }
+
+  private async refreshUnreadCounter() {
+    const token = this.auth.session()?.accessToken;
+    if (!token || !this.roleService.isAdmin()) {
+      this.unreadNotifications.set(0);
+      return;
+    }
+
+    try {
+      const response = await api.getAdminUnreadNotificationsCount(token);
+      this.unreadNotifications.set(response.unreadCount || 0);
+    } catch {
+      this.unreadNotifications.set(0);
+    }
   }
 }

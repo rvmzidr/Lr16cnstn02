@@ -24,6 +24,7 @@ const {
   verifierDisponibiliteIdentifiants,
   verifierReferencesProfil,
 } = require("./member-profile.service");
+const { createNotifications } = require("./collaboration.service");
 
 async function recupererReferencesInscription() {
   return {
@@ -65,6 +66,29 @@ async function inscrireUtilisateur(rawPayload, attestationFile) {
         stagedAttestation,
       );
       filesToDeleteAfterCommit = dossierResult.filesToDeleteAfterCommit;
+
+      const adminRecipients = await tx.utilisateurs.findMany({
+        where: {
+          role: ROLES.ADMINISTRATEUR,
+          statut: ACCOUNT_STATUS.ACTIF,
+          actif: true,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      await createNotifications(
+        tx,
+        adminRecipients.map((item) => item.id),
+        {
+          typeNotification: "NOUVELLE_INSCRIPTION",
+          titre: "Nouvelle inscription",
+          message: `Nouvelle demande d'inscription de ${created.prenom} ${created.nom}.`,
+          lienDirect: "/dashboard/registrations",
+        },
+        "comptes",
+      );
 
       return tx.utilisateurs.findUnique({
         where: { id: created.id },

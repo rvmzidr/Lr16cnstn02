@@ -299,6 +299,48 @@ async function cleanupDemoData() {
     return;
   }
 
+  const projects = await prisma.projets.findMany({
+    where: {
+      cree_par: {
+        in: ids,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  const projectIds = projects.map((item) => item.id);
+
+  const demandes = await prisma.demandes_achat.findMany({
+    where: {
+      OR: [
+        {
+          cree_par: {
+            in: ids,
+          },
+        },
+        {
+          decidee_par: {
+            in: ids,
+          },
+        },
+        ...(projectIds.length > 0
+          ? [
+              {
+                projet_id: {
+                  in: projectIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+    select: {
+      id: true,
+    },
+  });
+  const demandeIds = demandes.map((item) => item.id);
+
   await prisma.participants_conversation.deleteMany({
     where: {
       utilisateur_id: {
@@ -317,9 +359,31 @@ async function cleanupDemoData() {
 
   await prisma.notifications.deleteMany({
     where: {
-      utilisateur_id: {
-        in: ids,
-      },
+      OR: [
+        {
+          utilisateur_id: {
+            in: ids,
+          },
+        },
+        ...(projectIds.length > 0
+          ? [
+              {
+                projet_id: {
+                  in: projectIds,
+                },
+              },
+            ]
+          : []),
+        ...(demandeIds.length > 0
+          ? [
+              {
+                demande_achat_id: {
+                  in: demandeIds,
+                },
+              },
+            ]
+          : []),
+      ],
     },
   });
 
@@ -349,33 +413,85 @@ async function cleanupDemoData() {
 
   await prisma.commentaires_demande.deleteMany({
     where: {
-      auteur_id: {
-        in: ids,
-      },
+      OR: [
+        {
+          auteur_id: {
+            in: ids,
+          },
+        },
+        ...(demandeIds.length > 0
+          ? [
+              {
+                demande_achat_id: {
+                  in: demandeIds,
+                },
+              },
+            ]
+          : []),
+      ],
     },
   });
 
   await prisma.decisions_demande.deleteMany({
     where: {
-      decidee_par: {
-        in: ids,
-      },
+      OR: [
+        {
+          decidee_par: {
+            in: ids,
+          },
+        },
+        ...(demandeIds.length > 0
+          ? [
+              {
+                demande_achat_id: {
+                  in: demandeIds,
+                },
+              },
+            ]
+          : []),
+      ],
     },
   });
 
   await prisma.historiques_demande.deleteMany({
     where: {
-      modifie_par: {
-        in: ids,
-      },
+      OR: [
+        {
+          modifie_par: {
+            in: ids,
+          },
+        },
+        ...(demandeIds.length > 0
+          ? [
+              {
+                demande_achat_id: {
+                  in: demandeIds,
+                },
+              },
+            ]
+          : []),
+      ],
     },
   });
 
   await prisma.historiques_projet.deleteMany({
     where: {
-      effectue_par: {
-        in: ids,
-      },
+      OR: [
+        {
+          effectue_par: {
+            in: ids,
+          },
+        },
+        ...(projectIds.length > 0
+          ? [
+              {
+                projet_id: {
+                  in: projectIds,
+                },
+              },
+            ]
+          : []),
+      ],
     },
   });
 
@@ -392,15 +508,106 @@ async function cleanupDemoData() {
             in: ids,
           },
         },
+        ...(projectIds.length > 0
+          ? [
+              {
+                projet_id: {
+                  in: projectIds,
+                },
+              },
+            ]
+          : []),
       ],
+    },
+  });
+
+  await prisma.equipes_projet.deleteMany({
+    where: {
+      ...(projectIds.length > 0
+        ? {
+            projet_id: {
+              in: projectIds,
+            },
+          }
+        : {
+            projet_id: -1n,
+          }),
+    },
+  });
+
+  await prisma.mots_cles_projet.deleteMany({
+    where: {
+      ...(projectIds.length > 0
+        ? {
+            projet_id: {
+              in: projectIds,
+            },
+          }
+        : {
+            projet_id: -1n,
+          }),
     },
   });
 
   await prisma.pieces_jointes.deleteMany({
     where: {
-      ajoute_par: {
-        in: ids,
-      },
+      OR: [
+        {
+          ajoute_par: {
+            in: ids,
+          },
+        },
+        ...(demandeIds.length > 0
+          ? [
+              {
+                type_entite: "DEMANDE_ACHAT",
+                entite_id: {
+                  in: demandeIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.demandes_achat.deleteMany({
+    where: {
+      OR: [
+        {
+          cree_par: {
+            in: ids,
+          },
+        },
+        {
+          decidee_par: {
+            in: ids,
+          },
+        },
+        ...(projectIds.length > 0
+          ? [
+              {
+                projet_id: {
+                  in: projectIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.projets.deleteMany({
+    where: {
+      ...(projectIds.length > 0
+        ? {
+            id: {
+              in: projectIds,
+            },
+          }
+        : {
+            id: -1n,
+          }),
     },
   });
 

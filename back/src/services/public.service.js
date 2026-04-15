@@ -16,6 +16,25 @@ const {
   serializeEquipe,
   serializeInstitution,
 } = require("../utils/serializers");
+const {
+  getArticlePdfAttachmentMap,
+  getLatestArticlePdfAttachment,
+  resolveArticlePdfDownload,
+  serializeArticlePdfAttachment,
+} = require("./article-pdf.service");
+
+async function enrichSerializedArticlesWithPdf(articles) {
+  const attachmentsByArticleId = await getArticlePdfAttachmentMap(
+    articles.map((article) => article.id),
+  );
+
+  return articles.map((article) =>
+    serializeArticle(
+      article,
+      serializeArticlePdfAttachment(attachmentsByArticleId.get(String(article.id))),
+    ),
+  );
+}
 
 function buildPublishedArticlesWhere(filters = {}) {
   const conditions = [{ statut: ARTICLE_STATUS.PUBLIE }];
@@ -175,7 +194,7 @@ async function listerArticlesPublics(filters) {
   ]);
 
   return {
-    elements: articles.map(serializeArticle),
+    elements: await enrichSerializedArticlesWithPdf(articles),
     meta: buildMeta(total, page, limit),
   };
 }
@@ -193,7 +212,27 @@ async function recupererArticlePublic(articleId) {
     throw new AppError("Article public introuvable.", 404);
   }
 
-  return serializeArticle(article);
+  const attachment = await getLatestArticlePdfAttachment(article.id);
+  return serializeArticle(article, serializeArticlePdfAttachment(attachment));
+}
+
+async function telechargerPdfArticlePublic(articleId) {
+  const article = await prisma.articles.findFirst({
+    where: {
+      id: toBigInt(articleId),
+      statut: ARTICLE_STATUS.PUBLIE,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!article) {
+    throw new AppError("Article public introuvable.", 404);
+  }
+
+  const attachment = await getLatestArticlePdfAttachment(article.id);
+  return resolveArticlePdfDownload(attachment, `article-${article.id}`);
 }
 
 async function listerActualitesPubliques(filters) {
@@ -243,6 +282,7 @@ module.exports = {
   enregistrerMessageContact,
   listerArticlesPublics,
   recupererArticlePublic,
+  telechargerPdfArticlePublic,
   listerActualitesPubliques,
   recupererActualitePublique,
 };

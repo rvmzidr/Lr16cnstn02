@@ -2,9 +2,19 @@ const adminService = require("../services/admin.service");
 const { successResponse } = require("../utils/api-response");
 const asyncHandler = require("../utils/async-handler");
 
+const getDashboardKPIs = asyncHandler(async (req, res) => {
+  const donnees = await adminService.recupererKPITechnique(req.auth.userId);
+  successResponse(res, "KPI du dashboard administrateur recuperes.", donnees);
+});
+
 const listInscriptions = asyncHandler(async (req, res) => {
   const donnees = await adminService.listerInscriptions(req.query);
   successResponse(res, "Demandes d'inscription recuperees.", donnees);
+});
+
+const getInscriptionDetail = asyncHandler(async (req, res) => {
+  const donnees = await adminService.recupererInscriptionDetail(req.params.id);
+  successResponse(res, "Detail de l'inscription recupere.", donnees);
 });
 
 const validerInscription = asyncHandler(async (req, res) => {
@@ -55,54 +65,70 @@ const changerRole = asyncHandler(async (req, res) => {
   successResponse(res, "Role du compte mis a jour.", donnees);
 });
 
-const listArticlesEnAttente = asyncHandler(async (_req, res) => {
-  const donnees = await adminService.listerArticlesEnAttente();
-  successResponse(res, "Articles en attente recuperes.", donnees);
+const listNotifications = asyncHandler(async (req, res) => {
+  const donnees = await adminService.listerNotificationsAdmin(
+    req.auth.userId,
+    req.query,
+  );
+  successResponse(res, "Notifications admin recuperees.", donnees);
 });
 
-const validerArticle = asyncHandler(async (req, res) => {
-  const donnees = await adminService.validerArticle(
+const getUnreadNotificationsCount = asyncHandler(async (req, res) => {
+  const donnees = await adminService.recupererCompteurNotificationsAdmin(
+    req.auth.userId,
+  );
+  successResponse(res, "Compteur des notifications admin recupere.", donnees);
+});
+
+const markNotificationAsRead = asyncHandler(async (req, res) => {
+  const donnees = await adminService.marquerNotificationAdminLue(
     req.auth.userId,
     req.params.id,
   );
-  successResponse(res, "Article valide avec succes.", donnees);
+  successResponse(res, "Notification marquee comme lue.", donnees);
 });
 
-const refuserArticle = asyncHandler(async (req, res) => {
-  const donnees = await adminService.refuserArticle(
+const markAllNotificationsAsRead = asyncHandler(async (req, res) => {
+  const donnees = await adminService.marquerToutesNotificationsAdminLues(
     req.auth.userId,
-    req.params.id,
+  );
+  successResponse(res, "Notifications admin marquees comme lues.", donnees);
+});
+
+const getAdminProfile = asyncHandler(async (req, res) => {
+  const donnees = await adminService.recupererProfilAdmin(req.auth.userId);
+  successResponse(res, "Profil administrateur recupere.", donnees);
+});
+
+const updateAdminProfile = asyncHandler(async (req, res) => {
+  const donnees = await adminService.mettreAJourProfilAdmin(
+    req.auth.userId,
     req.body,
   );
-  successResponse(res, "Article refuse avec succes.", donnees);
+  successResponse(res, "Profil administrateur mis a jour.", donnees);
 });
 
-const publierArticle = asyncHandler(async (req, res) => {
-  const donnees = await adminService.publierArticle(
+const updateAdminPassword = asyncHandler(async (req, res) => {
+  const donnees = await adminService.modifierMotDePasseAdmin(
     req.auth.userId,
-    req.params.id,
+    req.body,
   );
-  successResponse(res, "Article publie avec succes.", donnees);
+  successResponse(res, "Mot de passe administrateur mis a jour.", donnees);
 });
 
-const listActualites = asyncHandler(async (req, res) => {
-  const donnees = await adminService.listerActualitesAdmin(req.query);
-  successResponse(res, "Actualites admin recuperees.", donnees);
+const getAdminPreferences = asyncHandler(async (req, res) => {
+  const donnees = await adminService.recupererPreferencesNotificationAdmin(
+    req.auth.userId,
+  );
+  successResponse(res, "Preferences administrateur recuperees.", donnees);
 });
 
-const createActualite = asyncHandler(async (req, res) => {
-  const donnees = await adminService.creerActualite(req.auth.userId, req.body);
-  successResponse(res, "Actualite creee avec succes.", donnees, 201);
-});
-
-const updateActualite = asyncHandler(async (req, res) => {
-  const donnees = await adminService.modifierActualite(req.params.id, req.body);
-  successResponse(res, "Actualite mise a jour avec succes.", donnees);
-});
-
-const deleteActualite = asyncHandler(async (req, res) => {
-  await adminService.supprimerActualite(req.params.id);
-  successResponse(res, "Actualite supprimee avec succes.", null);
+const updateAdminPreferences = asyncHandler(async (req, res) => {
+  const donnees = await adminService.mettreAJourPreferencesNotificationAdmin(
+    req.auth.userId,
+    req.body,
+  );
+  successResponse(res, "Preferences administrateur mises a jour.", donnees);
 });
 
 const downloadDoctorantAttestation = asyncHandler(async (req, res) => {
@@ -114,20 +140,23 @@ const downloadDoctorantAttestation = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  getDashboardKPIs,
   listInscriptions,
+  getInscriptionDetail,
   validerInscription,
   refuserInscription,
   listComptes,
   activerCompte,
   desactiverCompte,
   changerRole,
-  listArticlesEnAttente,
-  validerArticle,
-  refuserArticle,
-  publierArticle,
-  listActualites,
-  createActualite,
-  updateActualite,
-  deleteActualite,
+  listNotifications,
+  getUnreadNotificationsCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  getAdminProfile,
+  updateAdminProfile,
+  updateAdminPassword,
+  getAdminPreferences,
+  updateAdminPreferences,
   downloadDoctorantAttestation,
 };

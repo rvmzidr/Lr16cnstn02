@@ -30,6 +30,15 @@ const {
   verifierDisponibiliteIdentifiants,
   verifierReferencesProfil,
 } = require("./member-profile.service");
+const {
+  getArticlePdfAttachmentMap,
+  getLatestArticlePdfAttachment,
+  replaceArticlePdfAttachment,
+  resolveArticlePdfDownload,
+  serializeArticlePdfAttachment,
+  stageArticlePdf,
+} = require("./article-pdf.service");
+const { createNotifications } = require("./collaboration.service");
 
 async function verifierCategorie(categorieId) {
   if (!categorieId) {
@@ -222,6 +231,39 @@ function verifierArticleEditable(article) {
   }
 }
 
+function isArticlePdfAccessibleByUser(userId, role, article) {
+  if (!article) {
+    return false;
+  }
+
+  if ([ROLES.ADMINISTRATEUR, ROLES.CHEF_LABO].includes(role)) {
+    return true;
+  }
+
+  if (article.statut === ARTICLE_STATUS.PUBLIE) {
+    return true;
+  }
+
+  if (article.deposant_id === userId) {
+    return true;
+  }
+
+  return article.auteurs_article.some((item) => item.utilisateur_id === userId);
+}
+
+async function enrichSerializedArticlesWithPdf(articles) {
+  const attachmentsByArticleId = await getArticlePdfAttachmentMap(
+    articles.map((article) => article.id),
+  );
+
+  return articles.map((article) =>
+    serializeArticle(
+      article,
+      serializeArticlePdfAttachment(attachmentsByArticleId.get(String(article.id))),
+    ),
+  );
+}
+
 async function listerMesArticles(userId) {
   const [articles, references] = await Promise.all([
     prisma.articles.findMany({
@@ -243,7 +285,7 @@ async function listerMesArticles(userId) {
   );
 
   return {
-    articles: articles.map(serializeArticle),
+    articles: await enrichSerializedArticlesWithPdf(articles),
     statistiques,
     references,
   };
@@ -395,7 +437,7 @@ async function rechercherArticlesMembre(userId, filters) {
   ]);
 
   return {
-    elements: articles.map(serializeArticle),
+    elements: await enrichSerializedArticlesWithPdf(articles),
     meta: buildMeta(total, page, limit),
   };
 }
@@ -453,13 +495,38 @@ async function creerArticleMembre(userId, payload) {
 
     await creerVersionArticle(tx, created.id, userId, payload, 1);
 
+    if (statut === ARTICLE_STATUS.SOUMIS) {
+      const reviewers = await tx.utilisateurs.findMany({
+        where: {
+          role: ROLES.CHEF_LABO,
+          statut: ACCOUNT_STATUS.ACTIF,
+          actif: true,
+        },
+        select: { id: true },
+      });
+
+      await createNotifications(
+        tx,
+        reviewers.map((item) => item.id),
+        {
+          typeNotification: "NOUVEL_ARTICLE",
+          titre: "Nouvel article soumis",
+          message: `Un nouvel article a ete soumis: \"${payload.titre}\".`,
+          articleId: created.id,
+          lienDirect: `/dashboard/chef/articles?articleId=${Number(created.id)}`,
+        },
+        "articles",
+      );
+    }
+
     return tx.articles.findUnique({
       where: { id: created.id },
       include: articleInclude,
     });
   });
 
-  return serializeArticle(article);
+  const attachment = await getLatestArticlePdfAttachment(article.id);
+  return serializeArticle(article, serializeArticlePdfAttachment(attachment));
 }
 
 async function modifierArticleMembre(userId, articleId, payload) {
@@ -514,13 +581,38 @@ async function modifierArticleMembre(userId, articleId, payload) {
       (versionMax._max.numero_version || 0) + 1,
     );
 
+    if (payload.action === "SOUMETTRE") {
+      const reviewers = await tx.utilisateurs.findMany({
+        where: {
+          role: ROLES.CHEF_LABO,
+          statut: ACCOUNT_STATUS.ACTIF,
+          actif: true,
+        },
+        select: { id: true },
+      });
+
+      await createNotifications(
+        tx,
+        reviewers.map((item) => item.id),
+        {
+          typeNotification: "NOUVEL_ARTICLE",
+          titre: "Article soumis pour validation",
+          message: `L'article \"${payload.titre}\" a ete soumis pour validation.`,
+          articleId: updated.id,
+          lienDirect: `/dashboard/chef/articles?articleId=${Number(updated.id)}`,
+        },
+        "articles",
+      );
+    }
+
     return tx.articles.findUnique({
       where: { id: updated.id },
       include: articleInclude,
     });
   });
 
-  return serializeArticle(article);
+  const attachment = await getLatestArticlePdfAttachment(article.id);
+  return serializeArticle(article, serializeArticlePdfAttachment(attachment));
 }
 
 async function ajouterCoAuteur(userId, articleId, payload) {
@@ -584,7 +676,11 @@ async function ajouterCoAuteur(userId, articleId, payload) {
     articleId,
   );
 
-  return serializeArticle(articleMisAJour);
+  const attachment = await getLatestArticlePdfAttachment(articleMisAJour.id);
+  return serializeArticle(
+    articleMisAJour,
+    serializeArticlePdfAttachment(attachment),
+  );
 }
 
 async function supprimerCoAuteur(userId, articleId, targetUserId) {
@@ -620,7 +716,79 @@ async function supprimerCoAuteur(userId, articleId, targetUserId) {
     articleId,
   );
 
-  return serializeArticle(articleMisAJour);
+  const attachment = await getLatestArticlePdfAttachment(articleMisAJour.id);
+  return serializeArticle(
+    articleMisAJour,
+    serializeArticlePdfAttachment(attachment),
+  );
+}
+
+async function televerserPdfArticleMembre(userId, articleId, file) {
+  const article = await recupererArticleDuDeposantOuErreur(userId, articleId);
+  verifierArticleEditable(article);
+
+  const stagedPdf = await stageArticlePdf(file);
+  let oldPathToDelete = null;
+
+  try {
+    const articleMisAJour = await prisma.$transaction(async (tx) => {
+      const replacementResult = await replaceArticlePdfAttachment(
+        tx,
+        article.id,
+        stagedPdf,
+        userId,
+      );
+      oldPathToDelete = replacementResult.oldPathToDelete;
+
+      await tx.articles.update({
+        where: { id: article.id },
+        data: {
+          modifie_par: userId,
+          modifie_le: new Date(),
+        },
+      });
+
+      return tx.articles.findUnique({
+        where: { id: article.id },
+        include: articleInclude,
+      });
+    });
+
+    await cleanupStoredFile(oldPathToDelete);
+    const attachment = await getLatestArticlePdfAttachment(article.id);
+
+    return serializeArticle(
+      articleMisAJour,
+      serializeArticlePdfAttachment(attachment),
+    );
+  } catch (error) {
+    await cleanupStoredFile(stagedPdf?.chemin);
+    throw error;
+  }
+}
+
+async function telechargerPdfArticleMembre(userId, role, articleId) {
+  const article = await prisma.articles.findUnique({
+    where: { id: toBigInt(articleId) },
+    include: {
+      auteurs_article: {
+        select: {
+          utilisateur_id: true,
+        },
+      },
+    },
+  });
+
+  if (!article) {
+    throw new AppError("Article introuvable.", 404);
+  }
+
+  if (!isArticlePdfAccessibleByUser(userId, role, article)) {
+    throw new AppError("Vous n'avez pas les droits pour acceder a ce PDF.", 403);
+  }
+
+  const attachment = await getLatestArticlePdfAttachment(article.id);
+  return resolveArticlePdfDownload(attachment, `article-${article.id}`);
 }
 
 module.exports = {
@@ -635,4 +803,6 @@ module.exports = {
   modifierArticleMembre,
   ajouterCoAuteur,
   supprimerCoAuteur,
+  televerserPdfArticleMembre,
+  telechargerPdfArticleMembre,
 };

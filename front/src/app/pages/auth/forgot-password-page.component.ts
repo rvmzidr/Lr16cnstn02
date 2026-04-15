@@ -165,8 +165,8 @@ export class ForgotPasswordPageComponent {
     ar: 'يتم إنشاء رابط الاسترجاع انطلاقًا من العنوان الرسمي للعضو.',
   };
   readonly featureTwoTitle = {
-    fr: 'Flux Release 1',
-    en: 'Release 1 flow',
+    fr: 'Flux Gestion des articles',
+    en: 'Gestion des articles flow',
     ar: 'مسار الإصدار 1',
   };
   readonly featureTwoText = {
