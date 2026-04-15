@@ -17,6 +17,17 @@ export type PurchaseRequestStatus =
   | 'COMMANDEE'
   | 'LIVREE';
 
+export type SupportTicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type SupportTicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type SupportTicketCategory =
+  | 'LOGIN'
+  | 'ACCOUNT'
+  | 'MESSAGING'
+  | 'NOTIFICATIONS'
+  | 'ARTICLES'
+  | 'SYSTEM'
+  | 'OTHER';
+
 export interface AdminDashboardKPIs {
   inscriptionsEnAttente: number;
   comptesActifs: number;
@@ -578,11 +589,102 @@ export interface PurchaseRequest {
   } | null;
 }
 
+export interface SupportAttachment {
+  id: number;
+  ticketId: number;
+  replyId: number | null;
+  fileName: string;
+  mimeType: string | null;
+  size: number | null;
+  uploadedAt: string;
+  uploadedBy: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+}
+
+export interface SupportReply {
+  id: number;
+  ticketId: number;
+  authorId: string;
+  message: string;
+  isInternalNote: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+  attachments: SupportAttachment[];
+}
+
+export interface SupportTicketSummary {
+  id: number;
+  subject: string;
+  description: string;
+  category: SupportTicketCategory;
+  priority: SupportTicketPriority;
+  status: SupportTicketStatus;
+  requesterId: string;
+  assignedAdminId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+  closedAt: string | null;
+  requester: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+  assignedAdmin: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+  replyCount: number;
+  attachmentCount: number;
+  lastReplyAt: string | null;
+}
+
+export interface SupportTicketDetail {
+  id: number;
+  subject: string;
+  description: string;
+  category: SupportTicketCategory;
+  priority: SupportTicketPriority;
+  status: SupportTicketStatus;
+  requesterId: string;
+  assignedAdminId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+  closedAt: string | null;
+  requester: SupportTicketSummary['requester'];
+  assignedAdmin: SupportTicketSummary['assignedAdmin'];
+  attachments: SupportAttachment[];
+  replies: SupportReply[];
+}
+
+export interface SupportTicketStats {
+  open: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+  total: number;
+}
+
 export type AdminNotificationCategory =
   | 'registration'
   | 'account'
   | 'message'
-  | 'role';
+  | 'role'
+  | 'support';
 
 export interface NotificationItem {
   id: number;

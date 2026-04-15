@@ -39,6 +39,15 @@ const ADMIN_NOTIFICATION_TYPES_BY_CATEGORY = Object.freeze({
   account: ["COMPTE_VALIDE", "COMPTE_REJETE", "COMPTE_DESACTIVE"],
   message: ["NOUVEAU_MESSAGE"],
   role: ["SYSTEME"],
+  support: [
+    "SUPPORT_TICKET_CREE",
+    "SUPPORT_TICKET_ASSIGNE",
+    "SUPPORT_TICKET_REPONSE",
+    "SUPPORT_TICKET_STATUT_MODIFIE",
+    "SUPPORT_TICKET_RESOLU",
+    "SUPPORT_TICKET_FERME",
+    "SUPPORT_TICKET_REOUVERT",
+  ],
 });
 
 const ADMIN_NOTIFICATION_TYPES = Object.freeze(
@@ -68,6 +77,10 @@ function mapAdminNotificationCategory(typeNotification) {
 
   if (ADMIN_NOTIFICATION_TYPES_BY_CATEGORY.role.includes(typeNotification)) {
     return "role";
+  }
+
+  if (ADMIN_NOTIFICATION_TYPES_BY_CATEGORY.support.includes(typeNotification)) {
+    return "support";
   }
 
   return null;

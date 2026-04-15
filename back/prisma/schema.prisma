@@ -373,6 +373,66 @@ model notifications {
   @@index([utilisateur_id, est_lue, cree_le(sort: Desc)], map: "idx_notifications_utilisateur_lue")
 }
 
+model support_tickets {
+  id                           BigInt               @id @default(autoincrement())
+  demandeur_id                 String               @db.Char(36)
+  sujet                        String               @db.VarChar(255)
+  description                  String               @db.Text
+  categorie                    type_categorie_support
+  priorite                     type_priorite_support @default(MEDIUM)
+  statut                       type_statut_support   @default(OPEN)
+  admin_assigne_id             String?              @db.Char(36)
+  resolu_le                    DateTime?            @db.Timestamp(6)
+  ferme_le                     DateTime?            @db.Timestamp(6)
+  cree_le                      DateTime             @default(now()) @db.Timestamp(6)
+  modifie_le                   DateTime             @default(now()) @db.Timestamp(6)
+  demandeur                    utilisateurs          @relation("support_ticket_demandeur", fields: [demandeur_id], references: [id], onUpdate: NoAction, map: "fk_support_ticket_demandeur")
+  admin_assigne                utilisateurs?         @relation("support_ticket_admin_assigne", fields: [admin_assigne_id], references: [id], onUpdate: NoAction, map: "fk_support_ticket_admin_assigne")
+  support_pieces_jointes                                  support_pieces_jointes[]
+  support_reponses                                        support_reponses[]
+
+  @@index([demandeur_id], map: "idx_support_tickets_demandeur")
+  @@index([admin_assigne_id], map: "idx_support_tickets_admin")
+  @@index([statut], map: "idx_support_tickets_statut")
+  @@index([categorie], map: "idx_support_tickets_categorie")
+  @@index([priorite], map: "idx_support_tickets_priorite")
+  @@index([cree_le], map: "idx_support_tickets_cree_le")
+}
+
+model support_reponses {
+  id                  BigInt                  @id @default(autoincrement())
+  ticket_id           BigInt
+  auteur_id           String                  @db.Char(36)
+  message             String                  @db.Text
+  est_note_interne    Boolean                 @default(false)
+  cree_le             DateTime                @default(now()) @db.Timestamp(6)
+  modifie_le          DateTime                @default(now()) @db.Timestamp(6)
+  ticket              support_tickets         @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_support_reponses_ticket")
+  auteur              utilisateurs            @relation("support_reponse_auteur", fields: [auteur_id], references: [id], onUpdate: NoAction, map: "fk_support_reponses_auteur")
+  support_pieces_jointes support_pieces_jointes[]
+
+  @@index([ticket_id, cree_le], map: "idx_support_reponses_ticket")
+  @@index([auteur_id], map: "idx_support_reponses_auteur")
+}
+
+model support_pieces_jointes {
+  id                  BigInt           @id @default(autoincrement())
+  ticket_id           BigInt
+  reponse_id          BigInt?
+  nom_fichier         String           @db.VarChar(255)
+  chemin_fichier      String           @db.Text
+  type_mime           String?          @db.VarChar(150)
+  taille_octets       BigInt?
+  ajoute_par          String?          @db.Char(36)
+  cree_le             DateTime         @default(now()) @db.Timestamp(6)
+  ticket              support_tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_support_pieces_jointes_ticket")
+  reponse             support_reponses? @relation(fields: [reponse_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_support_pieces_jointes_reponse")
+  uploader            utilisateurs?     @relation("support_piece_jointe_auteur", fields: [ajoute_par], references: [id], onUpdate: NoAction, map: "fk_support_pieces_jointes_ajoute_par")
+
+  @@index([ticket_id], map: "idx_support_pieces_jointes_ticket")
+  @@index([reponse_id], map: "idx_support_pieces_jointes_reponse")
+}
+
 model participants_conversation {
   conversation_id BigInt
   utilisateur_id  String        @db.Char(36)
@@ -521,6 +581,10 @@ model utilisateurs {
   preferences_notification                                           preferences_notification?
   profil                                                             profils_utilisateur?        @relation("profil_utilisateur")
   projets                                                            projets[]
+  support_tickets_assignes                                            support_tickets[]            @relation("support_ticket_admin_assigne")
+  support_tickets_demandes                                            support_tickets[]            @relation("support_ticket_demandeur")
+  support_reponses_auteur                                             support_reponses[]           @relation("support_reponse_auteur")
+  support_pieces_jointes_auteur                                       support_pieces_jointes[]     @relation("support_piece_jointe_auteur")
   validateur_compte                                                  utilisateurs?               @relation("utilisateurs_validateur", fields: [valide_par], references: [id], onUpdate: NoAction, map: "fk_utilisateurs_validateur")
   utilisateurs_valides                                               utilisateurs[]              @relation("utilisateurs_validateur")
   versions_article                                                   versions_article[]          @relation("versions_article_sauvegarde")
@@ -604,7 +668,38 @@ enum type_notification {
   DEMANDE_ACHAT_COMMENTAIRE
   DEMANDE_ACHAT_PIECE_JOINTE
   DEMANDE_ACHAT_LIVREE
+  SUPPORT_TICKET_CREE
+  SUPPORT_TICKET_ASSIGNE
+  SUPPORT_TICKET_REPONSE
+  SUPPORT_TICKET_STATUT_MODIFIE
+  SUPPORT_TICKET_RESOLU
+  SUPPORT_TICKET_FERME
+  SUPPORT_TICKET_REOUVERT
   SYSTEME
+}
+
+enum type_categorie_support {
+  LOGIN
+  ACCOUNT
+  MESSAGING
+  NOTIFICATIONS
+  ARTICLES
+  SYSTEM
+  OTHER
+}
+
+enum type_priorite_support {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum type_statut_support {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }
 
 enum type_role {

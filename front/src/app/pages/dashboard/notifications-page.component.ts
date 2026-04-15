@@ -24,7 +24,8 @@ type NotificationFilterType =
   | 'registration'
   | 'account'
   | 'message'
-  | 'role';
+  | 'role'
+  | 'support';
 
 type NotificationReadFilter = 'all' | 'unread' | 'read';
 
@@ -278,6 +279,10 @@ export class NotificationsPageComponent implements OnInit {
       value: 'role',
       label: this.site.localize({ fr: 'Roles', en: 'Roles', ar: 'الأدوار' }),
     },
+    {
+      value: 'support',
+      label: this.site.localize({ fr: 'Support', en: 'Support', ar: 'الدعم' }),
+    },
   ]);
 
   readonly readFilters = computed<Array<{ value: NotificationReadFilter; label: string }>>(() => [
@@ -473,6 +478,10 @@ export class NotificationsPageComponent implements OnInit {
       return this.site.localize({ fr: 'Role', en: 'Role', ar: 'دور' });
     }
 
+    if (categorie === 'support') {
+      return this.site.localize({ fr: 'Support', en: 'Support', ar: 'الدعم' });
+    }
+
     return this.site.localize({
       fr: 'Notification',
       en: 'Notification',
@@ -499,6 +508,10 @@ export class NotificationsPageComponent implements OnInit {
       return this.icons.KeyRound;
     }
 
+    if (categorie === 'support') {
+      return this.icons.LifeBuoy;
+    }
+
     return this.icons.Bell;
   }
 
@@ -519,6 +532,10 @@ export class NotificationsPageComponent implements OnInit {
 
     if (categorie === 'role') {
       return 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 text-slate-700';
+    }
+
+    if (categorie === 'support') {
+      return 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700';
     }
 
     return 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground';
@@ -547,6 +564,20 @@ export class NotificationsPageComponent implements OnInit {
 
     if (item.typeNotification === 'SYSTEME') {
       return 'role';
+    }
+
+    if (
+      [
+        'SUPPORT_TICKET_CREE',
+        'SUPPORT_TICKET_ASSIGNE',
+        'SUPPORT_TICKET_REPONSE',
+        'SUPPORT_TICKET_STATUT_MODIFIE',
+        'SUPPORT_TICKET_RESOLU',
+        'SUPPORT_TICKET_FERME',
+        'SUPPORT_TICKET_REOUVERT',
+      ].includes(item.typeNotification)
+    ) {
+      return 'support';
     }
 
     return null;

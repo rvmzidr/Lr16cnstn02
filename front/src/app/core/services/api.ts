@@ -29,6 +29,10 @@ import type {
   Project,
   PurchaseRequest,
   PublicContactResponse,
+  SupportAttachment,
+  SupportTicketDetail,
+  SupportTicketStats,
+  SupportTicketSummary,
   ConversationSummary,
   ConversationDetail,
   RegistrationReferences,
@@ -65,6 +69,7 @@ type ApiErrorEnvelope = {
 
 const ADMIN_REGISTRATIONS_MAX_LIMIT = 50;
 const ADMIN_NOTIFICATIONS_MAX_LIMIT = 50;
+const SUPPORT_TICKETS_MAX_LIMIT = 50;
 
 function toPositiveInt(value: string | number | undefined | null) {
   if (value === undefined || value === null || value === '') {
@@ -105,7 +110,7 @@ function normalizeAdminNotificationsQuery(query?: RequestOptions['query']) {
   const read = typeof query['read'] === 'string' ? query['read'].trim().toLowerCase() : undefined;
 
   const normalizedType =
-    type && ['all', 'registration', 'account', 'message', 'role'].includes(type)
+    type && ['all', 'registration', 'account', 'message', 'role', 'support'].includes(type)
       ? type
       : undefined;
 
@@ -124,6 +129,21 @@ function normalizeAdminNotificationsQuery(query?: RequestOptions['query']) {
     page: page === null ? undefined : page,
     type: normalizedType,
     read: normalizedRead,
+  };
+}
+
+function normalizeSupportTicketsQuery(query?: RequestOptions['query']) {
+  if (!query) {
+    return undefined;
+  }
+
+  const limit = toPositiveInt(query['limit']);
+  const page = toPositiveInt(query['page']);
+
+  return {
+    ...query,
+    limit: limit === null ? undefined : Math.min(limit, SUPPORT_TICKETS_MAX_LIMIT),
+    page: page === null ? undefined : page,
   };
 }
 
@@ -991,6 +1011,132 @@ export const api = {
       method: 'PATCH',
       token,
       body: payload,
+    });
+  },
+
+  createSupportTicket(
+    token: string,
+    payload:
+      | FormData
+      | {
+          sujet: string;
+          categorie:
+            | 'LOGIN'
+            | 'ACCOUNT'
+            | 'MESSAGING'
+            | 'NOTIFICATIONS'
+            | 'ARTICLES'
+            | 'SYSTEM'
+            | 'OTHER';
+          priorite?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+          description: string;
+        },
+  ) {
+    return request<SupportTicketDetail>('/support/tickets', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+
+  listMySupportTickets(token: string, query?: RequestOptions['query']) {
+    return request<{ elements: SupportTicketSummary[]; meta: PaginationMeta }>(
+      '/support/tickets/my',
+      {
+        token,
+        query: normalizeSupportTicketsQuery(query),
+      },
+    );
+  },
+
+  getMySupportTicketDetail(token: string, ticketId: number) {
+    return request<SupportTicketDetail>(`/support/tickets/${ticketId}`, {
+      token,
+    });
+  },
+
+  createSupportTicketReply(
+    token: string,
+    ticketId: number,
+    payload: FormData | { message?: string; rouvrirTicket?: boolean },
+  ) {
+    return request<SupportTicketDetail>(`/support/tickets/${ticketId}/replies`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+
+  createAdminSupportTicketReply(
+    token: string,
+    ticketId: number,
+    payload: FormData | { message?: string; estNoteInterne?: boolean },
+  ) {
+    return request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}/replies`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+
+  uploadSupportTicketAttachment(token: string, ticketId: number, file: File) {
+    const formData = new FormData();
+    formData.set('pieceJointe', file);
+
+    return request<SupportAttachment>(`/support/tickets/${ticketId}/attachments`, {
+      method: 'POST',
+      token,
+      body: formData,
+    });
+  },
+
+  downloadSupportAttachment(token: string, attachmentId: number) {
+    return downloadProtectedFile(`/support/attachments/${attachmentId}`, token);
+  },
+
+  listAdminSupportTickets(token: string, query?: RequestOptions['query']) {
+    return request<{ elements: SupportTicketSummary[]; meta: PaginationMeta }>(
+      '/admin/support/tickets',
+      {
+        token,
+        query: normalizeSupportTicketsQuery(query),
+      },
+    );
+  },
+
+  getAdminSupportTicketDetail(token: string, ticketId: number) {
+    return request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}`, {
+      token,
+    });
+  },
+
+  updateAdminSupportTicketStatus(
+    token: string,
+    ticketId: number,
+    payload: { statut: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' },
+  ) {
+    return request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}/status`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  assignAdminSupportTicket(
+    token: string,
+    ticketId: number,
+    payload: { adminId?: string },
+  ) {
+    return request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}/assign`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  getAdminSupportStats(token: string) {
+    return request<SupportTicketStats>('/admin/support/stats', {
+      token,
     });
   },
 };

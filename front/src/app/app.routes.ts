@@ -225,6 +225,13 @@ export const routes: Routes = [
         canActivate: [dashboardRoleGuard(['admin'])],
       },
       {
+        path: 'support',
+        loadComponent: () =>
+          import('./pages/dashboard/support-page.component').then(
+            (m) => m.SupportPageComponent,
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./pages/dashboard/admin-settings-page.component').then(

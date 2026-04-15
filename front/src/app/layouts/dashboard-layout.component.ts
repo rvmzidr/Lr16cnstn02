@@ -355,6 +355,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       roles: ['admin', 'chef', 'membre'],
     },
     {
+      key: 'support',
+      label: { fr: 'Support interne', en: 'Internal support', ar: 'الدعم الداخلي' },
+      path: '/dashboard/support',
+      icon: this.icons.LifeBuoy,
+      roles: ['admin', 'chef', 'membre'],
+    },
+    {
       key: 'notifications',
       label: { fr: 'Notifications', en: 'Notifications', ar: 'الإشعارات' },
       path: '/dashboard/notifications',
@@ -400,7 +407,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     const url = this.currentUrl();
 
     if (url.startsWith('/dashboard/settings')) {
-      return 'Parametres';
+      return this.site.localize(this.settingsLabel);
     }
 
     const match = this.visibleMenuItems().find((item) =>

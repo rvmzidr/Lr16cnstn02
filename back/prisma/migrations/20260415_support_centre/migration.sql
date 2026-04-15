@@ -1,0 +1,87 @@
+CREATE TABLE IF NOT EXISTS `support_tickets` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `demandeur_id` CHAR(36) NOT NULL,
+  `sujet` VARCHAR(255) NOT NULL,
+  `description` TEXT NOT NULL,
+  `categorie` ENUM('LOGIN', 'ACCOUNT', 'MESSAGING', 'NOTIFICATIONS', 'ARTICLES', 'SYSTEM', 'OTHER') NOT NULL,
+  `priorite` ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT') NOT NULL DEFAULT 'MEDIUM',
+  `statut` ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
+  `admin_assigne_id` CHAR(36) NULL,
+  `resolu_le` TIMESTAMP(6) NULL,
+  `ferme_le` TIMESTAMP(6) NULL,
+  `cree_le` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `modifie_le` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  INDEX `idx_support_tickets_demandeur` (`demandeur_id`),
+  INDEX `idx_support_tickets_admin` (`admin_assigne_id`),
+  INDEX `idx_support_tickets_statut` (`statut`),
+  INDEX `idx_support_tickets_categorie` (`categorie`),
+  INDEX `idx_support_tickets_priorite` (`priorite`),
+  INDEX `idx_support_tickets_cree_le` (`cree_le`),
+  CONSTRAINT `fk_support_ticket_demandeur` FOREIGN KEY (`demandeur_id`) REFERENCES `utilisateurs`(`id`) ON DELETE RESTRICT ON UPDATE NO ACTION,
+  CONSTRAINT `fk_support_ticket_admin_assigne` FOREIGN KEY (`admin_assigne_id`) REFERENCES `utilisateurs`(`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `support_reponses` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `ticket_id` BIGINT NOT NULL,
+  `auteur_id` CHAR(36) NOT NULL,
+  `message` TEXT NOT NULL,
+  `est_note_interne` BOOLEAN NOT NULL DEFAULT FALSE,
+  `cree_le` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `modifie_le` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  INDEX `idx_support_reponses_ticket` (`ticket_id`, `cree_le`),
+  INDEX `idx_support_reponses_auteur` (`auteur_id`),
+  CONSTRAINT `fk_support_reponses_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `support_tickets`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `fk_support_reponses_auteur` FOREIGN KEY (`auteur_id`) REFERENCES `utilisateurs`(`id`) ON DELETE RESTRICT ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `support_pieces_jointes` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `ticket_id` BIGINT NOT NULL,
+  `reponse_id` BIGINT NULL,
+  `nom_fichier` VARCHAR(255) NOT NULL,
+  `chemin_fichier` TEXT NOT NULL,
+  `type_mime` VARCHAR(150) NULL,
+  `taille_octets` BIGINT NULL,
+  `ajoute_par` CHAR(36) NULL,
+  `cree_le` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  INDEX `idx_support_pieces_jointes_ticket` (`ticket_id`),
+  INDEX `idx_support_pieces_jointes_reponse` (`reponse_id`),
+  CONSTRAINT `fk_support_pieces_jointes_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `support_tickets`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `fk_support_pieces_jointes_reponse` FOREIGN KEY (`reponse_id`) REFERENCES `support_reponses`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `fk_support_pieces_jointes_ajoute_par` FOREIGN KEY (`ajoute_par`) REFERENCES `utilisateurs`(`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `notifications`
+  MODIFY COLUMN `type_notification` ENUM(
+    'NOUVELLE_INSCRIPTION',
+    'COMPTE_VALIDE',
+    'COMPTE_REJETE',
+    'COMPTE_DESACTIVE',
+    'NOUVEL_ARTICLE',
+    'ARTICLE_VALIDE',
+    'ARTICLE_REJETE',
+    'ARTICLE_PUBLIE',
+    'ACTUALITE_PUBLIEE',
+    'NOUVEAU_MESSAGE',
+    'NOUVEAU_PROJET',
+    'PROJET_MODIFIE',
+    'NOUVELLE_DEMANDE_ACHAT',
+    'DEMANDE_ACHAT_ACCEPTEE',
+    'DEMANDE_ACHAT_REJETEE',
+    'DEMANDE_ACHAT_STATUT_MODIFIE',
+    'DEMANDE_ACHAT_COMMENTAIRE',
+    'DEMANDE_ACHAT_PIECE_JOINTE',
+    'DEMANDE_ACHAT_LIVREE',
+    'SUPPORT_TICKET_CREE',
+    'SUPPORT_TICKET_ASSIGNE',
+    'SUPPORT_TICKET_REPONSE',
+    'SUPPORT_TICKET_STATUT_MODIFIE',
+    'SUPPORT_TICKET_RESOLU',
+    'SUPPORT_TICKET_FERME',
+    'SUPPORT_TICKET_REOUVERT',
+    'SYSTEME'
+  ) NOT NULL;

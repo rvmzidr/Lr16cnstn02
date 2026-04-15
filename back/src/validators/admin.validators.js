@@ -119,7 +119,7 @@ const actualitesQuerySchema = z.object({
 const adminNotificationsQuerySchema = z.object({
   type: z.preprocess(
     (value) => (value === "" || value === null || value === undefined ? "all" : value),
-    z.enum(["all", "registration", "account", "message", "role"]),
+    z.enum(["all", "registration", "account", "message", "role", "support"]),
   ),
   read: z.preprocess(
     (value) => (value === "" || value === null || value === undefined ? "all" : value),
