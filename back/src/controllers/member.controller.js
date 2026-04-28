@@ -24,6 +24,31 @@ const downloadDoctorantAttestation = asyncHandler(async (req, res) => {
   res.download(file.path, file.downloadName);
 });
 
+const getProfilePhoto = asyncHandler(async (req, res) => {
+  const file = await memberService.telechargerPhotoProfilMembre(req.auth.userId);
+  res.type(file.mimeType);
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename="${file.downloadName}"`,
+  );
+  res.sendFile(file.path);
+});
+
+const uploadProfilePhoto = asyncHandler(async (req, res) => {
+  const donnees = await memberService.televerserPhotoProfilMembre(
+    req.auth.userId,
+    req.file,
+  );
+  successResponse(res, "Photo de profil mise a jour.", donnees);
+});
+
+const deleteProfilePhoto = asyncHandler(async (req, res) => {
+  const donnees = await memberService.supprimerPhotoProfilMembre(
+    req.auth.userId,
+  );
+  successResponse(res, "Photo de profil supprimee.", donnees);
+});
+
 const listMembres = asyncHandler(async (req, res) => {
   const donnees = await memberService.listerMembresActifs(req.query);
   successResponse(res, "Membres actifs recuperes.", donnees);
@@ -91,6 +116,19 @@ const uploadArticlePdf = asyncHandler(async (req, res) => {
   successResponse(res, "PDF de l'article televerse avec succes.", donnees);
 });
 
+const uploadArticleCover = asyncHandler(async (req, res) => {
+  const donnees = await memberService.televerserCouvertureArticleMembre(
+    req.auth.userId,
+    req.params.id,
+    req.file,
+  );
+  successResponse(
+    res,
+    "Couverture de l'article televersee avec succes.",
+    donnees,
+  );
+});
+
 const downloadArticlePdf = asyncHandler(async (req, res) => {
   const file = await memberService.telechargerPdfArticleMembre(
     req.auth.userId,
@@ -110,6 +148,9 @@ module.exports = {
   getProfil,
   updateProfil,
   downloadDoctorantAttestation,
+  getProfilePhoto,
+  uploadProfilePhoto,
+  deleteProfilePhoto,
   listMembres,
   listActualites,
   listMesArticles,
@@ -119,5 +160,6 @@ module.exports = {
   addCoAuteur,
   deleteCoAuteur,
   uploadArticlePdf,
+  uploadArticleCover,
   downloadArticlePdf,
 };

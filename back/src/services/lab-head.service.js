@@ -85,10 +85,8 @@ async function recupererKPIChefLabo(userId) {
     }),
     prisma.demandes_achat.count({
       where: {
-        statut: "EN_ATTENTE",
-        projets: {
-          cree_par: userId,
-          archive: false,
+        statut: {
+          in: ["EN_ATTENTE", "PDF_GENERE", "TELECHARGEE", "EN_ATTENTE_SIGNATURE_CHEF"],
         },
       },
     }),
@@ -112,10 +110,8 @@ async function recupererKPIChefLabo(userId) {
     }),
     prisma.demandes_achat.findMany({
       where: {
-        statut: "EN_ATTENTE",
-        projets: {
-          cree_par: userId,
-          archive: false,
+        statut: {
+          in: ["EN_ATTENTE", "PDF_GENERE", "TELECHARGEE", "EN_ATTENTE_SIGNATURE_CHEF"],
         },
       },
       orderBy: [{ cree_le: "asc" }, { id: "asc" }],
@@ -125,11 +121,6 @@ async function recupererKPIChefLabo(userId) {
         objet: true,
         estimation_cout: true,
         cree_le: true,
-        projets: {
-          select: {
-            titre: true,
-          },
-        },
         utilisateurs_demandes_achat_cree_parToutilisateurs: {
           select: {
             nom: true,
@@ -226,7 +217,6 @@ async function recupererKPIChefLabo(userId) {
       purchaseRequests: pendingPurchaseRequests.map((request) => ({
         id: toNumber(request.id),
         title: request.objet,
-        projectName: request.projets?.titre || null,
         requester: formatFullName(
           request.utilisateurs_demandes_achat_cree_parToutilisateurs,
         ),
@@ -248,9 +238,13 @@ async function recupererKPIChefLabo(userId) {
   };
 }
 
+async function listerArticlesModeration(filters = {}) {
+  return adminService.listerArticlesEnAttente(filters);
+}
+
 module.exports = {
   recupererKPIChefLabo,
-  listerArticlesModeration: adminService.listerArticlesEnAttente,
+  listerArticlesModeration,
   validerArticle: adminService.validerArticle,
   refuserArticle: adminService.refuserArticle,
   publierArticle: adminService.publierArticle,

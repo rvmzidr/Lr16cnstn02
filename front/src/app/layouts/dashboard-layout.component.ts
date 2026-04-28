@@ -4,6 +4,7 @@ import {
   OnDestroy,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -27,6 +28,8 @@ import {
   DashboardRole,
   RoleService,
 } from '../shared/services/role.service';
+import { AccessContextService } from '../shared/services/access-context.service';
+import { NotificationsStateService } from '../shared/services/notifications-state.service';
 import { sharedIcons } from '../shared/lucide-icons';
 import { ToolbarControlsComponent } from '../shared/components/toolbar-controls.component';
 
@@ -52,7 +55,7 @@ type DashboardMenuItem = {
   template: `
     <div class="min-h-screen bg-background text-foreground">
       <aside
-        class="fixed inset-y-0 left-0 z-50 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300"
+        class="dashboard-sidebar-premium fixed inset-y-0 left-0 z-50 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300"
         [class.w-64]="sidebarExpanded()"
         [class.w-[72px]]="!sidebarExpanded()"
         [class.translate-x-0]="isDesktop() || mobileSidebarOpen()"
@@ -60,7 +63,7 @@ type DashboardMenuItem = {
       >
         <div class="flex h-full flex-col">
           <div
-            class="flex h-16 items-center gap-3 border-b border-sidebar-border px-4"
+            class="dashboard-sidebar-brand flex h-16 items-center gap-3 border-b border-sidebar-border px-4"
             [class.justify-center]="!sidebarExpanded()"
           >
             <div
@@ -87,9 +90,9 @@ type DashboardMenuItem = {
                 <li>
                   <a
                     [routerLink]="item.path"
-                    routerLinkActive="bg-secondary text-secondary-foreground"
+                    routerLinkActive="dashboard-nav-link--active"
                     [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
-                    class="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    class="dashboard-nav-link group"
                     (click)="closeMobileSidebar()"
                     [title]="site.localize(item.label)"
                   >
@@ -105,9 +108,10 @@ type DashboardMenuItem = {
 
           <div class="border-t border-sidebar-border px-3 py-4">
             @if (roleService.isAdmin()) {
+              @if (accessContext.isModuleVisible('admin_settings')) {
               <a
                 routerLink="/dashboard/settings"
-                class="mb-2 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+                class="dashboard-nav-link mb-2"
                 [title]="site.localize(settingsLabel)"
                 (click)="closeMobileSidebar()"
               >
@@ -116,11 +120,12 @@ type DashboardMenuItem = {
                   <span>{{ site.localize(settingsLabel) }}</span>
                 }
               </a>
+              }
             }
 
             <a
               routerLink="/"
-              class="flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+              class="dashboard-nav-link"
                 [title]="site.localize(returnToSiteLabel)"
               (click)="closeMobileSidebar()"
             >
@@ -132,7 +137,7 @@ type DashboardMenuItem = {
 
             <button
               type="button"
-              class="mt-2 flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold transition hover:bg-sidebar-accent"
+              class="dashboard-nav-link mt-2 w-full"
               [title]="site.localize(logoutLabel)"
               (click)="logout()"
             >
@@ -159,7 +164,7 @@ type DashboardMenuItem = {
         [style.padding-left.px]="contentOffset()"
       >
         <header
-          class="fixed right-0 top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur"
+          class="dashboard-topbar-premium fixed right-0 top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur"
           [style.left.px]="headerLeftOffset()"
         >
           <div class="flex h-full items-center justify-between px-4 lg:px-6">
@@ -187,7 +192,7 @@ type DashboardMenuItem = {
             <div class="flex items-center gap-3">
               <app-toolbar-controls [showThemeToggle]="false"></app-toolbar-controls>
 
-              @if (roleService.isAdmin()) {
+              @if (canAccessNotifications()) {
                 <button
                   type="button"
                   class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
@@ -207,15 +212,23 @@ type DashboardMenuItem = {
 
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-left transition hover:bg-muted"
+                class="dashboard-avatar-shell inline-flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 text-left transition hover:bg-muted"
                 (click)="goToProfile()"
                 [attr.aria-label]="site.localize(profileLabel)"
               >
-                <span
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
-                >
-                  {{ initials() }}
-                </span>
+                @if (profilePhotoUrl()) {
+                  <img
+                    [src]="profilePhotoUrl()"
+                    [alt]="site.localize(profileLabel)"
+                    class="h-8 w-8 rounded-full border border-border object-cover"
+                  />
+                } @else {
+                  <span
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+                  >
+                    {{ initials() }}
+                  </span>
+                }
                 @if (isDesktop()) {
                   <lucide-icon [img]="icons.ChevronDown" class="h-4 w-4"></lucide-icon>
                 }
@@ -234,6 +247,8 @@ type DashboardMenuItem = {
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   readonly auth = inject(AuthService);
   readonly roleService = inject(RoleService);
+  readonly accessContext = inject(AccessContextService);
+  readonly notificationsState = inject(NotificationsStateService);
   readonly site = inject(SitePreferencesService);
   readonly router = inject(Router);
   readonly icons = sharedIcons;
@@ -285,10 +300,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     typeof window === 'undefined' ? 1280 : window.innerWidth,
   );
   readonly currentUrl = signal(this.router.url);
-  readonly unreadNotifications = signal(0);
+  readonly profilePhotoUrl = signal<string | null>(null);
 
   private navigationSubscription?: Subscription;
   private resizeHandler?: () => void;
+  private profilePhotoObjectUrl: string | null = null;
+  private loadedProfilePhotoKey: string | null = null;
+  private profilePhotoRequestId = 0;
 
   readonly allMenuItems: DashboardMenuItem[] = [
     {
@@ -313,11 +331,18 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       roles: ['chef', 'membre'],
     },
     {
+      key: 'profile',
+      label: { fr: 'Profil', en: 'Profile', ar: 'الملف الشخصي' },
+      path: '/dashboard/profil',
+      icon: this.icons.UserCircle2,
+      roles: ['chef', 'membre'],
+    },
+    {
       key: 'users',
       label: { fr: 'Utilisateurs', en: 'Users', ar: 'المستخدمون' },
       path: '/dashboard/users',
       icon: this.icons.Users,
-      roles: ['admin'],
+      roles: ['admin', 'chef', 'membre'],
     },
     {
       key: 'registrations',
@@ -334,18 +359,22 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       roles: ['admin'],
     },
     {
+      key: 'access-control',
+      label: {
+        fr: 'Acces utilisateurs',
+        en: 'User access',
+        ar: 'صلاحيات المستخدمين',
+      },
+      path: '/dashboard/user-access',
+      icon: this.icons.Shield,
+      roles: ['admin'],
+    },
+    {
       key: 'purchases',
       label: { fr: 'Achats', en: 'Purchases', ar: 'المشتريات' },
       path: '/dashboard/purchases',
       icon: this.icons.ShoppingCart,
       roles: ['chef', 'membre'],
-    },
-    {
-      key: 'budget',
-      label: { fr: 'Budget', en: 'Budget', ar: 'الميزانية' },
-      path: '/dashboard/budget',
-      icon: this.icons.Wallet,
-      roles: ['chef'],
     },
     {
       key: 'messages',
@@ -366,20 +395,41 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       label: { fr: 'Notifications', en: 'Notifications', ar: 'الإشعارات' },
       path: '/dashboard/notifications',
       icon: this.icons.Bell,
-      roles: ['admin'],
+      roles: ['admin', 'chef', 'membre'],
     },
   ];
 
   readonly isDesktop = computed(() => this.viewportWidth() >= 1024);
   readonly currentRole = computed(() => this.roleService.dashboardRole());
+  readonly canAccessNotifications = computed(
+    () =>
+      this.accessContext.isModuleVisible('notifications') &&
+      this.accessContext.isPermissionAllowed('canViewNotifications'),
+  );
   readonly visibleMenuItems = computed(() => {
     const role = this.currentRole();
-    return this.allMenuItems.filter((item) => item.roles.includes(role));
+
+    return this.allMenuItems.filter((item) => {
+      if (!item.roles.includes(role)) {
+        return false;
+      }
+
+      if (
+        item.key === 'notifications' &&
+        !this.accessContext.isPermissionAllowed('canViewNotifications')
+      ) {
+        return false;
+      }
+
+      const moduleKey = this.menuModuleKey(item.key);
+      return moduleKey ? this.accessContext.isModuleVisible(moduleKey) : true;
+    });
   });
 
   readonly initials = computed(() =>
     getInitials(this.auth.session()?.utilisateur?.nomComplet || ''),
   );
+  readonly unreadNotifications = computed(() => this.notificationsState.unreadCount());
 
   readonly roleBadgeLabel = computed(() => {
     const role = this.currentRole();
@@ -402,6 +452,27 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
     return this.site.localize({ fr: 'Membre', en: 'Member', ar: 'عضو' });
   });
+
+  constructor() {
+    effect(() => {
+      const token = this.auth.session()?.accessToken || '';
+      const photoKey = this.auth.session()?.utilisateur?.profil?.photoUrl || '';
+      const cacheKey = token && photoKey ? `${token}:${photoKey}` : '';
+
+      if (!cacheKey) {
+        this.clearProfilePhoto();
+        return;
+      }
+
+      if (cacheKey === this.loadedProfilePhotoKey) {
+        return;
+      }
+
+      this.loadedProfilePhotoKey = cacheKey;
+      const requestId = ++this.profilePhotoRequestId;
+      void this.loadProfilePhoto(token, requestId);
+    });
+  }
 
   readonly currentPageTitle = computed(() => {
     const url = this.currentUrl();
@@ -430,12 +501,14 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   readonly headerLeftOffset = computed(() => this.contentOffset());
 
   ngOnInit() {
+    void this.accessContext.ensureLoaded();
+
     this.navigationSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.currentUrl.set((event as NavigationEnd).urlAfterRedirects);
         this.closeMobileSidebar();
-        void this.refreshUnreadCounter();
+        void this.notificationsState.refresh();
       });
 
     this.resizeHandler = () => {
@@ -446,7 +519,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     };
 
     window.addEventListener('resize', this.resizeHandler);
-    void this.refreshUnreadCounter();
+    void this.notificationsState.refresh();
   }
 
   ngOnDestroy() {
@@ -455,6 +528,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
     }
+
+    this.clearProfilePhoto();
   }
 
   toggleSidebar() {
@@ -473,7 +548,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   goToNotifications() {
-    if (!this.roleService.isAdmin()) {
+    if (!this.canAccessNotifications()) {
       void this.router.navigateByUrl('/dashboard');
       return;
     }
@@ -482,8 +557,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   goToProfile() {
-    if (this.roleService.isAdmin()) {
+    if (this.roleService.isAdmin() && this.accessContext.isModuleVisible('admin_settings')) {
       void this.router.navigateByUrl('/dashboard/settings');
+      return;
+    }
+
+    if (this.accessContext.isModuleVisible('profile_settings')) {
+      void this.router.navigateByUrl('/dashboard/profil');
       return;
     }
 
@@ -496,18 +576,67 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl('/connexion');
   }
 
-  private async refreshUnreadCounter() {
-    const token = this.auth.session()?.accessToken;
-    if (!token || !this.roleService.isAdmin()) {
-      this.unreadNotifications.set(0);
-      return;
+  private menuModuleKey(menuKey: string) {
+    const map: Record<string, string> = {
+      overview: 'dashboard_home',
+      articles: 'articles',
+      projects: 'projects',
+      profile: 'profile_settings',
+      users: 'admin_users',
+      registrations: 'admin_registrations',
+      roles: 'admin_roles',
+      'access-control': 'access_control',
+      purchases: 'purchases',
+      messages: 'messaging',
+      support: 'support',
+      notifications: 'notifications',
+    };
+
+    return map[menuKey] as
+      | 'dashboard_home'
+      | 'articles'
+      | 'projects'
+      | 'profile_settings'
+      | 'admin_users'
+      | 'admin_registrations'
+      | 'admin_roles'
+      | 'access_control'
+      | 'purchases'
+      | 'messaging'
+      | 'support'
+      | 'notifications'
+      | undefined;
+  }
+
+  private async loadProfilePhoto(token: string, requestId: number) {
+    try {
+      const objectUrl = await api.getMyProfilePhotoUrl(token);
+
+      if (requestId !== this.profilePhotoRequestId) {
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+
+      this.replaceProfilePhoto(objectUrl);
+    } catch {
+      if (requestId === this.profilePhotoRequestId) {
+        this.loadedProfilePhotoKey = null;
+        this.clearProfilePhoto();
+      }
+    }
+  }
+
+  private replaceProfilePhoto(nextUrl: string | null) {
+    if (this.profilePhotoObjectUrl && this.profilePhotoObjectUrl !== nextUrl) {
+      URL.revokeObjectURL(this.profilePhotoObjectUrl);
     }
 
-    try {
-      const response = await api.getAdminUnreadNotificationsCount(token);
-      this.unreadNotifications.set(response.unreadCount || 0);
-    } catch {
-      this.unreadNotifications.set(0);
-    }
+    this.profilePhotoObjectUrl = nextUrl;
+    this.profilePhotoUrl.set(nextUrl);
+  }
+
+  private clearProfilePhoto() {
+    this.loadedProfilePhotoKey = null;
+    this.replaceProfilePhoto(null);
   }
 }

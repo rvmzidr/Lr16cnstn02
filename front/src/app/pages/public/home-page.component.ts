@@ -252,6 +252,28 @@ import { formatDate } from '../../core/utils/format';
                 <p class="flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-4">
                   {{ a.resume }}
                 </p>
+                <p class="mt-3 text-xs leading-relaxed text-muted-foreground/90 line-clamp-3">
+                  {{ a.contenu }}
+                </p>
+
+                <p class="mt-4 text-xs font-medium text-slate-500 line-clamp-2">
+                  {{ site.localize(authorsLabel) }}: {{ articleAuthorsLabel(a) }}
+                </p>
+
+                @if (a.lienDoi) {
+                  <span
+                    class="mt-2 inline-flex max-w-full truncate text-xs font-semibold text-primary"
+                  >
+                    {{ site.localize(doiLabel) }}: {{ a.lienDoi }}
+                  </span>
+                }
+
+                @if (a.articlePdf) {
+                  <div class="mt-3 inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary">
+                    PDF disponible
+                  </div>
+                }
+
                 <div
                   class="mt-6 flex items-center justify-between border-t border-border/40 pt-5"
                 >
@@ -474,6 +496,16 @@ export class HomePageComponent implements OnInit {
     en: 'Read article ->',
     ar: 'قراءة المقال ->',
   };
+  readonly authorsLabel = {
+    fr: 'Auteurs',
+    en: 'Authors',
+    ar: 'المؤلفون',
+  };
+  readonly doiLabel = {
+    fr: 'DOI',
+    en: 'DOI',
+    ar: 'DOI',
+  };
   readonly newsTag = { fr: 'Actualites', en: 'News', ar: 'الاخبار' };
   readonly newsTitle = {
     fr: 'Dernieres nouvelles du laboratoire',
@@ -526,6 +558,17 @@ export class HomePageComponent implements OnInit {
   readonly recentNews = computed(() =>
     (this.homeData()?.actualitesRecentes || []).slice(0, 3),
   );
+
+  articleAuthorsLabel(article: HomeData['articlesRecents'][number]) {
+    const names = [
+      article.deposant?.nomComplet || '',
+      ...article.coAuteurs
+        .map((coAuthor) => coAuthor.utilisateur?.nomComplet || '')
+        .filter((name) => name && name !== article.deposant?.nomComplet),
+    ].filter(Boolean);
+
+    return names.length ? names.join(', ') : 'LR16CNSTN02';
+  }
 
   tagColor(statut: NewsStatus) {
     return statut === 'PUBLIEE'

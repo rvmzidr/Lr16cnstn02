@@ -3,7 +3,11 @@ import {
   authGuard,
   publicOnlyGuard,
 } from './core/services/auth.service';
-import { dashboardRoleGuard } from './guards/role.guard';
+import {
+  accessModuleGuard,
+  accessPermissionGuard,
+  dashboardRoleGuard,
+} from './guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -138,6 +142,7 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard-home-page.component').then(
             (m) => m.DashboardHomePageComponent,
           ),
+        canActivate: [accessModuleGuard('dashboard_home')],
       },
       {
         path: 'overview',
@@ -145,6 +150,7 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard-home-page.component').then(
             (m) => m.DashboardHomePageComponent,
           ),
+        canActivate: [accessModuleGuard('dashboard_home')],
       },
       {
         path: 'articles',
@@ -152,14 +158,7 @@ export const routes: Routes = [
           import('./pages/dashboard/articles-page.component').then(
             (m) => m.ArticlesPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
-      },
-      {
-        path: 'articles/editor',
-        loadComponent: () =>
-          import('./pages/dashboard/articles-management-page.component').then(
-            (m) => m.ArticlesManagementPageComponent,
-          ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre']), accessModuleGuard('articles')],
       },
       {
         path: 'users',
@@ -167,7 +166,7 @@ export const routes: Routes = [
           import('./pages/dashboard/admin-users-page.component').then(
             (m) => m.AdminUsersPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['admin'])],
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('admin_users')],
       },
       {
         path: 'registrations',
@@ -175,7 +174,7 @@ export const routes: Routes = [
           import('./pages/dashboard/admin-registrations-page.component').then(
             (m) => m.AdminRegistrationsPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['admin'])],
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('admin_registrations')],
       },
       {
         path: 'roles',
@@ -183,7 +182,23 @@ export const routes: Routes = [
           import('./pages/dashboard/admin-roles-page.component').then(
             (m) => m.AdminRolesPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['admin'])],
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('admin_roles')],
+      },
+      {
+        path: 'user-access',
+        loadComponent: () =>
+          import('./pages/dashboard/access-control-page.component').then(
+            (m) => m.AccessControlPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('access_control')],
+      },
+      {
+        path: 'access-control',
+        loadComponent: () =>
+          import('./pages/dashboard/access-control-page.component').then(
+            (m) => m.AccessControlPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('access_control')],
       },
       {
         path: 'projects',
@@ -191,7 +206,15 @@ export const routes: Routes = [
           import('./pages/dashboard/projects-page.component').then(
             (m) => m.ProjectsPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
+        canActivate: [dashboardRoleGuard(['chef', 'membre']), accessModuleGuard('projects')],
+      },
+      {
+        path: 'profil',
+        loadComponent: () =>
+          import('./pages/dashboard/profile-page.component').then(
+            (m) => m.ProfilePageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre']), accessModuleGuard('profile_settings')],
       },
       {
         path: 'messages',
@@ -199,6 +222,7 @@ export const routes: Routes = [
           import('./pages/dashboard/messages-page.component').then(
             (m) => m.MessagesPageComponent,
           ),
+        canActivate: [accessModuleGuard('messaging')],
       },
       {
         path: 'purchases',
@@ -206,15 +230,7 @@ export const routes: Routes = [
           import('./pages/dashboard/purchases-page.component').then(
             (m) => m.PurchasesPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
-      },
-      {
-        path: 'budget',
-        loadComponent: () =>
-          import('./pages/dashboard/budget-page.component').then(
-            (m) => m.BudgetPageComponent,
-          ),
-        canActivate: [dashboardRoleGuard(['chef'])],
+        canActivate: [dashboardRoleGuard(['chef', 'membre']), accessModuleGuard('purchases')],
       },
       {
         path: 'notifications',
@@ -222,7 +238,11 @@ export const routes: Routes = [
           import('./pages/dashboard/notifications-page.component').then(
             (m) => m.NotificationsPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['admin'])],
+        canActivate: [
+          dashboardRoleGuard(['admin', 'chef', 'membre']),
+          accessModuleGuard('notifications'),
+          accessPermissionGuard('canViewNotifications'),
+        ],
       },
       {
         path: 'support',
@@ -230,6 +250,7 @@ export const routes: Routes = [
           import('./pages/dashboard/support-page.component').then(
             (m) => m.SupportPageComponent,
           ),
+        canActivate: [accessModuleGuard('support')],
       },
       {
         path: 'settings',
@@ -237,7 +258,7 @@ export const routes: Routes = [
           import('./pages/dashboard/admin-settings-page.component').then(
             (m) => m.AdminSettingsPageComponent,
           ),
-        canActivate: [dashboardRoleGuard(['admin'])],
+        canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('admin_settings')],
       },
       {
         path: 'articles-view',
@@ -250,8 +271,8 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
-        path: 'profil',
-        redirectTo: 'settings',
+        path: 'profile',
+        redirectTo: 'profil',
         pathMatch: 'full',
       },
       {

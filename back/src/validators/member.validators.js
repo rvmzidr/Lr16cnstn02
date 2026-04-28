@@ -18,6 +18,7 @@ const articleBodySchema = z.object({
   titre: cleanString(500),
   resume: cleanString(4000),
   contenu: cleanString(20000),
+  lienDoi: cleanString(1024),
   categorieId: optionalPositiveInt(),
   action: z.enum(["BROUILLON", "SOUMETTRE"]).optional(),
 });

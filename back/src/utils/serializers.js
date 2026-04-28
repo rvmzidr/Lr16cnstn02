@@ -1,3 +1,4 @@
+const { EDITABLE_ARTICLE_STATUSES } = require("../config/constants");
 const { toNumber } = require("./bigint");
 
 function serializeUtilisateurResume(utilisateur) {
@@ -179,7 +180,7 @@ function serializeAuteurArticle(auteurArticle) {
   };
 }
 
-function serializeArticle(article, articlePdf = null) {
+function serializeArticle(article, articlePdf = null, articleCover = null) {
   if (!article) {
     return null;
   }
@@ -189,6 +190,7 @@ function serializeArticle(article, articlePdf = null) {
     titre: article.titre,
     resume: article.resume,
     contenu: article.contenu,
+    lienDoi: article.lien_doi,
     statut: article.statut,
     dateSoumission: article.date_soumission,
     dateValidation: article.date_validation,
@@ -196,13 +198,13 @@ function serializeArticle(article, articlePdf = null) {
     publieLe: article.publie_le,
     creeLe: article.cree_le,
     modifieLe: article.modifie_le,
-    editableParAuteur:
-      article.statut === "BROUILLON" || article.statut === "REJETE",
+    editableParAuteur: EDITABLE_ARTICLE_STATUSES.includes(article.statut),
     categorieId: toNumber(article.categorie_id),
     categorie: serializeCategorie(article.categorie),
     deposant: serializeUtilisateurResume(article.deposant),
     validateur: serializeUtilisateurResume(article.validateur),
     articlePdf,
+    articleCover,
     coAuteurs: Array.isArray(article.auteurs_article)
       ? article.auteurs_article.map(serializeAuteurArticle)
       : [],

@@ -30,8 +30,6 @@ export class RoleService {
   readonly isChef = computed(() => this.dashboardRole() === 'chef');
   readonly isMembre = computed(() => this.dashboardRole() === 'membre');
 
-  readonly canAccessBudget = computed(() => this.isChef());
-
   hasAnyRole(roles: DashboardRole[]) {
     return roles.includes(this.dashboardRole());
   }

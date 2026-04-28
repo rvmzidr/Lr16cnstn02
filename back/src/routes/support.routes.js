@@ -1,6 +1,7 @@
 const express = require("express");
 const supportController = require("../controllers/support.controller");
 const requireAuth = require("../middlewares/auth.middleware");
+const { requireModuleAccess } = require("../middlewares/access-control.middleware");
 const validate = require("../middlewares/validate.middleware");
 const { parseOptionalSupportAttachment } = require("../middlewares/support-upload.middleware");
 const {
@@ -14,6 +15,7 @@ const {
 const router = express.Router();
 
 router.use(requireAuth);
+router.use(requireModuleAccess("support"));
 
 router.post(
   "/tickets",

@@ -18,7 +18,7 @@ const STORAGE_THEME_KEY = 'lr16-site-theme';
 export class SitePreferencesService {
   private readonly document = inject(DOCUMENT);
   readonly languages = [
-    { code: 'fr' as const, label: 'Francais' },
+    { code: 'fr' as const, label: 'Français' },
     { code: 'en' as const, label: 'English' },
     { code: 'ar' as const, label: 'العربية' },
   ];
@@ -29,7 +29,7 @@ export class SitePreferencesService {
   readonly languageLabel = computed(
     () =>
       this.languages.find((item) => item.code === this.language())?.label ??
-      'Francais',
+      'Français',
   );
 
   constructor() {

@@ -6,10 +6,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import type {
+  AccessProfileSummary,
+  SupportTicketAccessDiagnostic,
   SupportTicketCategory,
   SupportTicketDetail,
   SupportTicketPriority,
@@ -19,6 +21,7 @@ import type {
 } from '../../core/models/models';
 import { SitePreferencesService } from '../../core/services/site-preferences.service';
 import { sharedIcons } from '../../shared/lucide-icons';
+import { AccessControlService } from '../../shared/services/access-control.service';
 import { SupportService } from '../../shared/services/support.service';
 import { formatDate } from '../../core/utils/format';
 
@@ -41,19 +44,37 @@ type SupportKpiCard = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-7">
-      <header class="app-page-header">
-        <div class="space-y-1.5">
-          <h2 class="app-page-title">{{ site.localize(pageTitle) }}</h2>
-          <p class="app-page-description">
-            {{ site.localize(pageDescription) }}
-          </p>
-        </div>
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
 
-        <button type="button" class="btn-secondary min-w-[12rem]" (click)="openCreateTicketModal()">
-          <lucide-icon [img]="icons.Plus" class="h-4 w-4"></lucide-icon>
-          {{ site.localize(newTicketLabel) }}
-        </button>
-      </header>
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">{{ site.localize(pageEyebrow) }}</p>
+
+          <div class="app-page-header mt-2">
+            <div class="space-y-1.5">
+              <h2 class="app-page-title">{{ site.localize(pageTitle) }}</h2>
+              <p class="app-page-description">
+                {{ site.localize(pageDescription) }}
+              </p>
+            </div>
+
+            <button type="button" class="btn-secondary min-w-[12rem]" (click)="openCreateTicketModal()">
+              <lucide-icon [img]="icons.Plus" class="h-4 w-4"></lucide-icon>
+              {{ site.localize(newTicketLabel) }}
+            </button>
+          </div>
+
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Total tickets', en: 'Total tickets', ar: 'إجمالي التذاكر' }) }}: {{ stats().total }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Ouverts', en: 'Open', ar: 'مفتوحة' }) }}: {{ stats().open }}
+            </span>
+          </div>
+        </div>
+      </section>
 
       <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @for (card of kpiCards(); track card.key) {
@@ -459,6 +480,129 @@ type SupportKpiCard = {
 
                 @if (isAdmin()) {
                   <article class="rounded-2xl border border-border bg-card p-4">
+                    <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      {{ site.localize(accessDiagnosticTitle) }}
+                    </h4>
+
+                    @if (accessDiagnostic()) {
+                      <div class="mt-3 space-y-3 text-sm">
+                        <div class="grid gap-2">
+                          <div class="flex items-start justify-between gap-3">
+                            <span class="text-muted-foreground">{{ site.localize(roleLabel) }}</span>
+                            <span class="text-right text-foreground">{{ roleLabelForUser(accessDiagnostic()!.accessContext.user.role) }}</span>
+                          </div>
+                          <div class="flex items-start justify-between gap-3">
+                            <span class="text-muted-foreground">{{ site.localize(accessProfileLabel) }}</span>
+                            <span class="text-right text-foreground">{{ accessDiagnostic()!.accessContext.profile?.name || site.localize(notAvailableLabel) }}</span>
+                          </div>
+                          <div class="flex items-start justify-between gap-3">
+                            <span class="text-muted-foreground">{{ site.localize(defaultLandingLabel) }}</span>
+                            <span class="text-right text-foreground">{{ accessDiagnostic()!.accessContext.effective.defaultLandingPage }}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(visibleModulesLabel) }}</p>
+                          <div class="mt-2 flex flex-wrap gap-2">
+                            @for (moduleKey of accessDiagnostic()!.accessContext.effective.visibleModules; track moduleKey) {
+                              <span class="badge-soft">{{ moduleKey }}</span>
+                            } @empty {
+                              <span class="text-xs text-muted-foreground">{{ site.localize(notAvailableLabel) }}</span>
+                            }
+                          </div>
+                        </div>
+
+                        <div>
+                          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(majorPermissionsLabel) }}</p>
+                          <div class="mt-2 flex flex-wrap gap-2">
+                            @for (permission of accessDiagnostic()!.accessContext.effective.majorPermissions; track permission.key) {
+                              <span class="badge-soft">{{ permission.key }}</span>
+                            } @empty {
+                              <span class="text-xs text-muted-foreground">{{ site.localize(notAvailableLabel) }}</span>
+                            }
+                          </div>
+                        </div>
+
+                        <div>
+                          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(overridesLabel) }}</p>
+                          <div class="mt-2 space-y-1.5">
+                            @for (override of accessDiagnostic()!.accessContext.overrides; track override.id) {
+                              <div class="rounded-lg border border-border bg-muted/30 px-2.5 py-2 text-xs text-foreground">
+                                {{ override.overrideType }} • {{ override.key }} = {{ override.value ? site.localize(enabledLabel) : site.localize(disabledLabel) }}
+                              </div>
+                            } @empty {
+                              <div class="text-xs text-muted-foreground">{{ site.localize(noOverridesLabel) }}</div>
+                            }
+                          </div>
+                        </div>
+
+                        <button type="button" class="btn-outline w-full" (click)="openAccessControlFromTicket()">
+                          {{ site.localize(openAccessControlLabel) }}
+                        </button>
+
+                        <div class="space-y-2 border-t border-border pt-3">
+                          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(applyResolutionLabel) }}</p>
+
+                          <select
+                            class="select-shell"
+                            [ngModel]="accessResolutionProfileId()"
+                            (ngModelChange)="setAccessResolutionProfileId($event)"
+                          >
+                            <option value="">{{ site.localize(keepProfileLabel) }}</option>
+                            @for (profile of accessProfiles(); track profile.id) {
+                              <option [value]="profile.id">{{ profile.name }} ({{ roleLabelForUser(profile.parentRole) }})</option>
+                            }
+                          </select>
+
+                          <select class="select-shell" [ngModel]="accessResolutionMessaging()" (ngModelChange)="accessResolutionMessaging.set($event)">
+                            <option value="">{{ site.localize(messagingNoChangeLabel) }}</option>
+                            <option value="allow">{{ site.localize(messagingAllowLabel) }}</option>
+                            <option value="deny">{{ site.localize(messagingDenyLabel) }}</option>
+                          </select>
+
+                          <select class="select-shell" [ngModel]="accessResolutionPurchases()" (ngModelChange)="accessResolutionPurchases.set($event)">
+                            <option value="">{{ site.localize(purchasesNoChangeLabel) }}</option>
+                            <option value="allow">{{ site.localize(purchasesAllowLabel) }}</option>
+                            <option value="deny">{{ site.localize(purchasesDenyLabel) }}</option>
+                          </select>
+
+                          <textarea
+                            class="textarea-shell min-h-20"
+                            [placeholder]="site.localize(resolutionNotesLabel)"
+                            [ngModel]="accessResolutionNotes()"
+                            (ngModelChange)="accessResolutionNotes.set($event)"
+                          ></textarea>
+
+                          <textarea
+                            class="textarea-shell min-h-20"
+                            [placeholder]="site.localize(resolutionMessageLabel)"
+                            [ngModel]="accessResolutionMessage()"
+                            (ngModelChange)="accessResolutionMessage.set($event)"
+                          ></textarea>
+
+                          <label class="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                            <input type="checkbox" class="h-4 w-4" [checked]="accessResolutionCloseTicket()" (change)="toggleAccessResolutionCloseTicket($event)" />
+                            {{ site.localize(closeTicketAfterResolutionLabel) }}
+                          </label>
+
+                          <button
+                            type="button"
+                            class="btn-secondary w-full"
+                            [disabled]="processing()"
+                            (click)="applyAccessResolutionFromSupport()"
+                          >
+                            {{ site.localize(saveAccessResolutionLabel) }}
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="mt-3 text-sm text-muted-foreground">
+                        {{ site.localize(accessDiagnosticUnavailableLabel) }}
+                      </div>
+                    }
+                  </article>
+
+                  <article class="rounded-2xl border border-border bg-card p-4">
                     <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(adminActionsLabel) }}</h4>
 
                     <div class="mt-3 grid gap-2">
@@ -505,7 +649,9 @@ type SupportKpiCard = {
 export class SupportPageComponent implements OnInit {
   readonly site = inject(SitePreferencesService);
   readonly support = inject(SupportService);
+  readonly accessControl = inject(AccessControlService);
   readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
   readonly icons = sharedIcons;
   readonly formatDate = formatDate;
 
@@ -525,6 +671,8 @@ export class SupportPageComponent implements OnInit {
   });
 
   readonly selectedTicketDetail = signal<SupportTicketDetail | null>(null);
+  readonly accessDiagnostic = signal<SupportTicketAccessDiagnostic | null>(null);
+  readonly accessProfiles = signal<AccessProfileSummary[]>([]);
   readonly showDetailModal = signal(false);
   readonly showCreateModal = signal(false);
 
@@ -549,11 +697,23 @@ export class SupportPageComponent implements OnInit {
   readonly replyAttachmentName = signal('');
   readonly replyInternalNote = signal(false);
   readonly replyReopenTicket = signal(false);
+  readonly accessResolutionProfileId = signal<number | ''>('');
+  readonly accessResolutionNotes = signal('');
+  readonly accessResolutionMessage = signal('');
+  readonly accessResolutionCloseTicket = signal(true);
+  readonly accessResolutionMessaging = signal<'' | 'allow' | 'deny'>('');
+  readonly accessResolutionPurchases = signal<'' | 'allow' | 'deny'>('');
 
   readonly statusOptions: SupportTicketStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
   readonly categoryOptions: SupportTicketCategory[] = [
     'LOGIN',
     'ACCOUNT',
+    'ACCESS',
+    'ROLE',
+    'MODULE_VISIBILITY',
+    'PERMISSION',
+    'UI_BUG',
+    'TRANSLATION',
     'MESSAGING',
     'NOTIFICATIONS',
     'ARTICLES',
@@ -565,6 +725,11 @@ export class SupportPageComponent implements OnInit {
   readonly pageTitle = {
     fr: 'Centre de Support',
     en: 'Support Center',
+    ar: 'مركز الدعم',
+  };
+  readonly pageEyebrow = {
+    fr: 'Centre assistance',
+    en: 'Support center',
     ar: 'مركز الدعم',
   };
   readonly pageDescription = {
@@ -662,6 +827,105 @@ export class SupportPageComponent implements OnInit {
   readonly emptyRepliesLabel = { fr: 'Aucune reponse pour le moment.', en: 'No replies yet.', ar: 'لا توجد ردود بعد.' };
   readonly emptyAttachmentsLabel = { fr: 'Aucune piece jointe.', en: 'No attachments.', ar: 'لا توجد مرفقات.' };
   readonly adminActionsLabel = { fr: 'Actions administrateur', en: 'Admin actions', ar: 'إجراءات المسؤول' };
+  readonly accessDiagnosticTitle = {
+    fr: "Diagnostic des acces",
+    en: 'Access diagnostics',
+    ar: 'تشخيص الوصول',
+  };
+  readonly accessProfileLabel = { fr: 'Profil acces', en: 'Access profile', ar: 'ملف الوصول' };
+  readonly defaultLandingLabel = {
+    fr: "Page d'accueil",
+    en: 'Default landing',
+    ar: 'صفحة الهبوط الافتراضية',
+  };
+  readonly visibleModulesLabel = {
+    fr: 'Modules visibles',
+    en: 'Visible modules',
+    ar: 'الوحدات الظاهرة',
+  };
+  readonly majorPermissionsLabel = {
+    fr: 'Permissions majeures',
+    en: 'Major permissions',
+    ar: 'الصلاحيات الرئيسية',
+  };
+  readonly overridesLabel = { fr: 'Overrides', en: 'Overrides', ar: 'الاستثناءات' };
+  readonly noOverridesLabel = {
+    fr: 'Aucun override applique.',
+    en: 'No override applied.',
+    ar: 'لا توجد استثناءات مطبقة.',
+  };
+  readonly enabledLabel = { fr: 'Actif', en: 'Enabled', ar: 'مفعل' };
+  readonly disabledLabel = { fr: 'Inactif', en: 'Disabled', ar: 'غير مفعل' };
+  readonly openAccessControlLabel = {
+    fr: "Ouvrir controle d'acces",
+    en: 'Open access control',
+    ar: 'فتح التحكم في الوصول',
+  };
+  readonly applyResolutionLabel = {
+    fr: 'Appliquer une resolution',
+    en: 'Apply resolution',
+    ar: 'تطبيق معالجة',
+  };
+  readonly keepProfileLabel = {
+    fr: 'Conserver profil actuel',
+    en: 'Keep current profile',
+    ar: 'الاحتفاظ بالملف الحالي',
+  };
+  readonly messagingNoChangeLabel = {
+    fr: 'Messagerie: aucun changement',
+    en: 'Messaging: no change',
+    ar: 'المراسلة: بدون تغيير',
+  };
+  readonly messagingAllowLabel = {
+    fr: 'Messagerie: autoriser',
+    en: 'Messaging: allow',
+    ar: 'المراسلة: سماح',
+  };
+  readonly messagingDenyLabel = {
+    fr: 'Messagerie: bloquer',
+    en: 'Messaging: deny',
+    ar: 'المراسلة: منع',
+  };
+  readonly purchasesNoChangeLabel = {
+    fr: 'Achats: aucun changement',
+    en: 'Purchases: no change',
+    ar: 'المشتريات: بدون تغيير',
+  };
+  readonly purchasesAllowLabel = {
+    fr: 'Achats: autoriser',
+    en: 'Purchases: allow',
+    ar: 'المشتريات: سماح',
+  };
+  readonly purchasesDenyLabel = {
+    fr: 'Achats: bloquer',
+    en: 'Purchases: deny',
+    ar: 'المشتريات: منع',
+  };
+  readonly resolutionNotesLabel = {
+    fr: 'Notes de resolution (interne)',
+    en: 'Resolution notes (internal)',
+    ar: 'ملاحظات المعالجة (داخلية)',
+  };
+  readonly resolutionMessageLabel = {
+    fr: 'Message reponse ticket',
+    en: 'Ticket reply message',
+    ar: 'رسالة الرد على التذكرة',
+  };
+  readonly closeTicketAfterResolutionLabel = {
+    fr: 'Marquer le ticket comme resolu apres correction',
+    en: 'Mark ticket as resolved after applying fix',
+    ar: 'وضع التذكرة كـ محلولة بعد التصحيح',
+  };
+  readonly saveAccessResolutionLabel = {
+    fr: 'Enregistrer resolution acces',
+    en: 'Save access resolution',
+    ar: 'حفظ معالجة الوصول',
+  };
+  readonly accessDiagnosticUnavailableLabel = {
+    fr: "Diagnostic d'acces indisponible pour ce ticket.",
+    en: 'Access diagnostics unavailable for this ticket.',
+    ar: 'تشخيص الوصول غير متاح لهذه التذكرة.',
+  };
   readonly takeOwnershipLabel = { fr: 'Prendre en charge', en: 'Take ownership', ar: 'تولي المعالجة' };
   readonly reopenLabel = { fr: 'Rouvrir', en: 'Reopen', ar: 'إعادة فتح' };
   readonly notAvailableLabel = { fr: 'N/A', en: 'N/A', ar: 'غير متاح' };
@@ -706,11 +970,50 @@ export class SupportPageComponent implements OnInit {
   });
 
   async ngOnInit() {
+    if (this.isAdmin()) {
+      await this.loadAccessProfiles();
+    }
+
     await this.applyFilters();
 
     const ticketId = Number(this.route.snapshot.queryParamMap.get('ticketId') || 0);
     if (ticketId > 0) {
       await this.openTicketDetail(ticketId);
+    }
+  }
+
+  private async loadAccessProfiles() {
+    if (!this.isAdmin()) {
+      this.accessProfiles.set([]);
+      return;
+    }
+
+    try {
+      const response = await this.accessControl.listProfiles({ page: 1, limit: 50, active: true });
+      this.accessProfiles.set(response.elements || []);
+    } catch {
+      this.accessProfiles.set([]);
+    }
+  }
+
+  private async loadAccessDiagnostic(ticketId: number) {
+    if (!this.isAdmin()) {
+      this.accessDiagnostic.set(null);
+      return;
+    }
+
+    try {
+      const diagnostic = await this.support.getTicketAccessDiagnostic(ticketId);
+      this.accessDiagnostic.set(diagnostic);
+
+      this.accessResolutionProfileId.set(diagnostic.accessContext.profile?.id || '');
+      this.accessResolutionNotes.set('');
+      this.accessResolutionMessage.set('');
+      this.accessResolutionCloseTicket.set(true);
+      this.accessResolutionMessaging.set('');
+      this.accessResolutionPurchases.set('');
+    } catch {
+      this.accessDiagnostic.set(null);
     }
   }
 
@@ -878,6 +1181,7 @@ export class SupportPageComponent implements OnInit {
       this.replyAttachmentName.set('');
       this.replyInternalNote.set(false);
       this.replyReopenTicket.set(false);
+      await this.loadAccessDiagnostic(ticketId);
       this.showDetailModal.set(true);
     } catch (error) {
       this.errorMessage.set(
@@ -897,6 +1201,7 @@ export class SupportPageComponent implements OnInit {
   closeTicketDetail() {
     this.showDetailModal.set(false);
     this.selectedTicketDetail.set(null);
+    this.accessDiagnostic.set(null);
   }
 
   canRequesterReopen(ticket: SupportTicketDetail) {
@@ -918,6 +1223,28 @@ export class SupportPageComponent implements OnInit {
   toggleReplyReopen(event: Event) {
     const input = event.target as HTMLInputElement;
     this.replyReopenTicket.set(Boolean(input.checked));
+  }
+
+  setAccessResolutionProfileId(value: string | number) {
+    if (value === '' || value === null || value === undefined) {
+      this.accessResolutionProfileId.set('');
+      return;
+    }
+
+    const parsedValue =
+      typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      this.accessResolutionProfileId.set('');
+      return;
+    }
+
+    this.accessResolutionProfileId.set(parsedValue);
+  }
+
+  toggleAccessResolutionCloseTicket(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    this.accessResolutionCloseTicket.set(Boolean(input?.checked));
   }
 
   async submitReply() {
@@ -993,6 +1320,97 @@ export class SupportPageComponent implements OnInit {
               ar: 'تعذر تنزيل المرفق.',
             }),
       );
+    }
+  }
+
+  openAccessControlFromTicket() {
+    const diagnostic = this.accessDiagnostic();
+    if (!diagnostic) {
+      return;
+    }
+
+    void this.router.navigate(['/dashboard/user-access'], {
+      queryParams: {
+        userId: diagnostic.accessContext.user.id,
+        ticketId: diagnostic.ticket.id,
+      },
+    });
+  }
+
+  async applyAccessResolutionFromSupport() {
+    const ticket = this.selectedTicketDetail();
+    if (!ticket || !this.isAdmin()) {
+      return;
+    }
+
+    this.processing.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const moduleOverrides: Array<{ moduleKey: string; value: boolean; reason?: string }> = [];
+
+      if (this.accessResolutionMessaging() === 'allow') {
+        moduleOverrides.push({
+          moduleKey: 'messaging',
+          value: true,
+          reason: 'Resolution ticket support acces messagerie',
+        });
+      } else if (this.accessResolutionMessaging() === 'deny') {
+        moduleOverrides.push({
+          moduleKey: 'messaging',
+          value: false,
+          reason: 'Resolution ticket support acces messagerie',
+        });
+      }
+
+      if (this.accessResolutionPurchases() === 'allow') {
+        moduleOverrides.push({
+          moduleKey: 'purchases',
+          value: true,
+          reason: 'Resolution ticket support acces achats',
+        });
+      } else if (this.accessResolutionPurchases() === 'deny') {
+        moduleOverrides.push({
+          moduleKey: 'purchases',
+          value: false,
+          reason: 'Resolution ticket support acces achats',
+        });
+      }
+
+      await this.support.resolveTicketAccess(ticket.id, {
+        assignProfileId:
+          this.accessResolutionProfileId() === ''
+            ? undefined
+            : Number(this.accessResolutionProfileId()),
+        replace: moduleOverrides.length > 0,
+        moduleOverrides,
+        notes: this.accessResolutionNotes().trim() || undefined,
+        responseMessage: this.accessResolutionMessage().trim() || undefined,
+        closeTicket: this.accessResolutionCloseTicket(),
+      });
+
+      await this.openTicketDetail(ticket.id);
+      await this.applyFilters();
+
+      this.statusMessage.set(
+        this.site.localize({
+          fr: "Resolution d'acces liee au ticket enregistree.",
+          en: 'Access resolution linked to the ticket has been saved.',
+          ar: 'تم حفظ معالجة الوصول وربطها بالتذكرة.',
+        }),
+      );
+    } catch (error) {
+      this.errorMessage.set(
+        error instanceof Error
+          ? error.message
+          : this.site.localize({
+              fr: "Impossible d'enregistrer la resolution d'acces.",
+              en: 'Unable to save access resolution.',
+              ar: 'تعذر حفظ معالجة الوصول.',
+            }),
+      );
+    } finally {
+      this.processing.set(false);
     }
   }
 
@@ -1168,6 +1586,34 @@ export class SupportPageComponent implements OnInit {
 
     if (category === 'ACCOUNT') {
       return this.site.localize({ fr: 'Compte', en: 'Account', ar: 'الحساب' });
+    }
+
+    if (category === 'ACCESS') {
+      return this.site.localize({ fr: 'Acces', en: 'Access', ar: 'الوصول' });
+    }
+
+    if (category === 'ROLE') {
+      return this.site.localize({ fr: 'Role', en: 'Role', ar: 'الدور' });
+    }
+
+    if (category === 'MODULE_VISIBILITY') {
+      return this.site.localize({
+        fr: 'Visibilite module',
+        en: 'Module visibility',
+        ar: 'ظهور الوحدات',
+      });
+    }
+
+    if (category === 'PERMISSION') {
+      return this.site.localize({ fr: 'Permission', en: 'Permission', ar: 'الصلاحية' });
+    }
+
+    if (category === 'UI_BUG') {
+      return this.site.localize({ fr: 'Bug interface', en: 'UI bug', ar: 'خلل واجهة' });
+    }
+
+    if (category === 'TRANSLATION') {
+      return this.site.localize({ fr: 'Traduction', en: 'Translation', ar: 'الترجمة' });
     }
 
     if (category === 'MESSAGING') {

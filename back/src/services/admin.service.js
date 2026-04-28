@@ -33,6 +33,9 @@ const {
   getLatestArticlePdfAttachment,
   serializeArticlePdfAttachment,
 } = require("./article-pdf.service");
+const {
+  isNotificationVisibleForModules,
+} = require("../utils/notification-access");
 
 const ADMIN_NOTIFICATION_TYPES_BY_CATEGORY = Object.freeze({
   registration: ["NOUVELLE_INSCRIPTION"],
@@ -96,6 +99,26 @@ function normalizeNotificationReadFilter(readFilter, nonLues) {
   }
 
   return undefined;
+}
+
+async function getModuleVisibilityForUser(userId) {
+  try {
+    const accessControlService = require("./access-control.service");
+    const effective = await accessControlService.getEffectiveAccessForRequest(userId);
+    return effective?.moduleVisibility || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function filterNotificationsByAccess(notifications, moduleVisibility) {
+  if (!moduleVisibility) {
+    return notifications;
+  }
+
+  return (notifications || []).filter((notification) =>
+    isNotificationVisibleForModules(notification, moduleVisibility),
+  );
 }
 
 function splitNomComplet(nomComplet, utilisateurActuel) {
@@ -922,41 +945,259 @@ async function changerRoleCompte(adminId, userId, payload) {
   return serializeUtilisateur(compte);
 }
 
-async function listerArticlesEnAttente() {
-  const [enAttente, valides, rejetes, publies, articles, articlesValides] =
-    await prisma.$transaction([
-      prisma.articles.count({
-        where: { statut: ARTICLE_STATUS.SOUMIS },
-      }),
-      prisma.articles.count({
-        where: { statut: ARTICLE_STATUS.VALIDE },
-      }),
-      prisma.articles.count({
-        where: { statut: ARTICLE_STATUS.REJETE },
-      }),
-      prisma.articles.count({
-        where: { statut: ARTICLE_STATUS.PUBLIE },
-      }),
-      prisma.articles.findMany({
-        where: { statut: ARTICLE_STATUS.SOUMIS },
-        include: articleInclude,
-        orderBy: [{ date_soumission: "asc" }, { cree_le: "asc" }],
-      }),
-      prisma.articles.findMany({
-        where: { statut: ARTICLE_STATUS.VALIDE },
-        include: articleInclude,
-        orderBy: [{ date_validation: "desc" }, { cree_le: "desc" }],
-      }),
-    ]);
+function buildWhereFromConditions(conditions = []) {
+  return conditions.length > 0 ? { AND: conditions } : {};
+}
+
+function buildArticleModerationDateConditions(filters) {
+  const conditions = [];
+
+  if (filters.dateDebut) {
+    const dateDebut = new Date(filters.dateDebut);
+
+    conditions.push({
+      OR: [
+        { publie_le: { gte: dateDebut } },
+        { date_validation: { gte: dateDebut } },
+        { date_soumission: { gte: dateDebut } },
+        { cree_le: { gte: dateDebut } },
+      ],
+    });
+  }
+
+  if (filters.dateFin) {
+    const dateFin = new Date(`${filters.dateFin}T23:59:59.999Z`);
+
+    conditions.push({
+      OR: [
+        { publie_le: { lte: dateFin } },
+        { date_validation: { lte: dateFin } },
+        { date_soumission: { lte: dateFin } },
+        { cree_le: { lte: dateFin } },
+      ],
+    });
+  }
+
+  return conditions;
+}
+
+function buildArticleModerationBaseConditions(filters = {}) {
+  const conditions = [];
+  const normalizedSearch = (filters.q || "").trim();
+
+  if (normalizedSearch) {
+    conditions.push({
+      OR: [
+        { titre: { contains: normalizedSearch } },
+        { resume: { contains: normalizedSearch } },
+        { contenu: { contains: normalizedSearch } },
+        { lien_doi: { contains: normalizedSearch } },
+        {
+          deposant: {
+            is: {
+              OR: [
+                { nom: { contains: normalizedSearch } },
+                { prenom: { contains: normalizedSearch } },
+                { email_institutionnel: { contains: normalizedSearch } },
+              ],
+            },
+          },
+        },
+        {
+          auteurs_article: {
+            some: {
+              utilisateur: {
+                is: {
+                  OR: [
+                    { nom: { contains: normalizedSearch } },
+                    { prenom: { contains: normalizedSearch } },
+                    { email_institutionnel: { contains: normalizedSearch } },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  if (filters.categorieId) {
+    conditions.push({ categorie_id: toBigInt(filters.categorieId) });
+  }
+
+  if (filters.auteurId) {
+    conditions.push({
+      OR: [
+        { deposant_id: filters.auteurId },
+        {
+          auteurs_article: {
+            some: {
+              utilisateur_id: filters.auteurId,
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  if (filters.equipeRechercheId) {
+    const equipeRechercheId = toBigInt(filters.equipeRechercheId);
+
+    conditions.push({
+      OR: [
+        {
+          deposant: {
+            is: {
+              profil: {
+                is: {
+                  equipe_recherche_id: equipeRechercheId,
+                },
+              },
+            },
+          },
+        },
+        {
+          auteurs_article: {
+            some: {
+              utilisateur: {
+                is: {
+                  profil: {
+                    is: {
+                      equipe_recherche_id: equipeRechercheId,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    });
+  }
+
+  conditions.push(...buildArticleModerationDateConditions(filters));
+
+  return conditions;
+}
+
+function buildArticleModerationOrderBy(filters = {}) {
+  const ordre = filters.ordre === "asc" ? "asc" : "desc";
+
+  switch (filters.tri) {
+    case "titre":
+      return [{ titre: ordre }, { modifie_le: "desc" }];
+    case "soumission":
+      return [{ date_soumission: ordre }, { cree_le: ordre }];
+    case "validation":
+      return [{ date_validation: ordre }, { modifie_le: "desc" }];
+    case "publication":
+      return [{ publie_le: ordre }, { modifie_le: "desc" }];
+    case "creation":
+      return [{ cree_le: ordre }];
+    default:
+      return [{ modifie_le: ordre }, { cree_le: ordre }];
+  }
+}
+
+async function listerArticlesEnAttente(filters = {}) {
+  if (
+    filters.dateDebut &&
+    filters.dateFin &&
+    new Date(filters.dateDebut) > new Date(filters.dateFin)
+  ) {
+    throw new AppError(
+      "La date de debut doit etre anterieure ou egale a la date de fin.",
+      400,
+    );
+  }
+
+  const { page, limit, skip, take } = getPagination(
+    filters.page,
+    filters.limit,
+  );
+  const baseConditions = buildArticleModerationBaseConditions(filters);
+  const listConditions = [...baseConditions];
+
+  if (filters.statut) {
+    listConditions.push({ statut: filters.statut });
+  }
+
+  const whereForList = buildWhereFromConditions(listConditions);
+  const whereEnAttente = buildWhereFromConditions([
+    ...baseConditions,
+    { statut: ARTICLE_STATUS.SOUMIS },
+  ]);
+  const whereValides = buildWhereFromConditions([
+    ...baseConditions,
+    { statut: ARTICLE_STATUS.VALIDE },
+  ]);
+  const whereRejetes = buildWhereFromConditions([
+    ...baseConditions,
+    { statut: ARTICLE_STATUS.REJETE },
+  ]);
+  const wherePublies = buildWhereFromConditions([
+    ...baseConditions,
+    { statut: ARTICLE_STATUS.PUBLIE },
+  ]);
+  const orderBy = buildArticleModerationOrderBy(filters);
+
+  const [
+    enAttente,
+    valides,
+    rejetes,
+    publies,
+    total,
+    elements,
+    articles,
+    articlesValides,
+  ] = await prisma.$transaction([
+    prisma.articles.count({ where: whereEnAttente }),
+    prisma.articles.count({ where: whereValides }),
+    prisma.articles.count({ where: whereRejetes }),
+    prisma.articles.count({ where: wherePublies }),
+    prisma.articles.count({ where: whereForList }),
+    prisma.articles.findMany({
+      where: whereForList,
+      include: articleInclude,
+      orderBy,
+      skip,
+      take,
+    }),
+    prisma.articles.findMany({
+      where: whereEnAttente,
+      include: articleInclude,
+      orderBy: [{ date_soumission: "asc" }, { cree_le: "asc" }],
+    }),
+    prisma.articles.findMany({
+      where: whereValides,
+      include: articleInclude,
+      orderBy: [{ date_validation: "desc" }, { cree_le: "desc" }],
+    }),
+  ]);
 
   return {
     articles: await enrichSerializedArticlesWithPdf(articles),
     articlesValides: await enrichSerializedArticlesWithPdf(articlesValides),
+    elements: await enrichSerializedArticlesWithPdf(elements),
+    meta: buildMeta(total, page, limit),
+    filtres: {
+      q: filters.q || "",
+      statut: filters.statut || null,
+      categorieId: filters.categorieId || null,
+      equipeRechercheId: filters.equipeRechercheId || null,
+      auteurId: filters.auteurId || null,
+      dateDebut: filters.dateDebut || null,
+      dateFin: filters.dateFin || null,
+      tri: filters.tri || "modification",
+      ordre: filters.ordre === "asc" ? "asc" : "desc",
+    },
     statistiques: {
       enAttente,
       valides,
       rejetes,
       publies,
+      total,
     },
   };
 }
@@ -1229,7 +1470,7 @@ async function listerNotificationsAdmin(userId, filters = {}) {
   const filteredTypes = getAdminNotificationTypes(filters.type);
   const estLue = normalizeNotificationReadFilter(filters.read, filters.nonLues);
 
-  const where = {
+  const listWhere = {
     utilisateur_id: userId,
     type_notification: {
       in: filteredTypes,
@@ -1237,9 +1478,12 @@ async function listerNotificationsAdmin(userId, filters = {}) {
     ...(estLue === undefined ? {} : { est_lue: estLue }),
   };
 
-  const [total, unreadCount, notifications] = await prisma.$transaction([
-    prisma.notifications.count({ where }),
-    prisma.notifications.count({
+  const [notifications, unreadNotifications, moduleVisibility] = await Promise.all([
+    prisma.notifications.findMany({
+      where: listWhere,
+      orderBy: [{ cree_le: "desc" }, { id: "desc" }],
+    }),
+    prisma.notifications.findMany({
       where: {
         utilisateur_id: userId,
         type_notification: {
@@ -1248,16 +1492,21 @@ async function listerNotificationsAdmin(userId, filters = {}) {
         est_lue: false,
       },
     }),
-    prisma.notifications.findMany({
-      where,
-      orderBy: [{ cree_le: "desc" }, { id: "desc" }],
-      skip,
-      take,
-    }),
+    getModuleVisibilityForUser(userId),
   ]);
 
+  const visibleNotifications = filterNotificationsByAccess(
+    notifications,
+    moduleVisibility,
+  );
+  const visibleUnread = filterNotificationsByAccess(
+    unreadNotifications,
+    moduleVisibility,
+  );
+  const pagedNotifications = visibleNotifications.slice(skip, skip + take);
+
   return {
-    elements: notifications.map((notification) => ({
+    elements: pagedNotifications.map((notification) => ({
       id: Number(notification.id),
       typeNotification: notification.type_notification,
       categorie: mapAdminNotificationCategory(notification.type_notification),
@@ -1273,8 +1522,8 @@ async function listerNotificationsAdmin(userId, filters = {}) {
       lienDirect: notification.lien_direct,
       creeLe: notification.cree_le,
     })),
-    unreadCount,
-    meta: buildMeta(total, page, limit),
+    unreadCount: visibleUnread.length,
+    meta: buildMeta(visibleNotifications.length, page, limit),
   };
 }
 
@@ -1324,15 +1573,23 @@ async function marquerToutesNotificationsAdminLues(userId) {
 }
 
 async function recupererCompteurNotificationsAdmin(userId) {
-  const unreadCount = await prisma.notifications.count({
-    where: {
-      utilisateur_id: userId,
-      type_notification: {
-        in: ADMIN_NOTIFICATION_TYPES,
+  const [unreadNotifications, moduleVisibility] = await Promise.all([
+    prisma.notifications.findMany({
+      where: {
+        utilisateur_id: userId,
+        type_notification: {
+          in: ADMIN_NOTIFICATION_TYPES,
+        },
+        est_lue: false,
       },
-      est_lue: false,
-    },
-  });
+    }),
+    getModuleVisibilityForUser(userId),
+  ]);
+
+  const unreadCount = filterNotificationsByAccess(
+    unreadNotifications,
+    moduleVisibility,
+  ).length;
 
   return { unreadCount };
 }

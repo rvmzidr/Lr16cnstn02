@@ -25,17 +25,25 @@ const {
   enregistrerDossierMembre,
   normalizeMemberDossierPayload,
   recupererAttestationDoctorantOuErreur,
+  recupererPhotoProfilOuErreur,
   recupererReferencesMembre,
+  resolveProfilePhotoPath,
   stageDoctorantAttestation,
+  stageProfilePhoto,
   verifierDisponibiliteIdentifiants,
   verifierReferencesProfil,
 } = require("./member-profile.service");
 const {
+  getArticleCoverAttachmentMap,
   getArticlePdfAttachmentMap,
+  getLatestArticleCoverAttachment,
   getLatestArticlePdfAttachment,
+  replaceArticleCoverAttachment,
   replaceArticlePdfAttachment,
+  serializeArticleCoverAttachment,
   resolveArticlePdfDownload,
   serializeArticlePdfAttachment,
+  stageArticleCover,
   stageArticlePdf,
 } = require("./article-pdf.service");
 const { createNotifications } = require("./collaboration.service");
@@ -131,6 +139,100 @@ async function mettreAJourProfilMembre(userId, rawPayload, attestationFile) {
 
 async function telechargerAttestationProfilMembre(userId) {
   return recupererAttestationDoctorantOuErreur(userId);
+}
+
+async function telechargerPhotoProfilMembre(userId) {
+  return recupererPhotoProfilOuErreur(userId);
+}
+
+async function televerserPhotoProfilMembre(userId, photoFile) {
+  if (!photoFile) {
+    throw new AppError("Aucune photo de profil n'a ete fournie.", 400);
+  }
+
+  const existingUser = await prisma.utilisateurs.findUnique({
+    where: { id: userId },
+    include: utilisateurCompletInclude,
+  });
+
+  if (!existingUser) {
+    throw new AppError("Profil membre introuvable.", 404);
+  }
+
+  const stagedPhoto = await stageProfilePhoto(photoFile);
+  const previousPhotoPath = resolveProfilePhotoPath(
+    existingUser.profil?.photo_url || null,
+  );
+
+  try {
+    const utilisateur = await prisma.$transaction(async (tx) => {
+      await tx.profils_utilisateur.upsert({
+        where: { utilisateur_id: userId },
+        update: {
+          photo_url: stagedPhoto.nomStocke,
+        },
+        create: {
+          utilisateur_id: userId,
+          photo_url: stagedPhoto.nomStocke,
+        },
+      });
+
+      return tx.utilisateurs.findUnique({
+        where: { id: userId },
+        include: utilisateurCompletInclude,
+      });
+    });
+
+    if (previousPhotoPath) {
+      await cleanupStoredFile(previousPhotoPath);
+    }
+
+    return {
+      utilisateur: serializeUtilisateur(utilisateur),
+      references: await recupererReferencesMembre(),
+    };
+  } catch (error) {
+    await cleanupStoredFile(stagedPhoto.chemin);
+    throw error;
+  }
+}
+
+async function supprimerPhotoProfilMembre(userId) {
+  const existingUser = await prisma.utilisateurs.findUnique({
+    where: { id: userId },
+    include: utilisateurCompletInclude,
+  });
+
+  if (!existingUser) {
+    throw new AppError("Profil membre introuvable.", 404);
+  }
+
+  const previousPhotoPath = resolveProfilePhotoPath(
+    existingUser.profil?.photo_url || null,
+  );
+
+  const utilisateur = await prisma.$transaction(async (tx) => {
+    if (existingUser.profil) {
+      await tx.profils_utilisateur.update({
+        where: { utilisateur_id: userId },
+        data: { photo_url: null },
+      });
+    }
+
+    return tx.utilisateurs.findUnique({
+      where: { id: userId },
+      include: utilisateurCompletInclude,
+    });
+  });
+
+  if (previousPhotoPath) {
+    await cleanupStoredFile(previousPhotoPath);
+  }
+
+  return {
+    utilisateur: serializeUtilisateur(utilisateur),
+    references: await recupererReferencesMembre(),
+  };
 }
 
 async function listerMembresActifs(filters = {}) {
@@ -252,15 +354,33 @@ function isArticlePdfAccessibleByUser(userId, role, article) {
 }
 
 async function enrichSerializedArticlesWithPdf(articles) {
-  const attachmentsByArticleId = await getArticlePdfAttachmentMap(
-    articles.map((article) => article.id),
-  );
+  const [pdfAttachmentsByArticleId, coverAttachmentsByArticleId] =
+    await Promise.all([
+      getArticlePdfAttachmentMap(articles.map((article) => article.id)),
+      getArticleCoverAttachmentMap(articles.map((article) => article.id)),
+    ]);
 
   return articles.map((article) =>
     serializeArticle(
       article,
-      serializeArticlePdfAttachment(attachmentsByArticleId.get(String(article.id))),
+      serializeArticlePdfAttachment(pdfAttachmentsByArticleId.get(String(article.id))),
+      serializeArticleCoverAttachment(
+        coverAttachmentsByArticleId.get(String(article.id)),
+      ),
     ),
+  );
+}
+
+async function serializeArticleWithAttachments(article) {
+  const [pdfAttachment, coverAttachment] = await Promise.all([
+    getLatestArticlePdfAttachment(article.id),
+    getLatestArticleCoverAttachment(article.id),
+  ]);
+
+  return serializeArticle(
+    article,
+    serializeArticlePdfAttachment(pdfAttachment),
+    serializeArticleCoverAttachment(coverAttachment),
   );
 }
 
@@ -359,6 +479,7 @@ async function rechercherArticlesMembre(userId, filters) {
         { titre: { contains: filters.q } },
         { resume: { contains: filters.q } },
         { contenu: { contains: filters.q } },
+        { lien_doi: { contains: filters.q } },
       ],
     });
   }
@@ -476,6 +597,7 @@ async function creerArticleMembre(userId, payload) {
         titre: payload.titre,
         resume: payload.resume,
         contenu: payload.contenu,
+        lien_doi: payload.lienDoi,
         deposant_id: userId,
         categorie_id: toBigInt(payload.categorieId) ?? null,
         statut,
@@ -525,8 +647,7 @@ async function creerArticleMembre(userId, payload) {
     });
   });
 
-  const attachment = await getLatestArticlePdfAttachment(article.id);
-  return serializeArticle(article, serializeArticlePdfAttachment(attachment));
+  return serializeArticleWithAttachments(article);
 }
 
 async function modifierArticleMembre(userId, articleId, payload) {
@@ -557,6 +678,7 @@ async function modifierArticleMembre(userId, articleId, payload) {
         titre: payload.titre,
         resume: payload.resume,
         contenu: payload.contenu,
+        lien_doi: payload.lienDoi,
         categorie_id:
           payload.categorieId !== undefined
             ? (toBigInt(payload.categorieId) ?? null)
@@ -611,8 +733,7 @@ async function modifierArticleMembre(userId, articleId, payload) {
     });
   });
 
-  const attachment = await getLatestArticlePdfAttachment(article.id);
-  return serializeArticle(article, serializeArticlePdfAttachment(attachment));
+  return serializeArticleWithAttachments(article);
 }
 
 async function ajouterCoAuteur(userId, articleId, payload) {
@@ -676,11 +797,7 @@ async function ajouterCoAuteur(userId, articleId, payload) {
     articleId,
   );
 
-  const attachment = await getLatestArticlePdfAttachment(articleMisAJour.id);
-  return serializeArticle(
-    articleMisAJour,
-    serializeArticlePdfAttachment(attachment),
-  );
+  return serializeArticleWithAttachments(articleMisAJour);
 }
 
 async function supprimerCoAuteur(userId, articleId, targetUserId) {
@@ -716,11 +833,7 @@ async function supprimerCoAuteur(userId, articleId, targetUserId) {
     articleId,
   );
 
-  const attachment = await getLatestArticlePdfAttachment(articleMisAJour.id);
-  return serializeArticle(
-    articleMisAJour,
-    serializeArticlePdfAttachment(attachment),
-  );
+  return serializeArticleWithAttachments(articleMisAJour);
 }
 
 async function televerserPdfArticleMembre(userId, articleId, file) {
@@ -755,14 +868,48 @@ async function televerserPdfArticleMembre(userId, articleId, file) {
     });
 
     await cleanupStoredFile(oldPathToDelete);
-    const attachment = await getLatestArticlePdfAttachment(article.id);
-
-    return serializeArticle(
-      articleMisAJour,
-      serializeArticlePdfAttachment(attachment),
-    );
+    return serializeArticleWithAttachments(articleMisAJour);
   } catch (error) {
     await cleanupStoredFile(stagedPdf?.chemin);
+    throw error;
+  }
+}
+
+async function televerserCouvertureArticleMembre(userId, articleId, file) {
+  const article = await recupererArticleDuDeposantOuErreur(userId, articleId);
+  verifierArticleEditable(article);
+
+  const stagedCover = await stageArticleCover(file);
+  let oldPathToDelete = null;
+
+  try {
+    const articleMisAJour = await prisma.$transaction(async (tx) => {
+      const replacementResult = await replaceArticleCoverAttachment(
+        tx,
+        article.id,
+        stagedCover,
+        userId,
+      );
+      oldPathToDelete = replacementResult.oldPathToDelete;
+
+      await tx.articles.update({
+        where: { id: article.id },
+        data: {
+          modifie_par: userId,
+          modifie_le: new Date(),
+        },
+      });
+
+      return tx.articles.findUnique({
+        where: { id: article.id },
+        include: articleInclude,
+      });
+    });
+
+    await cleanupStoredFile(oldPathToDelete);
+    return serializeArticleWithAttachments(articleMisAJour);
+  } catch (error) {
+    await cleanupStoredFile(stagedCover?.chemin);
     throw error;
   }
 }
@@ -795,6 +942,9 @@ module.exports = {
   recupererProfilMembre,
   mettreAJourProfilMembre,
   telechargerAttestationProfilMembre,
+  telechargerPhotoProfilMembre,
+  televerserPhotoProfilMembre,
+  supprimerPhotoProfilMembre,
   listerMembresActifs,
   listerActualitesMembre,
   listerMesArticles,
@@ -804,5 +954,6 @@ module.exports = {
   ajouterCoAuteur,
   supprimerCoAuteur,
   televerserPdfArticleMembre,
+  televerserCouvertureArticleMembre,
   telechargerPdfArticleMembre,
 };

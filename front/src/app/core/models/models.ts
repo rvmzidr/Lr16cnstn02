@@ -10,6 +10,12 @@ export type ArticleStatus =
 export type NewsStatus = 'BROUILLON' | 'PUBLIEE' | 'ARCHIVEE';
 export type ProjectStatus = 'EN_COURS' | 'TERMINE' | 'ARCHIVE';
 export type PurchaseRequestStatus =
+  | 'BROUILLON'
+  | 'PDF_GENERE'
+  | 'TELECHARGEE'
+  | 'EN_ATTENTE_SIGNATURE_CHEF'
+  | 'SIGNEE'
+  | 'TRANSMISE_ADMINISTRATION'
   | 'EN_ATTENTE'
   | 'ACCEPTEE'
   | 'REJETEE'
@@ -22,11 +28,57 @@ export type SupportTicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type SupportTicketCategory =
   | 'LOGIN'
   | 'ACCOUNT'
+  | 'ACCESS'
+  | 'ROLE'
+  | 'MODULE_VISIBILITY'
+  | 'PERMISSION'
+  | 'UI_BUG'
+  | 'TRANSLATION'
   | 'MESSAGING'
   | 'NOTIFICATIONS'
   | 'ARTICLES'
   | 'SYSTEM'
   | 'OTHER';
+
+export type AccessModuleKey =
+  | 'dashboard_home'
+  | 'profile_settings'
+  | 'messaging'
+  | 'notifications'
+  | 'support'
+  | 'articles'
+  | 'purchases'
+  | 'projects'
+  | 'admin_users'
+  | 'admin_registrations'
+  | 'admin_roles'
+  | 'access_control'
+  | 'admin_settings';
+
+export type AccessPermissionKey =
+  | 'canViewDashboard'
+  | 'canViewMessaging'
+  | 'canSendMessages'
+  | 'canCreatePurchaseRequest'
+  | 'canViewOwnArticles'
+  | 'canCreateArticle'
+  | 'canEditOwnDraft'
+  | 'canValidateArticle'
+  | 'canChangeRole'
+  | 'canManageUsers'
+  | 'canManageAccessProfiles'
+  | 'canManageProjects'
+  | 'canManageSupport'
+  | 'canViewNotifications';
+
+export type AccessWidgetKey =
+  | 'messages_widget'
+  | 'notifications_widget'
+  | 'articles_widget'
+  | 'support_widget'
+  | 'purchases_widget'
+  | 'stats_widget'
+  | 'projects_widget';
 
 export interface AdminDashboardKPIs {
   inscriptionsEnAttente: number;
@@ -92,7 +144,6 @@ export interface LabHeadDashboardKPIs {
     purchaseRequests: Array<{
       id: number;
       title: string;
-      projectName: string | null;
       requester: string;
       amount: number | null;
       createdAt: string;
@@ -247,6 +298,7 @@ export interface Article {
   titre: string;
   resume: string;
   contenu: string;
+  lienDoi: string | null;
   statut: ArticleStatus;
   dateSoumission: string | null;
   dateValidation: string | null;
@@ -260,6 +312,12 @@ export interface Article {
   deposant: UtilisateurResume | null;
   validateur: UtilisateurResume | null;
   articlePdf: {
+    id: number;
+    nomFichier: string;
+    typeMime: string | null;
+    tailleOctets: number | null;
+  } | null;
+  articleCover?: {
     id: number;
     nomFichier: string;
     typeMime: string | null;
@@ -304,6 +362,7 @@ export interface RegistrationReferences {
   categoriesArticle: Category[];
   laboratoireParDefaut: LaboratoryDefaults;
   televersementAttestation?: UploadConstraints;
+  televersementPhotoProfil?: UploadConstraints;
 }
 
 export interface RegistrationPayload {
@@ -316,6 +375,7 @@ export interface RegistrationPayload {
   cin: string;
   passeport: string;
   emailInstitutionnel: string;
+  emailSecondaire: string;
   telephone: string;
   adresse: string;
   grade: string;
@@ -344,6 +404,7 @@ export interface ArticlePayload {
   titre: string;
   resume: string;
   contenu: string;
+  lienDoi?: string;
   categorieId?: number | null;
   action?: 'BROUILLON' | 'SOUMETTRE';
 }
@@ -356,6 +417,26 @@ export interface ArticleSearchFilters {
   statut?: ArticleStatus | '';
   dateDebut?: string;
   dateFin?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface LabHeadArticlesQuery {
+  q?: string;
+  statut?: ArticleStatus | '';
+  categorieId?: number | '';
+  equipeRechercheId?: number | '';
+  auteurId?: string;
+  dateDebut?: string;
+  dateFin?: string;
+  tri?:
+    | 'modification'
+    | 'soumission'
+    | 'validation'
+    | 'publication'
+    | 'creation'
+    | 'titre';
+  ordre?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }
@@ -462,11 +543,31 @@ export interface AdminAccountsList {
 export interface LabHeadArticlesData {
   articles: Article[];
   articlesValides: Article[];
+  elements?: Article[];
+  meta?: PaginationMeta;
+  filtres?: {
+    q: string;
+    statut: ArticleStatus | null;
+    categorieId: number | null;
+    equipeRechercheId: number | null;
+    auteurId: string | null;
+    dateDebut: string | null;
+    dateFin: string | null;
+    tri:
+      | 'modification'
+      | 'soumission'
+      | 'validation'
+      | 'publication'
+      | 'creation'
+      | 'titre';
+    ordre: 'asc' | 'desc';
+  };
   statistiques: {
     enAttente: number;
     valides: number;
     rejetes: number;
     publies: number;
+    total?: number;
   };
 }
 
@@ -565,8 +666,6 @@ export interface Project {
 
 export interface PurchaseRequest {
   id: number;
-  projetId: number;
-  projetTitre: string | null;
   creePar: UtilisateurResume | null;
   decideePar: UtilisateurResume | null;
   objet: string;
@@ -581,6 +680,40 @@ export interface PurchaseRequest {
   dateLivraison: string | null;
   creeLe: string;
   modifieLe: string;
+  isExpressionWorkflow?: boolean;
+  dateDemande?: string | null;
+  demandeurNom?: string | null;
+  demandeurPrenom?: string | null;
+  directionServiceLabo?: string | null;
+  langueDocument?: 'fr' | 'en' | 'ar' | null;
+  justificationBesoin?: string | null;
+  rubriqueBudgetaire?: string | null;
+  rubriqueBudgetaireLabel?: string | null;
+  lignes?: Array<{
+    articleService: string;
+    quantite: number;
+    prixUnitaireTtc: number;
+    totalLigne: number;
+  }>;
+  totalGeneral?: number | null;
+  typesPiecesJointes?: string[];
+  autrePieceJointe?: string | null;
+  nombrePiecesJointes?: number;
+  piecesJointes?: Array<{
+    id: number;
+    nomFichier: string;
+    typeMime: string | null;
+    tailleOctets: number | null;
+    creeLe: string;
+  }>;
+  pdfGenere?: {
+    disponible: boolean;
+    nomFichier: string | null;
+    typeMime: string | null;
+    tailleOctets: number | null;
+    genereLe: string | null;
+    telechargeLe: string | null;
+  };
   pieceJointe: {
     id: number;
     nomFichier: string;
@@ -677,6 +810,236 @@ export interface SupportTicketStats {
   resolved: number;
   closed: number;
   total: number;
+}
+
+export interface AccessProfileSummary {
+  id: number;
+  name: string;
+  description: string | null;
+  parentRole: Role;
+  isActive: boolean;
+  defaultLandingPage: string;
+  allowedLanguages: Array<'fr' | 'en' | 'ar'>;
+  defaultLanguage: 'fr' | 'en' | 'ar';
+  rtlArabic: boolean;
+  assignedUsersCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccessProfileDetail extends AccessProfileSummary {
+  modules: Array<{
+    moduleKey: AccessModuleKey;
+    isVisible: boolean;
+  }>;
+  permissions: Array<{
+    permissionKey: AccessPermissionKey;
+    isAllowed: boolean;
+  }>;
+  widgets: Array<{
+    widgetKey: AccessWidgetKey;
+    isVisible: boolean;
+  }>;
+}
+
+export interface AccessLinkedSupportTicket {
+  id: number;
+  subject: string;
+  category: SupportTicketCategory;
+  status: SupportTicketStatus;
+  createdAt: string;
+  requester: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+}
+
+export interface AccessProfilesListResponse {
+  elements: AccessProfileSummary[];
+  meta: PaginationMeta;
+  stats: {
+    activeProfiles: number;
+    usersWithOverrides: number;
+    accessRelatedTicketsOpen: number;
+    restrictedProfilesCount: number;
+  };
+  linkedTickets: AccessLinkedSupportTicket[];
+}
+
+export interface AccessProfileUsersResponse {
+  elements: Array<{
+    id: number;
+    user: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+    assignedAt: string;
+    updatedAt: string;
+    assignedBy: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+  }>;
+  meta: PaginationMeta;
+}
+
+export interface AccessOverrideItem {
+  id: number;
+  overrideType: 'module' | 'permission' | 'widget';
+  key: string;
+  value: boolean;
+  reason: string | null;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role | null;
+  } | null;
+}
+
+export interface UserAccessSummaryStats {
+  totalUsers: number;
+  adminUsers: number;
+  labHeadUsers: number;
+  memberUsers: number;
+  doctorantMembers: number;
+  usersWithOverrides: number;
+  accessRelatedTicketsOpen: number;
+}
+
+export interface UserAccessSummaryResponse {
+  stats: UserAccessSummaryStats;
+  linkedTickets: AccessLinkedSupportTicket[];
+}
+
+export interface UserAccessUserSummaryItem {
+  id: string;
+  fullName: string;
+  email: string;
+  role: Role | null;
+  globalRole: 'ADMIN' | 'LAB_HEAD' | 'MEMBER';
+  accountStatus: AccountStatus;
+  active: boolean;
+  isDoctorant: boolean;
+  defaultSource: string;
+  defaultLandingPage: string;
+  effectiveLandingPage: string;
+  visibleModules: AccessModuleKey[];
+  majorPermissions: Array<{ key: AccessPermissionKey; isAllowed: true }>;
+  overridesCount: number;
+  hasOverrides: boolean;
+}
+
+export interface UserAccessUsersListResponse {
+  elements: UserAccessUserSummaryItem[];
+  meta: PaginationMeta;
+}
+
+export interface UserAccessContext {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role;
+    globalRole?: 'ADMIN' | 'LAB_HEAD' | 'MEMBER';
+    accountStatus: AccountStatus;
+    active: boolean;
+    isDoctorant?: boolean;
+  };
+  profile: {
+    id: number;
+    name: string;
+    description: string | null;
+    parentRole: Role;
+    isActive: boolean;
+    defaultLandingPage: string;
+    allowedLanguages: Array<'fr' | 'en' | 'ar'>;
+    defaultLanguage: 'fr' | 'en' | 'ar';
+    rtlArabic: boolean;
+  } | null;
+  assignment: {
+    assignedAt: string;
+    updatedAt: string;
+    assignedBy: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+  } | null;
+  defaultSource?: string;
+  defaultAccess?: {
+    source: string;
+    defaultLandingPage: string;
+    modules: Array<{ key: AccessModuleKey; isVisible: boolean }>;
+    permissions: Array<{ key: AccessPermissionKey; isAllowed: boolean }>;
+    widgets: Array<{ key: AccessWidgetKey; isVisible: boolean }>;
+  };
+  landingOverride?: string | null;
+  effective: {
+    modules: Array<{ key: AccessModuleKey; isVisible: boolean }>;
+    permissions: Array<{ key: AccessPermissionKey; isAllowed: boolean }>;
+    widgets: Array<{ key: AccessWidgetKey; isVisible: boolean }>;
+    visibleModules: AccessModuleKey[];
+    majorPermissions: Array<{ key: AccessPermissionKey; isAllowed: true }>;
+    defaultLandingPage: string;
+    allowedLanguages: Array<'fr' | 'en' | 'ar'>;
+    defaultLanguage: 'fr' | 'en' | 'ar';
+    rtlArabic: boolean;
+  };
+  overrides: AccessOverrideItem[];
+}
+
+export interface AccessPreviewProfileResponse {
+  profile: AccessProfileDetail;
+  effective: UserAccessContext['effective'];
+}
+
+export interface SupportTicketAccessDiagnostic {
+  ticket: {
+    id: number;
+    subject: string;
+    category: SupportTicketCategory;
+    status: SupportTicketStatus;
+    createdAt: string;
+    requester: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+    assignedAdmin: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+  };
+  isAccessRelated: boolean;
+  accessContext: UserAccessContext;
+  resolutions: Array<{
+    id: number;
+    notes: string | null;
+    createdAt: string;
+    admin: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: Role | null;
+    } | null;
+    profile: {
+      id: number;
+      name: string;
+      parentRole: Role;
+    } | null;
+  }>;
 }
 
 export type AdminNotificationCategory =

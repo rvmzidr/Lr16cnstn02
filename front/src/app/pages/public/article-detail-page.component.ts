@@ -50,6 +50,38 @@ import { sharedIcons } from '../../shared/lucide-icons';
               article()?.deposant?.nomComplet || site.localize(defaultAuthor)
             }}</span>
           </div>
+
+          <div
+            class="mt-3 flex items-start gap-3 text-sm text-muted-foreground"
+          >
+            <lucide-icon
+              [img]="icons.Users"
+              class="mt-0.5 h-4 w-4 text-primary"
+            ></lucide-icon>
+            <span>{{ site.localize(authorsLabel) }}: {{ articleAuthorsLabel() }}</span>
+          </div>
+
+          <div
+            class="mt-2 flex items-start gap-3 text-sm text-muted-foreground"
+          >
+            <lucide-icon
+              [img]="icons.Link2"
+              class="mt-0.5 h-4 w-4 text-primary"
+            ></lucide-icon>
+            @if (article()?.lienDoi) {
+              <a
+                [href]="resolveDoiUrl(article()?.lienDoi)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-primary hover:underline"
+              >
+                {{ site.localize(doiLabel) }}: {{ article()?.lienDoi }}
+              </a>
+            } @else {
+              <span>{{ site.localize(doiNotAvailableLabel) }}</span>
+            }
+          </div>
+
           @if (article()?.articlePdf) {
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button
@@ -98,11 +130,56 @@ export class ArticleDetailPageComponent implements OnInit {
     en: 'LR16CNSTN02',
     ar: 'LR16CNSTN02',
   };
+  readonly authorsLabel = {
+    fr: 'Auteurs',
+    en: 'Authors',
+    ar: 'المؤلفون',
+  };
+  readonly doiLabel = {
+    fr: 'DOI',
+    en: 'DOI',
+    ar: 'DOI',
+  };
+  readonly doiNotAvailableLabel = {
+    fr: 'DOI non renseigné',
+    en: 'DOI not provided',
+    ar: 'DOI غير متوفر',
+  };
   readonly notFoundLabel = {
     fr: 'Article introuvable.',
     en: 'Article not found.',
     ar: 'المقال غير موجود.',
   };
+
+  articleAuthorsLabel() {
+    const currentArticle = this.article();
+    if (!currentArticle) {
+      return this.site.localize(this.defaultAuthor);
+    }
+
+    const names = [
+      currentArticle.deposant?.nomComplet || '',
+      ...currentArticle.coAuteurs
+        .map((coAuthor) => coAuthor.utilisateur?.nomComplet || '')
+        .filter((name) => name && name !== currentArticle.deposant?.nomComplet),
+    ].filter(Boolean);
+
+    return names.length ? names.join(', ') : this.site.localize(this.defaultAuthor);
+  }
+
+  resolveDoiUrl(rawDoi: string | null | undefined) {
+    const value = (rawDoi || '').trim();
+    if (!value) {
+      return '#';
+    }
+
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    const normalized = value.replace(/^doi:\s*/i, '').trim();
+    return `https://doi.org/${normalized}`;
+  }
 
   async ngOnInit() {
     const articleId = this.route.snapshot.paramMap.get('articleId');

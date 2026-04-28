@@ -341,6 +341,64 @@ async function cleanupDemoData() {
   });
   const demandeIds = demandes.map((item) => item.id);
 
+  const supportTickets = await prisma.support_tickets.findMany({
+    where: {
+      OR: [
+        {
+          demandeur_id: {
+            in: ids,
+          },
+        },
+        {
+          admin_assigne_id: {
+            in: ids,
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+    },
+  });
+  const supportTicketIds = supportTickets.map((item) => item.id);
+
+  const supportResponses = await prisma.support_reponses.findMany({
+    where: {
+      OR: [
+        {
+          auteur_id: {
+            in: ids,
+          },
+        },
+        ...(supportTicketIds.length > 0
+          ? [
+              {
+                ticket_id: {
+                  in: supportTicketIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+    select: {
+      id: true,
+    },
+  });
+  const supportResponseIds = supportResponses.map((item) => item.id);
+
+  const accessProfiles = await prisma.access_profiles.findMany({
+    where: {
+      cree_par: {
+        in: ids,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  const accessProfileIds = accessProfiles.map((item) => item.id);
+
   await prisma.participants_conversation.deleteMany({
     where: {
       utilisateur_id: {
@@ -406,6 +464,177 @@ async function cleanupDemoData() {
   await prisma.messages_contact.deleteMany({
     where: {
       traite_par: {
+        in: ids,
+      },
+    },
+  });
+
+  await prisma.support_pieces_jointes.deleteMany({
+    where: {
+      OR: [
+        {
+          ajoute_par: {
+            in: ids,
+          },
+        },
+        ...(supportTicketIds.length > 0
+          ? [
+              {
+                ticket_id: {
+                  in: supportTicketIds,
+                },
+              },
+            ]
+          : []),
+        ...(supportResponseIds.length > 0
+          ? [
+              {
+                reponse_id: {
+                  in: supportResponseIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.support_ticket_access_resolutions.deleteMany({
+    where: {
+      OR: [
+        {
+          admin_id: {
+            in: ids,
+          },
+        },
+        {
+          utilisateur_id: {
+            in: ids,
+          },
+        },
+        ...(supportTicketIds.length > 0
+          ? [
+              {
+                ticket_id: {
+                  in: supportTicketIds,
+                },
+              },
+            ]
+          : []),
+        ...(accessProfileIds.length > 0
+          ? [
+              {
+                profile_id: {
+                  in: accessProfileIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.support_reponses.deleteMany({
+    where: {
+      OR: [
+        {
+          auteur_id: {
+            in: ids,
+          },
+        },
+        ...(supportTicketIds.length > 0
+          ? [
+              {
+                ticket_id: {
+                  in: supportTicketIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.support_tickets.deleteMany({
+    where: {
+      OR: [
+        {
+          demandeur_id: {
+            in: ids,
+          },
+        },
+        {
+          admin_assigne_id: {
+            in: ids,
+          },
+        },
+      ],
+    },
+  });
+
+  await prisma.user_access_overrides.deleteMany({
+    where: {
+      OR: [
+        {
+          utilisateur_id: {
+            in: ids,
+          },
+        },
+        {
+          cree_par: {
+            in: ids,
+          },
+        },
+      ],
+    },
+  });
+
+  await prisma.user_access_preferences.deleteMany({
+    where: {
+      OR: [
+        {
+          utilisateur_id: {
+            in: ids,
+          },
+        },
+        {
+          cree_par: {
+            in: ids,
+          },
+        },
+      ],
+    },
+  });
+
+  await prisma.access_profile_user_assignments.deleteMany({
+    where: {
+      OR: [
+        {
+          utilisateur_id: {
+            in: ids,
+          },
+        },
+        {
+          assigne_par: {
+            in: ids,
+          },
+        },
+        ...(accessProfileIds.length > 0
+          ? [
+              {
+                profile_id: {
+                  in: accessProfileIds,
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+  });
+
+  await prisma.access_profiles.deleteMany({
+    where: {
+      cree_par: {
         in: ids,
       },
     },

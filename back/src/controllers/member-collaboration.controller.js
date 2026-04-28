@@ -139,14 +139,57 @@ const createPurchaseRequest = asyncHandler(async (req, res) => {
     req.auth.userId,
     req.auth.role,
     req.body,
-    req.file,
+    req.files,
   );
   successResponse(res, "Demande d'achat creee.", donnees, 201);
 });
 
+const updatePurchaseRequest = asyncHandler(async (req, res) => {
+  const donnees = await collaborationService.updatePurchaseRequest(
+    req.auth.userId,
+    req.auth.role,
+    req.params.id,
+    req.body,
+    req.files,
+  );
+  successResponse(res, "Demande d'achat mise a jour.", donnees);
+});
+
+const generatePurchaseRequestPdf = asyncHandler(async (req, res) => {
+  const donnees = await collaborationService.generatePurchaseRequestPdf(
+    req.auth.userId,
+    req.auth.role,
+    req.params.id,
+  );
+  successResponse(res, "PDF de la demande genere.", donnees);
+});
+
 const getPurchaseRequest = asyncHandler(async (req, res) => {
-  const donnees = await collaborationService.getPurchaseRequestById(req.params.id);
+  const donnees = await collaborationService.getPurchaseRequestById(req.params.id, {
+    userId: req.auth.userId,
+    role: req.auth.role,
+  });
   successResponse(res, "Demande d'achat recuperee.", donnees);
+});
+
+const downloadPurchaseRequestPdf = asyncHandler(async (req, res) => {
+  const file = await collaborationService.downloadPurchaseRequestPdf(
+    req.auth.userId,
+    req.auth.role,
+    req.params.id,
+  );
+
+  res.type(file.mimeType);
+  if (req.query.action === "view") {
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename=\"${file.downloadName}\"`,
+    );
+    res.sendFile(file.path);
+    return;
+  }
+
+  res.download(file.path, file.downloadName);
 });
 
 const downloadPurchaseAttachment = asyncHandler(async (req, res) => {
@@ -154,6 +197,17 @@ const downloadPurchaseAttachment = asyncHandler(async (req, res) => {
     req.auth.userId,
     req.auth.role,
     req.params.id,
+  );
+  res.type(file.mimeType);
+  res.download(file.path, file.downloadName);
+});
+
+const downloadPurchaseAttachmentById = asyncHandler(async (req, res) => {
+  const file = await collaborationService.downloadPurchaseAttachmentById(
+    req.auth.userId,
+    req.auth.role,
+    req.params.id,
+    req.params.attachmentId,
   );
   res.type(file.mimeType);
   res.download(file.path, file.downloadName);
@@ -214,8 +268,12 @@ module.exports = {
   getProject,
   listPurchaseRequests,
   createPurchaseRequest,
+  updatePurchaseRequest,
+  generatePurchaseRequestPdf,
   getPurchaseRequest,
+  downloadPurchaseRequestPdf,
   downloadPurchaseAttachment,
+  downloadPurchaseAttachmentById,
   listNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,

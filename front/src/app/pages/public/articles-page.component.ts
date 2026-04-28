@@ -147,11 +147,25 @@ import { sharedIcons } from '../../shared/lucide-icons';
               {{ article.titre }}
             </h2>
             <div class="mt-3 text-base text-muted-foreground">
-              {{ formatDate(article.publieLe || article.creeLe) }} •
-              {{ article.deposant?.nomComplet || 'LR16CNSTN02' }}
+              {{ formatDate(article.publieLe || article.creeLe) }}
             </div>
+            <div class="mt-1 text-sm text-muted-foreground">
+              {{ site.localize(authorsLabel) }}: {{ articleAuthorsLabel(article) }}
+            </div>
+
+            @if (article.lienDoi) {
+              <span
+                class="mt-2 inline-flex max-w-full truncate text-sm font-medium text-primary"
+              >
+                {{ site.localize(doiLabel) }}: {{ article.lienDoi }}
+              </span>
+            }
+
             <p class="mt-5 text-lg leading-8 text-muted-foreground">
               {{ article.resume }}
+            </p>
+            <p class="mt-3 line-clamp-3 text-sm leading-7 text-muted-foreground/90">
+              {{ article.contenu }}
             </p>
             @if (article.articlePdf) {
               <div class="mt-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
@@ -184,7 +198,7 @@ export class ArticlesPageComponent implements OnInit {
   readonly estimateReadTime = estimateReadTime;
   readonly articlesLabel = { fr: 'Articles', en: 'Articles', ar: 'المقالات' };
   readonly subtitle = {
-    fr: 'Explorez les publications evaluees et les contributions scientifiques du laboratoire.',
+    fr: 'Explorez les publications évaluées et les contributions scientifiques du laboratoire.',
     en: 'Explore the reviewed publications and scientific contributions of the laboratory.',
     ar: 'استكشف المنشورات العلمية والمساهمات البحثية الخاصة بالمختبر.',
   };
@@ -203,8 +217,18 @@ export class ArticlesPageComponent implements OnInit {
   readonly yearPlaceholder = { fr: 'AAAA', en: 'YYYY', ar: 'السنة' };
   readonly allYearsLabel = { fr: 'Toutes', en: 'All', ar: 'الكل' };
   readonly allLabel = { fr: 'Tous', en: 'All', ar: 'الكل' };
+  readonly authorsLabel = {
+    fr: 'Auteurs',
+    en: 'Authors',
+    ar: 'المؤلفون',
+  };
+  readonly doiLabel = {
+    fr: 'DOI',
+    en: 'DOI',
+    ar: 'DOI',
+  };
   readonly emptyLabel = {
-    fr: 'Aucun article ne correspond a vos criteres.',
+    fr: 'Aucun article ne correspond à vos critères.',
     en: 'No article matches your current filters.',
     ar: 'لا توجد مقالات تطابق معاييرك الحالية.',
   };
@@ -226,7 +250,14 @@ export class ArticlesPageComponent implements OnInit {
         !q ||
         article.titre.toLowerCase().includes(q) ||
         article.resume.toLowerCase().includes(q) ||
-        article.contenu.toLowerCase().includes(q);
+        article.contenu.toLowerCase().includes(q) ||
+        (article.lienDoi || '').toLowerCase().includes(q) ||
+        (article.deposant?.nomComplet || '').toLowerCase().includes(q) ||
+        article.coAuteurs
+          .map((coAuthor) => coAuthor.utilisateur?.nomComplet || '')
+          .join(' ')
+          .toLowerCase()
+          .includes(q);
       const matchesCategory =
         !this.selectedCategoryId() ||
         article.categorie?.id === this.selectedCategoryId();
@@ -241,6 +272,17 @@ export class ArticlesPageComponent implements OnInit {
     return Number.isNaN(date.getTime())
       ? new Date().getFullYear()
       : date.getFullYear();
+  }
+
+  articleAuthorsLabel(article: Article) {
+    const names = [
+      article.deposant?.nomComplet || '',
+      ...article.coAuteurs
+        .map((coAuthor) => coAuthor.utilisateur?.nomComplet || '')
+        .filter((name) => name && name !== article.deposant?.nomComplet),
+    ].filter(Boolean);
+
+    return names.length ? names.join(', ') : 'LR16CNSTN02';
   }
 
   setCategory(categoryId: number | null) {

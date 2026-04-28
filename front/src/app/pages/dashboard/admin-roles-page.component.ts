@@ -22,14 +22,34 @@ import { sharedIcons } from '../../shared/lucide-icons';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8">
-      <div class="app-page-header">
-        <div>
-          <h2 class="app-page-title">{{ site.localize(rolesTitle) }}</h2>
-          <p class="app-page-description">
-            {{ site.localize(rolesDescription) }}
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
+
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">
+            {{ site.localize({ fr: 'Gouvernance des roles', en: 'Role governance', ar: 'حوكمة الأدوار' }) }}
           </p>
+
+          <div class="app-page-header mt-2">
+            <div>
+              <h2 class="app-page-title">{{ site.localize(rolesTitle) }}</h2>
+              <p class="app-page-description">
+                {{ site.localize(rolesDescription) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Comptes', en: 'Accounts', ar: 'الحسابات' }) }}: {{ (accounts()?.comptes || []).length }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Sans role', en: 'No role', ar: 'بدون دور' }) }}: {{ accountsWithoutRoleCount() }}
+            </span>
+          </div>
         </div>
-      </div>
+      </section>
 
       <section class="app-kpi-grid">
         @for (card of summaryCards(); track card.label) {
@@ -250,6 +270,10 @@ export class AdminRolesPageComponent implements OnInit {
       },
     ];
   });
+
+  readonly accountsWithoutRoleCount = computed(
+    () => (this.accounts()?.comptes || []).filter((item) => !item.role).length,
+  );
 
   readonly filteredAccounts = computed(() => {
     const q = this.searchTerm().trim().toLowerCase();

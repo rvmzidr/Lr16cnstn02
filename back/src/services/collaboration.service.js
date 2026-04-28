@@ -4,9 +4,12 @@ const path = require("path");
 const prisma = require("../config/prisma");
 const { ACCOUNT_STATUS, ROLES } = require("../config/constants");
 const {
+  PURCHASE_ATTACHMENTS_FIELD,
   PURCHASE_ATTACHMENT_ENTITY,
+  PURCHASE_ATTACHMENT_FIELD,
   PURCHASE_ATTACHMENT_MIME_TYPES,
   PURCHASE_ATTACHMENT_STORAGE_DIR,
+  PURCHASE_GENERATED_PDF_STORAGE_DIR,
 } = require("../config/purchase-files");
 const {
   MESSAGE_ATTACHMENT_ENTITY,
@@ -17,7 +20,13 @@ const {
 const { toBigInt, toNumber } = require("../utils/bigint");
 const { buildMeta, getPagination } = require("../utils/pagination");
 const AppError = require("../utils/app-error");
+const {
+  isNotificationVisibleForModules,
+} = require("../utils/notification-access");
 const { cleanupStoredFile } = require("./member-profile.service");
+const {
+  buildPurchaseExpressionPdf,
+} = require("./purchase-expression-pdf.service");
 
 const NOTIFICATION_PREFERENCE_BY_CATEGORY = {
   messages: "notif_messages",
@@ -32,6 +41,64 @@ const GROUP_CREATOR_ROLES = new Set([
   ROLES.CHEF_LABO,
   ROLES.ADMINISTRATEUR,
 ]);
+
+const EXPRESSION_WORKFLOW_STATUSES = new Set([
+  "BROUILLON",
+  "PDF_GENERE",
+  "TELECHARGEE",
+  "EN_ATTENTE_SIGNATURE_CHEF",
+  "SIGNEE",
+  "TRANSMISE_ADMINISTRATION",
+]);
+
+const PURCHASE_EDITABLE_STATUSES = new Set([
+  "BROUILLON",
+  "REJETEE",
+  "EN_ATTENTE",
+]);
+
+const PURCHASE_REVIEWABLE_STATUSES = new Set([
+  "PDF_GENERE",
+  "TELECHARGEE",
+  "EN_ATTENTE",
+]);
+
+const PURCHASE_RUBRIQUE_LABELS = Object.freeze({
+  EQUIPEMENT: "Equipement",
+  SOUS_TRAITANCE: "Sous-traitance",
+  CONSOMMABLES_ET_PETITS_MATERIELS: "Consommables et petits materiels",
+  MISSIONS: "Missions",
+  STAGES: "Stages",
+  DEPLACEMENTS_ET_HEBERGEMENT: "Deplacements et hebergement",
+  MANIFESTATIONS_SCIENTIFIQUES: "Manifestations Scientifiques",
+  VACATIONS: "Vacations",
+  DOCUMENTATION_ET_RESEAUX: "Documentation et reseaux",
+  MAINTENANCE_ET_DIVERS: "Maintenance et divers",
+});
+
+function normalizeDocumentLanguage(value) {
+  return ["fr", "en", "ar"].includes(value) ? value : "fr";
+}
+
+async function getModuleVisibilityForUser(userId) {
+  try {
+    const accessControlService = require("./access-control.service");
+    const effective = await accessControlService.getEffectiveAccessForRequest(userId);
+    return effective?.moduleVisibility || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function filterNotificationsByAccess(notifications, moduleVisibility) {
+  if (!moduleVisibility) {
+    return notifications;
+  }
+
+  return (notifications || []).filter((notification) =>
+    isNotificationVisibleForModules(notification, moduleVisibility),
+  );
+}
 
 function serializeUtilisateurResume(utilisateur) {
   if (!utilisateur) {
@@ -1321,43 +1388,197 @@ function buildPurchaseAttachmentFileName(file) {
   return `${Date.now()}-${crypto.randomUUID()}${extension || ".bin"}`;
 }
 
-async function stagePurchaseAttachment(file) {
-  if (!file) {
-    return null;
+function buildPurchaseGeneratedPdfFileName() {
+  return `${Date.now()}-${crypto.randomUUID()}.pdf`;
+}
+
+function toPurchaseAmount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
   }
 
-  if (!PURCHASE_ATTACHMENT_MIME_TYPES.includes(file.mimetype)) {
-    throw new AppError(
-      "La piece jointe doit etre au format PDF, JPG, PNG, DOC, DOCX ou XLSX.",
-      400,
-    );
+  return Math.round(numeric * 1000) / 1000;
+}
+
+function normalizePurchaseAttachmentFiles(filePayload) {
+  if (!filePayload) {
+    return [];
+  }
+
+  if (Array.isArray(filePayload)) {
+    return filePayload.filter(Boolean);
+  }
+
+  if (filePayload.buffer && filePayload.originalname) {
+    return [filePayload];
+  }
+
+  const files = [];
+  const fieldFiles = filePayload[PURCHASE_ATTACHMENTS_FIELD];
+  const legacyFiles = filePayload[PURCHASE_ATTACHMENT_FIELD];
+
+  if (Array.isArray(fieldFiles)) {
+    files.push(...fieldFiles.filter(Boolean));
+  }
+
+  if (Array.isArray(legacyFiles)) {
+    files.push(...legacyFiles.filter(Boolean));
+  }
+
+  return files;
+}
+
+async function stagePurchaseAttachments(files) {
+  const inputFiles = normalizePurchaseAttachmentFiles(files);
+  if (!inputFiles.length) {
+    return [];
   }
 
   await fs.mkdir(PURCHASE_ATTACHMENT_STORAGE_DIR, { recursive: true });
-  const nomStocke = buildPurchaseAttachmentFileName(file);
-  const chemin = path.join(PURCHASE_ATTACHMENT_STORAGE_DIR, nomStocke);
-  await fs.writeFile(chemin, file.buffer);
+
+  const staged = [];
+  try {
+    for (const file of inputFiles) {
+      if (!PURCHASE_ATTACHMENT_MIME_TYPES.includes(file.mimetype)) {
+        throw new AppError(
+          "La piece jointe doit etre au format PDF, JPG, PNG, DOC ou DOCX.",
+          400,
+        );
+      }
+
+      const nomStocke = buildPurchaseAttachmentFileName(file);
+      const chemin = path.join(PURCHASE_ATTACHMENT_STORAGE_DIR, nomStocke);
+      await fs.writeFile(chemin, file.buffer);
+
+      staged.push({
+        nomFichier: file.originalname,
+        chemin,
+        typeMime: file.mimetype,
+        tailleOctets: BigInt(file.size),
+      });
+    }
+  } catch (error) {
+    await Promise.allSettled(staged.map((item) => cleanupStoredFile(item.chemin)));
+    throw error;
+  }
+
+  return staged;
+}
+
+function deriveDirectionServiceLaboFromUtilisateur(utilisateur) {
+  if (!utilisateur) {
+    return null;
+  }
+
+  const profil = utilisateur.profil || utilisateur.profil_utilisateur;
+  const segments = [
+    profil?.laboratoire_denomination,
+    profil?.equipes_recherche?.nom,
+    profil?.institutions?.nom,
+  ]
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
+
+  if (segments.length > 0) {
+    return segments.join(" / ");
+  }
+
+  return "LR16-CNSTN-02";
+}
+
+function buildLegacyExpressionLines(demande) {
+  const quantite = Number(demande.quantite || 0);
+  const total = toPurchaseAmount(demande.estimation_cout || 0);
+  const prixUnitaire =
+    quantite > 0 ? toPurchaseAmount(total / quantite) : toPurchaseAmount(total);
+
+  return [
+    {
+      articleService: demande.objet || "",
+      quantite: quantite > 0 ? quantite : 1,
+      prixUnitaireTtc: prixUnitaire,
+      totalLigne: total,
+    },
+  ];
+}
+
+function extractExpressionDetails(demande) {
+  const payload =
+    demande.expression_details && typeof demande.expression_details === "object"
+      ? demande.expression_details
+      : null;
+
+  const lignes = Array.isArray(payload?.lignes)
+    ? payload.lignes.map((line) => ({
+        articleService: line?.articleService || "",
+        quantite: Number(line?.quantite || 0),
+        prixUnitaireTtc: toPurchaseAmount(line?.prixUnitaireTtc || 0),
+        totalLigne: toPurchaseAmount(
+          line?.totalLigne ?? Number(line?.quantite || 0) * Number(line?.prixUnitaireTtc || 0),
+        ),
+      }))
+    : buildLegacyExpressionLines(demande);
+
+  const totalGeneral =
+    demande.total_general === null || demande.total_general === undefined
+      ? toPurchaseAmount(payload?.totalGeneral || demande.estimation_cout || 0)
+      : toPurchaseAmount(demande.total_general);
 
   return {
-    nomFichier: file.originalname,
-    chemin,
-    typeMime: file.mimetype,
-    tailleOctets: BigInt(file.size),
+    dateDemande: demande.date_demande || payload?.dateDemande || null,
+    justificationBesoin:
+      payload?.justificationBesoin || demande.justification_scientifique || "",
+    rubriqueBudgetaire:
+      demande.rubrique_budgetaire || payload?.rubriqueBudgetaire || null,
+    rubriqueBudgetaireLabel:
+      PURCHASE_RUBRIQUE_LABELS[
+        demande.rubrique_budgetaire || payload?.rubriqueBudgetaire || ""
+      ] ||
+      payload?.rubriqueBudgetaireLabel ||
+      null,
+    demandeurNom: demande.demandeur_nom || payload?.demandeurNom || null,
+    demandeurPrenom: demande.demandeur_prenom || payload?.demandeurPrenom || null,
+    directionServiceLabo:
+      demande.direction_service_labo || payload?.directionServiceLabo || null,
+    langueDocument: normalizeDocumentLanguage(payload?.langueDocument),
+    lignes,
+    totalGeneral,
+    typesPiecesJointes: Array.isArray(payload?.typesPiecesJointes)
+      ? payload.typesPiecesJointes
+      : Array.isArray(demande.types_pieces_jointes)
+        ? demande.types_pieces_jointes
+        : [],
+    autrePieceJointe: demande.autre_piece_jointe || payload?.autrePieceJointe || null,
+    nombrePiecesJointes:
+      Number(demande.nombre_pieces_jointes || payload?.nombrePiecesJointes || 0) ||
+      0,
   };
 }
 
-function serializePurchaseRequest(
-  demande,
-  creatorsMap,
-  decidersMap,
-  attachmentsByDemande,
-) {
-  const attachment = attachmentsByDemande.get(String(demande.id));
+function serializePurchaseAttachment(attachment) {
+  return {
+    id: toNumber(attachment.id),
+    nomFichier: attachment.nom_fichier,
+    typeMime: attachment.type_mime,
+    tailleOctets:
+      attachment.taille_octets === null || attachment.taille_octets === undefined
+        ? null
+        : Number(attachment.taille_octets),
+    creeLe: attachment.cree_le,
+  };
+}
+
+function serializePurchaseRequest(demande, creatorsMap, decidersMap, attachmentsByDemande) {
+  const attachments = attachmentsByDemande.get(String(demande.id)) || [];
+  const attachment = attachments[0] || null;
+  const expression = extractExpressionDetails(demande);
+  const isExpressionWorkflow =
+    EXPRESSION_WORKFLOW_STATUSES.has(demande.statut) ||
+    Boolean(demande.expression_details);
 
   return {
     id: toNumber(demande.id),
-    projetId: toNumber(demande.projet_id),
-    projetTitre: demande.projets?.titre || null,
     creePar: creatorsMap.get(demande.cree_par) || null,
     decideePar: demande.decidee_par
       ? decidersMap.get(demande.decidee_par) || null
@@ -1377,18 +1598,43 @@ function serializePurchaseRequest(
     dateLivraison: demande.date_livraison,
     creeLe: demande.cree_le,
     modifieLe: demande.modifie_le,
-    pieceJointe: attachment
+    pieceJointe: attachment ? serializePurchaseAttachment(attachment) : null,
+    piecesJointes: attachments.map(serializePurchaseAttachment),
+    isExpressionWorkflow,
+    dateDemande: expression.dateDemande,
+    demandeurNom: expression.demandeurNom,
+    demandeurPrenom: expression.demandeurPrenom,
+    directionServiceLabo: expression.directionServiceLabo,
+    langueDocument: expression.langueDocument,
+    justificationBesoin: expression.justificationBesoin,
+    rubriqueBudgetaire: expression.rubriqueBudgetaire,
+    rubriqueBudgetaireLabel: expression.rubriqueBudgetaireLabel,
+    lignes: expression.lignes,
+    totalGeneral: expression.totalGeneral,
+    typesPiecesJointes: expression.typesPiecesJointes,
+    autrePieceJointe: expression.autrePieceJointe,
+    nombrePiecesJointes: expression.nombrePiecesJointes || attachments.length,
+    pdfGenere: demande.pdf_chemin_fichier
       ? {
-          id: toNumber(attachment.id),
-          nomFichier: attachment.nom_fichier,
-          typeMime: attachment.type_mime,
+          disponible: true,
+          nomFichier: demande.pdf_nom_fichier,
+          typeMime: demande.pdf_type_mime || "application/pdf",
           tailleOctets:
-            attachment.taille_octets === null ||
-            attachment.taille_octets === undefined
+            demande.pdf_taille_octets === null ||
+            demande.pdf_taille_octets === undefined
               ? null
-              : Number(attachment.taille_octets),
+              : Number(demande.pdf_taille_octets),
+          genereLe: demande.pdf_genere_le,
+          telechargeLe: demande.pdf_telecharge_le,
         }
-      : null,
+      : {
+          disponible: false,
+          nomFichier: null,
+          typeMime: null,
+          tailleOctets: null,
+          genereLe: null,
+          telechargeLe: null,
+        },
   };
 }
 
@@ -1397,22 +1643,7 @@ function getPurchaseAccessCondition(userId, role) {
     return {};
   }
 
-  return {
-    OR: [
-      { cree_par: userId },
-      {
-        projets: {
-          is: {
-            membres_projet: {
-              some: {
-                utilisateur_id: userId,
-              },
-            },
-          },
-        },
-      },
-    ],
-  };
+  return { cree_par: userId };
 }
 
 async function createGroupConversation(userId, role, payload, attachmentFile) {
@@ -1912,23 +2143,16 @@ async function listPurchaseRequests(userId, role, filters) {
         { objet: { contains: filters.q } },
         { description: { contains: filters.q } },
         { justification_scientifique: { contains: filters.q } },
-        {
-          projets: {
-            is: {
-              titre: { contains: filters.q },
-            },
-          },
-        },
+        { demandeur_nom: { contains: filters.q } },
+        { demandeur_prenom: { contains: filters.q } },
+        { rubrique_budgetaire: { contains: filters.q } },
+        { direction_service_labo: { contains: filters.q } },
       ],
     });
   }
 
   if (filters.statut) {
     conditions.push({ statut: filters.statut });
-  }
-
-  if (filters.projetId) {
-    conditions.push({ projet_id: toBigInt(filters.projetId) });
   }
 
   const where = {
@@ -1939,14 +2163,6 @@ async function listPurchaseRequests(userId, role, filters) {
     prisma.demandes_achat.count({ where }),
     prisma.demandes_achat.findMany({
       where,
-      include: {
-        projets: {
-          select: {
-            id: true,
-            titre: true,
-          },
-        },
-      },
       orderBy: [{ modifie_le: "desc" }, { id: "desc" }],
       skip,
       take,
@@ -1975,8 +2191,9 @@ async function listPurchaseRequests(userId, role, filters) {
   for (const attachment of attachments) {
     const key = String(attachment.entite_id);
     if (!attachmentsByDemande.has(key)) {
-      attachmentsByDemande.set(key, attachment);
+      attachmentsByDemande.set(key, []);
     }
+    attachmentsByDemande.get(key).push(attachment);
   }
 
   return {
@@ -1992,162 +2209,270 @@ async function listPurchaseRequests(userId, role, filters) {
   };
 }
 
-async function createPurchaseRequest(userId, role, payload, file) {
-  const projet = await prisma.projets.findUnique({
-    where: {
-      id: toBigInt(payload.projetId),
+function hasExpressionPayload(payload) {
+  return (
+    Array.isArray(payload.lignes) ||
+    Boolean(payload.justificationBesoin) ||
+    Boolean(payload.rubriqueBudgetaire) ||
+    Boolean(payload.dateDemande)
+  );
+}
+
+function normalizeExpressionLines(lines = []) {
+  return (Array.isArray(lines) ? lines : []).map((line) => {
+    const quantite = Number(line.quantite || 0);
+    const prixUnitaire = toPurchaseAmount(line.prixUnitaireTtc || 0);
+    const totalLigne = toPurchaseAmount(
+      line.totalLigne === undefined
+        ? quantite * prixUnitaire
+        : Number(line.totalLigne),
+    );
+
+    return {
+      articleService: String(line.articleService || "").trim(),
+      quantite,
+      prixUnitaireTtc: prixUnitaire,
+      totalLigne,
+    };
+  });
+}
+
+function validateExpressionAttachmentConsistency(payload, attachmentCount) {
+  const types = Array.isArray(payload.typesPiecesJointes)
+    ? payload.typesPiecesJointes
+    : [];
+
+  if (!types.length && attachmentCount > 0) {
+    throw new AppError(
+      "Selectionnez le type des pieces jointes televersees (Devis, Specifications techniques ou Autres).",
+      400,
+    );
+  }
+}
+
+function buildExpressionDraftData(payload, requester, attachmentCount) {
+  const lignes = normalizeExpressionLines(payload.lignes);
+  const totalGeneral = toPurchaseAmount(
+    lignes.reduce((sum, line) => sum + Number(line.totalLigne || 0), 0),
+  );
+  const totalQuantite = lignes.reduce(
+    (sum, line) => sum + Number(line.quantite || 0),
+    0,
+  );
+  const rubriqueBudgetaire = payload.rubriqueBudgetaire || null;
+  const rubriqueLabel = rubriqueBudgetaire
+    ? PURCHASE_RUBRIQUE_LABELS[rubriqueBudgetaire] || rubriqueBudgetaire
+    : "Expression de besoins";
+  const directionServiceLabo =
+    payload.directionServiceLabo || deriveDirectionServiceLaboFromUtilisateur(requester);
+  const demandeurNom =
+    typeof payload.demandeurNom === "string" && payload.demandeurNom.trim()
+      ? payload.demandeurNom.trim()
+      : requester?.nom || null;
+  const demandeurPrenom =
+    typeof payload.demandeurPrenom === "string" && payload.demandeurPrenom.trim()
+      ? payload.demandeurPrenom.trim()
+      : requester?.prenom || null;
+  const dateDemande = payload.dateDemande ? new Date(payload.dateDemande) : new Date();
+  const justification = payload.justificationBesoin || "";
+  const langueDocument = normalizeDocumentLanguage(payload.langueDocument);
+  const typesPiecesJointes = Array.from(
+    new Set(Array.isArray(payload.typesPiecesJointes) ? payload.typesPiecesJointes : []),
+  );
+  const autrePieceJointe =
+    typesPiecesJointes.includes("AUTRES") && payload.autrePieceJointe
+      ? payload.autrePieceJointe
+      : null;
+  const firstFilledLine = lignes.find((line) => line.articleService);
+
+  const objet = (
+    firstFilledLine?.articleService ||
+    (rubriqueBudgetaire ? `Expression de besoins - ${rubriqueLabel}` : "Expression de besoins")
+  )
+    .trim()
+    .slice(0, 255);
+
+  return {
+    objet: objet || "Expression de besoins",
+    description: justification,
+    quantite: Math.max(1, Math.round(totalQuantite || 1)),
+    estimation_cout: totalGeneral,
+    justification_scientifique: justification,
+    urgente: Boolean(payload.urgente),
+    statut: "BROUILLON",
+    date_demande: dateDemande,
+    rubrique_budgetaire: rubriqueBudgetaire,
+    demandeur_nom: demandeurNom,
+    demandeur_prenom: demandeurPrenom,
+    direction_service_labo: directionServiceLabo,
+    expression_details: {
+      demandeurNom,
+      demandeurPrenom,
+      directionServiceLabo,
+      dateDemande: dateDemande.toISOString().slice(0, 10),
+      justificationBesoin: justification,
+      rubriqueBudgetaire,
+      rubriqueBudgetaireLabel: rubriqueLabel,
+      langueDocument,
+      lignes,
+      totalGeneral,
+      nombrePiecesJointes: attachmentCount,
+      typesPiecesJointes,
+      autrePieceJointe,
+      template: "LR16-CNSTN-02",
+      templateVersion: "2026-04",
     },
+    total_general: totalGeneral,
+    types_pieces_jointes: typesPiecesJointes,
+    autre_piece_jointe: autrePieceJointe,
+    nombre_pieces_jointes: attachmentCount,
+  };
+}
+
+async function getPurchaseRequesterProfile(userId, client = prisma) {
+  return client.utilisateurs.findUnique({
+    where: { id: userId },
     select: {
       id: true,
-      titre: true,
-      cree_par: true,
+      nom: true,
+      prenom: true,
+      profil: {
+        select: {
+          laboratoire_denomination: true,
+          institutions: {
+            select: { nom: true },
+          },
+          equipes_recherche: {
+            select: { nom: true },
+          },
+        },
+      },
     },
   });
+}
 
-  if (!projet) {
-    throw new AppError("Projet introuvable.", 404);
+async function createPurchaseRequest(userId, role, payload, filesPayload) {
+  const isExpression = hasExpressionPayload(payload);
+  const stagedAttachments = await stagePurchaseAttachments(filesPayload);
+  const requester = await getPurchaseRequesterProfile(userId);
+
+  if (isExpression) {
+    validateExpressionAttachmentConsistency(payload, stagedAttachments.length);
   }
-
-  if (
-    ![ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR].includes(role) &&
-    projet.cree_par !== userId
-  ) {
-    const membership = await prisma.membres_projet.findFirst({
-      where: {
-        projet_id: projet.id,
-        utilisateur_id: userId,
-      },
-    });
-
-    if (!membership) {
-      throw new AppError(
-        "Vous devez etre rattache au projet pour creer une demande d'achat.",
-        403,
-      );
-    }
-  }
-
-  const stagedAttachment = await stagePurchaseAttachment(file);
 
   try {
     const created = await prisma.$transaction(async (tx) => {
-      const demande = await tx.demandes_achat.create({
-        data: {
-          projet_id: projet.id,
+      let createData;
+      let nextStatus;
+
+      if (isExpression) {
+        const expressionData = buildExpressionDraftData(
+          payload,
+          requester,
+          stagedAttachments.length,
+        );
+        createData = {
+          cree_par: userId,
+          ...expressionData,
+        };
+        nextStatus = "BROUILLON";
+      } else {
+        createData = {
           cree_par: userId,
           objet: payload.objet,
           description: payload.description,
-          quantite: payload.quantite,
+          quantite: payload.quantite || 1,
           estimation_cout:
             payload.estimationCout === undefined ? null : payload.estimationCout,
           justification_scientifique: payload.justificationScientifique,
           urgente: Boolean(payload.urgente),
           statut: "EN_ATTENTE",
-        },
-        include: {
-          projets: {
-            select: {
-              id: true,
-              titre: true,
-            },
-          },
-        },
+        };
+        nextStatus = "EN_ATTENTE";
+      }
+
+      const demande = await tx.demandes_achat.create({
+        data: createData,
       });
 
       await tx.historiques_demande.create({
         data: {
           demande_achat_id: demande.id,
           ancien_statut: null,
-          nouveau_statut: "EN_ATTENTE",
+          nouveau_statut: nextStatus,
           commentaire: "Demande creee.",
           modifie_par: userId,
         },
       });
 
-      if (stagedAttachment) {
-        await tx.pieces_jointes.create({
-          data: {
+      if (stagedAttachments.length) {
+        await tx.pieces_jointes.createMany({
+          data: stagedAttachments.map((item) => ({
             type_entite: PURCHASE_ATTACHMENT_ENTITY,
             entite_id: demande.id,
-            nom_fichier: stagedAttachment.nomFichier,
-            chemin_fichier: stagedAttachment.chemin,
-            type_mime: stagedAttachment.typeMime,
-            taille_octets: stagedAttachment.tailleOctets,
+            nom_fichier: item.nomFichier,
+            chemin_fichier: item.chemin,
+            type_mime: item.typeMime,
+            taille_octets: item.tailleOctets,
             ajoute_par: userId,
-          },
+          })),
         });
       }
 
-      const reviewers = await tx.utilisateurs.findMany({
-        where: {
-          statut: ACCOUNT_STATUS.ACTIF,
-          actif: true,
-          role: {
-            in: [ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR],
+      if (!isExpression) {
+        const reviewers = await tx.utilisateurs.findMany({
+          where: {
+            statut: ACCOUNT_STATUS.ACTIF,
+            actif: true,
+            role: {
+              in: [ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR],
+            },
           },
-        },
-        select: { id: true },
-      });
+          select: { id: true },
+        });
 
-      await createNotifications(
-        tx,
-        reviewers.map((item) => item.id),
-        {
-          typeNotification: "NOUVELLE_DEMANDE_ACHAT",
-          titre: "Nouvelle demande d'achat",
-          message: `Une nouvelle demande d'achat a ete soumise pour le projet \"${projet.titre}\".`,
-          demandeAchatId: demande.id,
-          projetId: demande.projet_id,
-          lienDirect: `/dashboard/purchases?demandeId=${toNumber(demande.id)}`,
-        },
-        "demandes",
-      );
+        await createNotifications(
+          tx,
+          reviewers.map((item) => item.id),
+          {
+            typeNotification: "NOUVELLE_DEMANDE_ACHAT",
+            titre: "Nouvelle demande d'achat",
+            message: "Une nouvelle demande d'achat a ete soumise.",
+            demandeAchatId: demande.id,
+            lienDirect: `/dashboard/purchases?demandeId=${toNumber(demande.id)}`,
+          },
+          "demandes",
+        );
+      }
 
       return demande;
     });
 
-    const [creatorsMap, attachment] = await Promise.all([
-      fetchUsersMapByIds([created.cree_par]),
-      stagedAttachment
-        ? prisma.pieces_jointes.findFirst({
-            where: {
-              type_entite: PURCHASE_ATTACHMENT_ENTITY,
-              entite_id: created.id,
-            },
-            orderBy: [{ cree_le: "desc" }, { id: "desc" }],
-          })
-        : Promise.resolve(null),
-    ]);
-
-    const attachmentsByDemande = new Map();
-    if (attachment) {
-      attachmentsByDemande.set(String(created.id), attachment);
-    }
-
-    return serializePurchaseRequest(
-      created,
-      creatorsMap,
-      new Map(),
-      attachmentsByDemande,
-    );
+    return getPurchaseRequestById(created.id, { userId, role });
   } catch (error) {
-    await cleanupStoredFile(stagedAttachment?.chemin);
+    await Promise.allSettled(
+      stagedAttachments.map((item) => cleanupStoredFile(item.chemin)),
+    );
     throw error;
   }
 }
 
-async function getPurchaseRequestByIdOrThrow(purchaseId) {
+async function assertPurchaseReadAccess(userId, role, demande) {
+  if ([ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR].includes(role)) {
+    return;
+  }
+
+  if (demande.cree_par === userId) {
+    return;
+  }
+
+  throw new AppError("Vous n'avez pas les droits sur cette demande d'achat.", 403);
+}
+
+async function getPurchaseRequestByIdOrThrow(purchaseId, options = {}) {
   const demande = await prisma.demandes_achat.findUnique({
     where: {
       id: toBigInt(purchaseId),
-    },
-    include: {
-      projets: {
-        select: {
-          id: true,
-          titre: true,
-        },
-      },
     },
   });
 
@@ -2155,13 +2480,135 @@ async function getPurchaseRequestByIdOrThrow(purchaseId) {
     throw new AppError("Demande d'achat introuvable.", 404);
   }
 
+  if (options.userId && options.role) {
+    await assertPurchaseReadAccess(options.userId, options.role, demande);
+  }
+
   return demande;
 }
 
-async function decidePurchaseRequest(userId, purchaseId, payload) {
-  const demande = await getPurchaseRequestByIdOrThrow(purchaseId);
+async function updatePurchaseRequest(userId, role, purchaseId, payload, filesPayload) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role,
+  });
 
-  if (!["EN_ATTENTE", "EN_COURS_TRAITEMENT", "ACCEPTEE"].includes(demande.statut)) {
+  if (
+    ![ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR].includes(role) &&
+    demande.cree_par !== userId
+  ) {
+    throw new AppError("Vous ne pouvez modifier que vos propres demandes.", 403);
+  }
+
+  if (!PURCHASE_EDITABLE_STATUSES.has(demande.statut)) {
+    throw new AppError("Cette demande n'est plus editable.", 409);
+  }
+
+  const isExpression =
+    hasExpressionPayload(payload) || Boolean(demande.expression_details);
+  const stagedAttachments = await stagePurchaseAttachments(filesPayload);
+
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const existingAttachments = await tx.pieces_jointes.findMany({
+        where: {
+          type_entite: PURCHASE_ATTACHMENT_ENTITY,
+          entite_id: demande.id,
+        },
+        orderBy: [{ cree_le: "desc" }, { id: "desc" }],
+      });
+
+      const attachmentCount = stagedAttachments.length
+        ? stagedAttachments.length
+        : existingAttachments.length;
+
+      let updateData;
+      if (isExpression) {
+        validateExpressionAttachmentConsistency(payload, attachmentCount);
+        const requester = await getPurchaseRequesterProfile(demande.cree_par, tx);
+        updateData = buildExpressionDraftData(payload, requester, attachmentCount);
+      } else {
+        updateData = {
+          objet: payload.objet,
+          description: payload.description,
+          quantite: payload.quantite || 1,
+          estimation_cout:
+            payload.estimationCout === undefined ? null : payload.estimationCout,
+          justification_scientifique: payload.justificationScientifique,
+          urgente: Boolean(payload.urgente),
+        };
+      }
+
+      const demandeUpdated = await tx.demandes_achat.update({
+        where: { id: demande.id },
+        data: {
+          ...updateData,
+          statut: isExpression ? "BROUILLON" : demande.statut,
+          pdf_nom_fichier: isExpression ? null : undefined,
+          pdf_chemin_fichier: isExpression ? null : undefined,
+          pdf_type_mime: isExpression ? null : undefined,
+          pdf_taille_octets: isExpression ? null : undefined,
+          pdf_genere_le: isExpression ? null : undefined,
+          pdf_telecharge_le: isExpression ? null : undefined,
+        },
+      });
+
+      if (stagedAttachments.length) {
+        await tx.pieces_jointes.deleteMany({
+          where: {
+            type_entite: PURCHASE_ATTACHMENT_ENTITY,
+            entite_id: demande.id,
+          },
+        });
+
+        await tx.pieces_jointes.createMany({
+          data: stagedAttachments.map((item) => ({
+            type_entite: PURCHASE_ATTACHMENT_ENTITY,
+            entite_id: demande.id,
+            nom_fichier: item.nomFichier,
+            chemin_fichier: item.chemin,
+            type_mime: item.typeMime,
+            taille_octets: item.tailleOctets,
+            ajoute_par: userId,
+          })),
+        });
+
+        await Promise.allSettled(
+          existingAttachments.map((item) => cleanupStoredFile(item.chemin_fichier)),
+        );
+      }
+
+      if (demande.statut !== demandeUpdated.statut) {
+        await tx.historiques_demande.create({
+          data: {
+            demande_achat_id: demande.id,
+            ancien_statut: demande.statut,
+            nouveau_statut: demandeUpdated.statut,
+            commentaire: "Demande mise a jour.",
+            modifie_par: userId,
+          },
+        });
+      }
+
+      return demandeUpdated;
+    });
+
+    return getPurchaseRequestById(updated.id, { userId, role });
+  } catch (error) {
+    await Promise.allSettled(
+      stagedAttachments.map((item) => cleanupStoredFile(item.chemin)),
+    );
+    throw error;
+  }
+}
+
+async function decidePurchaseRequest(userId, purchaseId, payload) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role: ROLES.CHEF_LABO,
+  });
+
+  if (!PURCHASE_REVIEWABLE_STATUSES.has(demande.statut)) {
     throw new AppError("Cette demande ne peut plus etre arbitree.", 409);
   }
 
@@ -2183,14 +2630,14 @@ async function decidePurchaseRequest(userId, purchaseId, payload) {
         demande_achat_id: demande.id,
       },
       update: {
-        decision: nextStatus,
+        decision: payload.decision === "ACCEPTER" ? "ACCEPTEE" : "REJETEE",
         commentaire: payload.commentaire || null,
         decidee_par: userId,
         cree_le: new Date(),
       },
       create: {
         demande_achat_id: demande.id,
-        decision: nextStatus,
+        decision: payload.decision === "ACCEPTER" ? "ACCEPTEE" : "REJETEE",
         commentaire: payload.commentaire || null,
         decidee_par: userId,
       },
@@ -2211,32 +2658,37 @@ async function decidePurchaseRequest(userId, purchaseId, payload) {
       [demande.cree_par],
       {
         typeNotification:
-          nextStatus === "ACCEPTEE"
+          payload.decision === "ACCEPTER"
             ? "DEMANDE_ACHAT_ACCEPTEE"
             : "DEMANDE_ACHAT_REJETEE",
         titre:
-          nextStatus === "ACCEPTEE"
+          payload.decision === "ACCEPTER"
             ? "Demande d'achat acceptee"
             : "Demande d'achat rejetee",
         message:
-          nextStatus === "ACCEPTEE"
-            ? "Votre demande d'achat a ete acceptee."
+          payload.decision === "ACCEPTER"
+            ? "Votre demande d'achat a ete acceptee par le chef du laboratoire."
             : `Votre demande d'achat a ete rejetee.${
                 payload.commentaire ? ` Motif: ${payload.commentaire}` : ""
               }`,
         demandeAchatId: demande.id,
-        projetId: demande.projet_id,
         lienDirect: `/dashboard/purchases?demandeId=${toNumber(demande.id)}`,
       },
       "demandes",
     );
   });
 
-  return getPurchaseRequestById(purchaseId);
+  return getPurchaseRequestById(purchaseId, {
+    userId,
+    role: ROLES.CHEF_LABO,
+  });
 }
 
 async function updatePurchaseStatus(userId, purchaseId, payload) {
-  const demande = await getPurchaseRequestByIdOrThrow(purchaseId);
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role: ROLES.CHEF_LABO,
+  });
 
   await prisma.$transaction(async (tx) => {
     await tx.demandes_achat.update({
@@ -2282,21 +2734,23 @@ async function updatePurchaseStatus(userId, purchaseId, payload) {
             : "Statut de demande d'achat modifie",
         message: `Le statut de votre demande d'achat est maintenant: ${payload.statut}.`,
         demandeAchatId: demande.id,
-        projetId: demande.projet_id,
         lienDirect: `/dashboard/purchases?demandeId=${toNumber(demande.id)}`,
       },
       payload.statut === "LIVREE" ? "livraisons" : "demandes",
     );
   });
 
-  return getPurchaseRequestById(purchaseId);
+  return getPurchaseRequestById(purchaseId, {
+    userId,
+    role: ROLES.CHEF_LABO,
+  });
 }
 
-async function getPurchaseRequestById(purchaseId) {
-  const demande = await getPurchaseRequestByIdOrThrow(purchaseId);
+async function getPurchaseRequestById(purchaseId, options = {}) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, options);
 
-  const [attachment, creatorsMap, decidersMap] = await Promise.all([
-    prisma.pieces_jointes.findFirst({
+  const [attachments, creatorsMap, decidersMap] = await Promise.all([
+    prisma.pieces_jointes.findMany({
       where: {
         type_entite: PURCHASE_ATTACHMENT_ENTITY,
         entite_id: demande.id,
@@ -2308,8 +2762,8 @@ async function getPurchaseRequestById(purchaseId) {
   ]);
 
   const attachmentsByDemande = new Map();
-  if (attachment) {
-    attachmentsByDemande.set(String(demande.id), attachment);
+  if (attachments.length) {
+    attachmentsByDemande.set(String(demande.id), attachments);
   }
 
   return serializePurchaseRequest(
@@ -2320,8 +2774,229 @@ async function getPurchaseRequestById(purchaseId) {
   );
 }
 
+async function generatePurchaseRequestPdf(userId, role, purchaseId) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role,
+  });
+
+  if (
+    demande.cree_par !== userId &&
+    ![ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR].includes(role)
+  ) {
+    throw new AppError("Vous n'avez pas les droits pour generer ce PDF.", 403);
+  }
+
+  if (
+    !["BROUILLON", "REJETEE", "EN_ATTENTE", "PDF_GENERE", "TELECHARGEE"].includes(
+      demande.statut,
+    )
+  ) {
+    throw new AppError("Cette demande ne peut plus etre regeneree.", 409);
+  }
+
+  const attachments = await prisma.pieces_jointes.findMany({
+    where: {
+      type_entite: PURCHASE_ATTACHMENT_ENTITY,
+      entite_id: demande.id,
+    },
+  });
+
+  const expression = extractExpressionDetails(demande);
+  if (!expression.rubriqueBudgetaire) {
+    throw new AppError(
+      "La rubrique budgetaire est obligatoire avant la generation du PDF.",
+      400,
+    );
+  }
+
+  if (!expression.justificationBesoin?.trim()) {
+    throw new AppError(
+      "La justification du besoin est obligatoire avant la generation du PDF.",
+      400,
+    );
+  }
+
+  if (!Array.isArray(expression.lignes) || expression.lignes.length === 0) {
+    throw new AppError(
+      "Ajoutez au moins un article ou service avant la generation du PDF.",
+      400,
+    );
+  }
+
+  expression.lignes.forEach((line, index) => {
+    if (!String(line?.articleService || "").trim()) {
+      throw new AppError(
+        `La ligne ${index + 1} doit contenir un article ou un service avant la generation du PDF.`,
+        400,
+      );
+    }
+
+    if (!Number.isFinite(Number(line?.quantite)) || Number(line.quantite) < 1) {
+      throw new AppError(
+        `La quantite de la ligne ${index + 1} est invalide avant la generation du PDF.`,
+        400,
+      );
+    }
+
+    if (
+      !Number.isFinite(Number(line?.prixUnitaireTtc)) ||
+      Number(line.prixUnitaireTtc) < 0
+    ) {
+      throw new AppError(
+        `Le prix unitaire TTC de la ligne ${index + 1} est invalide avant la generation du PDF.`,
+        400,
+      );
+    }
+  });
+
+  validateExpressionAttachmentConsistency(
+    { typesPiecesJointes: expression.typesPiecesJointes },
+    attachments.length,
+  );
+
+  const requester = await getPurchaseRequesterProfile(demande.cree_par);
+  const demandeurNom = expression.demandeurNom || requester?.nom || "";
+  const demandeurPrenom = expression.demandeurPrenom || requester?.prenom || "";
+
+  const pdfBuffer = await buildPurchaseExpressionPdf({
+    reference: toNumber(demande.id),
+    language: expression.langueDocument,
+    demandeurNomPrenom: `${demandeurPrenom} ${demandeurNom}`.trim(),
+    directionServiceLabo:
+      expression.directionServiceLabo || deriveDirectionServiceLaboFromUtilisateur(requester),
+    dateDemande: expression.dateDemande || new Date(),
+    justificationBesoin: expression.justificationBesoin,
+    rubriqueLabel:
+      PURCHASE_RUBRIQUE_LABELS[expression.rubriqueBudgetaire] ||
+      expression.rubriqueBudgetaire,
+    lignes: expression.lignes,
+    totalGeneral: expression.totalGeneral,
+    nombrePiecesJointes: attachments.length,
+    typesPiecesJointes: expression.typesPiecesJointes,
+    autrePieceJointe: expression.autrePieceJointe,
+  });
+
+  await fs.mkdir(PURCHASE_GENERATED_PDF_STORAGE_DIR, { recursive: true });
+  const filePath = path.join(
+    PURCHASE_GENERATED_PDF_STORAGE_DIR,
+    buildPurchaseGeneratedPdfFileName(),
+  );
+  await fs.writeFile(filePath, pdfBuffer);
+
+  const previousPdfPath = demande.pdf_chemin_fichier;
+  const previousStatus = demande.statut;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.demandes_achat.update({
+        where: { id: demande.id },
+        data: {
+          pdf_nom_fichier: `expression-besoins-${toNumber(demande.id)}.pdf`,
+          pdf_chemin_fichier: filePath,
+          pdf_type_mime: "application/pdf",
+          pdf_taille_octets: BigInt(pdfBuffer.length),
+          pdf_genere_le: new Date(),
+          statut: "PDF_GENERE",
+          nombre_pieces_jointes: attachments.length,
+        },
+      });
+
+      if (previousStatus !== updated.statut) {
+        await tx.historiques_demande.create({
+          data: {
+            demande_achat_id: demande.id,
+            ancien_statut: previousStatus,
+            nouveau_statut: updated.statut,
+            commentaire: "PDF officiel genere.",
+            modifie_par: userId,
+          },
+        });
+      }
+
+      const reviewers = await tx.utilisateurs.findMany({
+        where: {
+          statut: ACCOUNT_STATUS.ACTIF,
+          actif: true,
+          role: {
+            in: [ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR],
+          },
+        },
+        select: { id: true },
+      });
+
+      await createNotifications(
+        tx,
+        reviewers.map((item) => item.id),
+        {
+          typeNotification: "NOUVELLE_DEMANDE_ACHAT",
+          titre: "Expression de besoins prete",
+          message: `La demande #${toNumber(demande.id)} a ete remplie electroniquement, le PDF est pret et attend la revue du chef du laboratoire.`,
+          demandeAchatId: demande.id,
+          lienDirect: `/dashboard/purchases?demandeId=${toNumber(demande.id)}`,
+        },
+        "demandes",
+      );
+    });
+  } catch (error) {
+    await cleanupStoredFile(filePath);
+    throw error;
+  }
+
+  if (previousPdfPath && previousPdfPath !== filePath) {
+    await cleanupStoredFile(previousPdfPath);
+  }
+
+  return getPurchaseRequestById(purchaseId, { userId, role });
+}
+
+async function downloadPurchaseRequestPdf(userId, role, purchaseId) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role,
+  });
+
+  if (!demande.pdf_chemin_fichier) {
+    throw new AppError("Aucun PDF genere pour cette demande.", 404);
+  }
+
+  try {
+    await fs.access(demande.pdf_chemin_fichier);
+  } catch (_error) {
+    throw new AppError("Le fichier PDF genere est introuvable.", 404);
+  }
+
+  if (demande.cree_par === userId) {
+    await prisma.demandes_achat.update({
+      where: { id: demande.id },
+      data: {
+        pdf_telecharge_le: new Date(),
+      },
+    });
+  }
+
+  return {
+    path: demande.pdf_chemin_fichier,
+    mimeType: demande.pdf_type_mime || "application/pdf",
+    downloadName:
+      demande.pdf_nom_fichier || `expression-besoins-${toNumber(demande.id)}.pdf`,
+  };
+}
+
 async function downloadPurchaseAttachment(userId, role, purchaseId) {
-  const demande = await getPurchaseRequestByIdOrThrow(purchaseId);
+  return downloadPurchaseAttachmentById(userId, role, purchaseId, null);
+}
+
+async function downloadPurchaseAttachmentById(
+  userId,
+  role,
+  purchaseId,
+  attachmentId,
+) {
+  const demande = await getPurchaseRequestByIdOrThrow(purchaseId, {
+    userId,
+    role,
+  });
 
   if (
     ![ROLES.CHEF_LABO, ROLES.ADMINISTRATEUR].includes(role) &&
@@ -2330,13 +3005,21 @@ async function downloadPurchaseAttachment(userId, role, purchaseId) {
     throw new AppError("Vous n'avez pas les droits pour cette piece jointe.", 403);
   }
 
-  const attachment = await prisma.pieces_jointes.findFirst({
-    where: {
-      type_entite: PURCHASE_ATTACHMENT_ENTITY,
-      entite_id: demande.id,
-    },
-    orderBy: [{ cree_le: "desc" }, { id: "desc" }],
-  });
+  const attachment = attachmentId
+    ? await prisma.pieces_jointes.findFirst({
+        where: {
+          id: toBigInt(attachmentId),
+          type_entite: PURCHASE_ATTACHMENT_ENTITY,
+          entite_id: demande.id,
+        },
+      })
+    : await prisma.pieces_jointes.findFirst({
+        where: {
+          type_entite: PURCHASE_ATTACHMENT_ENTITY,
+          entite_id: demande.id,
+        },
+        orderBy: [{ cree_le: "desc" }, { id: "desc" }],
+      });
 
   if (!attachment?.chemin_fichier) {
     throw new AppError("Aucune piece jointe disponible.", 404);
@@ -2357,29 +3040,37 @@ async function downloadPurchaseAttachment(userId, role, purchaseId) {
 
 async function listNotifications(userId, filters) {
   const { page, limit, skip, take } = getPagination(filters.page, filters.limit);
-  const where = {
+  const listWhere = {
     utilisateur_id: userId,
     ...(filters.nonLues ? { est_lue: false } : {}),
   };
 
-  const [total, unreadCount, notifications] = await prisma.$transaction([
-    prisma.notifications.count({ where }),
-    prisma.notifications.count({
+  const [notifications, unreadNotifications, moduleVisibility] = await Promise.all([
+    prisma.notifications.findMany({
+      where: listWhere,
+      orderBy: [{ cree_le: "desc" }, { id: "desc" }],
+    }),
+    prisma.notifications.findMany({
       where: {
         utilisateur_id: userId,
         est_lue: false,
       },
     }),
-    prisma.notifications.findMany({
-      where,
-      orderBy: [{ cree_le: "desc" }, { id: "desc" }],
-      skip,
-      take,
-    }),
+    getModuleVisibilityForUser(userId),
   ]);
 
+  const visibleNotifications = filterNotificationsByAccess(
+    notifications,
+    moduleVisibility,
+  );
+  const visibleUnread = filterNotificationsByAccess(
+    unreadNotifications,
+    moduleVisibility,
+  );
+  const pagedNotifications = visibleNotifications.slice(skip, skip + take);
+
   return {
-    elements: notifications.map((notification) => ({
+    elements: pagedNotifications.map((notification) => ({
       id: toNumber(notification.id),
       typeNotification: notification.type_notification,
       titre: notification.titre,
@@ -2394,8 +3085,8 @@ async function listNotifications(userId, filters) {
       lienDirect: notification.lien_direct,
       creeLe: notification.cree_le,
     })),
-    unreadCount,
-    meta: buildMeta(total, page, limit),
+    unreadCount: visibleUnread.length,
+    meta: buildMeta(visibleNotifications.length, page, limit),
   };
 }
 
@@ -2533,10 +3224,14 @@ module.exports = {
   removeProjectMember,
   listPurchaseRequests,
   createPurchaseRequest,
+  updatePurchaseRequest,
   getPurchaseRequestById,
+  generatePurchaseRequestPdf,
+  downloadPurchaseRequestPdf,
   decidePurchaseRequest,
   updatePurchaseStatus,
   downloadPurchaseAttachment,
+  downloadPurchaseAttachmentById,
   listNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -2544,3 +3239,4 @@ module.exports = {
   updateNotificationPreferences,
   createNotifications,
 };
+

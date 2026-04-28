@@ -1,0 +1,215 @@
+const ACCESS_MODULE_KEYS = Object.freeze([
+  "dashboard_home",
+  "profile_settings",
+  "messaging",
+  "notifications",
+  "support",
+  "articles",
+  "purchases",
+  "projects",
+  "admin_users",
+  "admin_registrations",
+  "admin_roles",
+  "access_control",
+  "admin_settings",
+]);
+
+const ACCESS_PERMISSION_KEYS = Object.freeze([
+  "canViewDashboard",
+  "canViewMessaging",
+  "canSendMessages",
+  "canCreatePurchaseRequest",
+  "canViewOwnArticles",
+  "canCreateArticle",
+  "canEditOwnDraft",
+  "canValidateArticle",
+  "canChangeRole",
+  "canManageUsers",
+  "canManageAccessProfiles",
+  "canManageProjects",
+  "canManageSupport",
+  "canViewNotifications",
+]);
+
+const ACCESS_WIDGET_KEYS = Object.freeze([
+  "messages_widget",
+  "notifications_widget",
+  "articles_widget",
+  "support_widget",
+  "purchases_widget",
+  "stats_widget",
+  "projects_widget",
+]);
+
+const ROLE_ALLOWED_MODULES = Object.freeze({
+  MEMBRE: Object.freeze([
+    "dashboard_home",
+    "profile_settings",
+    "messaging",
+    "notifications",
+    "support",
+    "articles",
+    "purchases",
+    "projects",
+  ]),
+  CHEF_LABO: Object.freeze([
+    "dashboard_home",
+    "profile_settings",
+    "messaging",
+    "notifications",
+    "support",
+    "articles",
+    "purchases",
+    "projects",
+  ]),
+  ADMINISTRATEUR: Object.freeze([
+    "dashboard_home",
+    "profile_settings",
+    "messaging",
+    "notifications",
+    "support",
+    "admin_users",
+    "admin_registrations",
+    "admin_roles",
+    "access_control",
+    "admin_settings",
+  ]),
+});
+
+const ROLE_ALLOWED_PERMISSIONS = Object.freeze({
+  MEMBRE: Object.freeze([
+    "canViewDashboard",
+    "canViewMessaging",
+    "canSendMessages",
+    "canCreatePurchaseRequest",
+    "canViewOwnArticles",
+    "canCreateArticle",
+    "canEditOwnDraft",
+    "canViewNotifications",
+  ]),
+  CHEF_LABO: Object.freeze([
+    "canViewDashboard",
+    "canViewMessaging",
+    "canSendMessages",
+    "canCreatePurchaseRequest",
+    "canViewOwnArticles",
+    "canCreateArticle",
+    "canEditOwnDraft",
+    "canValidateArticle",
+    "canManageProjects",
+    "canViewNotifications",
+    "canManageSupport",
+  ]),
+  ADMINISTRATEUR: Object.freeze([
+    "canViewDashboard",
+    "canViewMessaging",
+    "canSendMessages",
+    "canChangeRole",
+    "canManageUsers",
+    "canManageAccessProfiles",
+    "canViewNotifications",
+    "canManageSupport",
+  ]),
+});
+
+const ROLE_ALLOWED_WIDGETS = Object.freeze({
+  MEMBRE: Object.freeze([
+    "messages_widget",
+    "notifications_widget",
+    "articles_widget",
+    "support_widget",
+    "purchases_widget",
+    "projects_widget",
+  ]),
+  CHEF_LABO: Object.freeze([
+    "messages_widget",
+    "notifications_widget",
+    "articles_widget",
+    "support_widget",
+    "purchases_widget",
+    "stats_widget",
+    "projects_widget",
+  ]),
+  ADMINISTRATEUR: Object.freeze([
+    "messages_widget",
+    "notifications_widget",
+    "support_widget",
+    "stats_widget",
+  ]),
+});
+
+const ACCESS_RELATED_SUPPORT_CATEGORIES = Object.freeze([
+  "ACCESS",
+  "ROLE",
+  "MODULE_VISIBILITY",
+  "PERMISSION",
+  "UI_BUG",
+  "TRANSLATION",
+]);
+
+const DEFAULT_ACCESS_PRESETS = Object.freeze({
+  ADMINISTRATEUR: Object.freeze({
+    sourceKey: "ADMIN_DEFAULT",
+    defaultLandingPage: "/dashboard/users",
+    enabledModules: ROLE_ALLOWED_MODULES.ADMINISTRATEUR,
+    enabledPermissions: ROLE_ALLOWED_PERMISSIONS.ADMINISTRATEUR,
+    enabledWidgets: ROLE_ALLOWED_WIDGETS.ADMINISTRATEUR,
+  }),
+  CHEF_LABO: Object.freeze({
+    sourceKey: "LAB_HEAD_DEFAULT",
+    defaultLandingPage: "/dashboard/projects",
+    enabledModules: ROLE_ALLOWED_MODULES.CHEF_LABO,
+    enabledPermissions: ROLE_ALLOWED_PERMISSIONS.CHEF_LABO,
+    enabledWidgets: ROLE_ALLOWED_WIDGETS.CHEF_LABO,
+  }),
+  MEMBRE_STANDARD: Object.freeze({
+    sourceKey: "MEMBER_DEFAULT",
+    defaultLandingPage: "/dashboard/articles",
+    enabledModules: ROLE_ALLOWED_MODULES.MEMBRE,
+    enabledPermissions: ROLE_ALLOWED_PERMISSIONS.MEMBRE,
+    enabledWidgets: ROLE_ALLOWED_WIDGETS.MEMBRE,
+  }),
+  MEMBRE_DOCTORANT: Object.freeze({
+    sourceKey: "MEMBER_DOCTORANT_DEFAULT",
+    defaultLandingPage: "/dashboard/support",
+    enabledModules: Object.freeze([
+      "dashboard_home",
+      "profile_settings",
+      "messaging",
+      "support",
+      "notifications",
+      "articles",
+      "purchases",
+      "projects",
+    ]),
+    enabledPermissions: Object.freeze([
+      "canViewDashboard",
+      "canViewMessaging",
+      "canSendMessages",
+      "canCreatePurchaseRequest",
+      "canViewOwnArticles",
+      "canCreateArticle",
+      "canEditOwnDraft",
+      "canViewNotifications",
+    ]),
+    enabledWidgets: Object.freeze([
+      "messages_widget",
+      "notifications_widget",
+      "articles_widget",
+      "support_widget",
+      "purchases_widget",
+      "projects_widget",
+    ]),
+  }),
+});
+
+module.exports = {
+  ACCESS_MODULE_KEYS,
+  ACCESS_PERMISSION_KEYS,
+  ACCESS_WIDGET_KEYS,
+  ROLE_ALLOWED_MODULES,
+  ROLE_ALLOWED_PERMISSIONS,
+  ROLE_ALLOWED_WIDGETS,
+  ACCESS_RELATED_SUPPORT_CATEGORIES,
+  DEFAULT_ACCESS_PRESETS,
+};

@@ -1,5 +1,13 @@
 import { API_URL } from '../utils/env';
 import type {
+  UserAccessSummaryResponse,
+  UserAccessUsersListResponse,
+  AccessPreviewProfileResponse,
+  AccessProfileDetail,
+  AccessProfileUsersResponse,
+  AccessProfilesListResponse,
+  SupportTicketAccessDiagnostic,
+  UserAccessContext,
   AdminPasswordUpdatePayload,
   AdminProfileSettings,
   AboutData,
@@ -16,6 +24,7 @@ import type {
   ForgotPasswordResponse,
   HomeData,
   LabHeadArticlesData,
+  LabHeadArticlesQuery,
   LabHeadDashboardKPIs,
   LoginResponse,
   MessagingUserSummary,
@@ -70,6 +79,7 @@ type ApiErrorEnvelope = {
 const ADMIN_REGISTRATIONS_MAX_LIMIT = 50;
 const ADMIN_NOTIFICATIONS_MAX_LIMIT = 50;
 const SUPPORT_TICKETS_MAX_LIMIT = 50;
+const ACCESS_CONTROL_MAX_LIMIT = 50;
 
 function toPositiveInt(value: string | number | undefined | null) {
   if (value === undefined || value === null || value === '') {
@@ -143,6 +153,21 @@ function normalizeSupportTicketsQuery(query?: RequestOptions['query']) {
   return {
     ...query,
     limit: limit === null ? undefined : Math.min(limit, SUPPORT_TICKETS_MAX_LIMIT),
+    page: page === null ? undefined : page,
+  };
+}
+
+function normalizeAccessControlQuery(query?: RequestOptions['query']) {
+  if (!query) {
+    return undefined;
+  }
+
+  const limit = toPositiveInt(query['limit']);
+  const page = toPositiveInt(query['page']);
+
+  return {
+    ...query,
+    limit: limit === null ? undefined : Math.min(limit, ACCESS_CONTROL_MAX_LIMIT),
     page: page === null ? undefined : page,
   };
 }
@@ -305,6 +330,39 @@ async function openProtectedFile(path: string, token: string) {
   window.setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
 }
 
+async function createProtectedBlobUrl(path: string, token: string) {
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (_error) {
+    throw new ApiError(
+      "Impossible de joindre l'API. Verifiez que le backend est demarre et que l'URL API est correcte.",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}.`;
+
+    try {
+      const data = (await response.json()) as ApiErrorEnvelope;
+      message = buildApiErrorMessage(data, message);
+    } catch (_error) {
+      // Ignore non-JSON download failures.
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 function openPublicFile(path: string) {
   window.open(buildUrl(path), '_blank', 'noopener,noreferrer');
 }
@@ -446,6 +504,24 @@ export const api = {
       body: payload,
     });
   },
+  getMyProfilePhotoUrl(token: string) {
+    return createProtectedBlobUrl('/membre/profil/photo', token);
+  },
+  uploadMyProfilePhoto(token: string, file: File) {
+    const payload = new FormData();
+    payload.set('photoProfil', file);
+    return request<MemberProfileData>('/membre/profil/photo', {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+  },
+  deleteMyProfilePhoto(token: string) {
+    return request<MemberProfileData>('/membre/profil/photo', {
+      method: 'DELETE',
+      token,
+    });
+  },
   downloadMyDoctorantAttestation(token: string) {
     return downloadProtectedFile('/membre/profil/attestation-doctorant', token);
   },
@@ -489,8 +565,20 @@ export const api = {
       body: payload,
     });
   },
+  uploadArticleCover(token: string, articleId: number, file: File) {
+    const payload = new FormData();
+    payload.set('articleCover', file);
+    return request<Article>(`/membre/articles/${articleId}/couverture`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
   openMemberArticlePdf(token: string, articleId: number) {
     return openProtectedFile(`/membre/articles/${articleId}/pdf?action=view`, token);     
+  },
+  getMemberArticlePdfUrl(token: string, articleId: number) {
+    return createProtectedBlobUrl(`/membre/articles/${articleId}/pdf?action=view`, token);
   },
   downloadMemberArticlePdf(token: string, articleId: number) {
     return downloadProtectedFile(`/membre/articles/${articleId}/pdf`, token);
@@ -608,8 +696,11 @@ export const api = {
       token,
     );
   },
-  getLabHeadArticles(token: string) {
-    return request<LabHeadArticlesData>('/chef-labo/articles', { token });
+  getLabHeadArticles(token: string, query?: LabHeadArticlesQuery) {
+    return request<LabHeadArticlesData>('/chef-labo/articles', {
+      token,
+      query: query as RequestOptions['query'],
+    });
   },
   getLabHeadDashboardKPIs(token: string) {
     return request<LabHeadDashboardKPIs>('/chef-labo/dashboard', { token });
@@ -865,9 +956,34 @@ export const api = {
       body: payload,
     });
   },
-  downloadPurchaseAttachment(token: string, purchaseId: number) {
+  updatePurchaseRequest(token: string, purchaseId: number, payload: FormData) {
+    return request<PurchaseRequest>(`/membre/demandes-achat/${purchaseId}`, {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+  },
+  generatePurchaseRequestPdf(token: string, purchaseId: number) {
+    return request<PurchaseRequest>(`/membre/demandes-achat/${purchaseId}/generer-pdf`, {
+      method: 'POST',
+      token,
+    });
+  },
+  openPurchaseRequestPdf(token: string, purchaseId: number) {
+    return openProtectedFile(`/membre/demandes-achat/${purchaseId}/pdf?action=view`, token);
+  },
+  downloadPurchaseRequestPdf(token: string, purchaseId: number) {
+    return downloadProtectedFile(`/membre/demandes-achat/${purchaseId}/pdf`, token);
+  },
+  downloadPurchaseAttachment(
+    token: string,
+    purchaseId: number,
+    attachmentId?: number,
+  ) {
     return downloadProtectedFile(
-      `/membre/demandes-achat/${purchaseId}/piece-jointe`,
+      attachmentId
+        ? `/membre/demandes-achat/${purchaseId}/pieces-jointes/${attachmentId}`
+        : `/membre/demandes-achat/${purchaseId}/piece-jointe`,
       token,
     );
   },
@@ -904,13 +1020,16 @@ export const api = {
     });
   },
   markNotificationRead(token: string, notificationId: number) {
-    return request<unknown>(`/membre/notifications/${notificationId}/lire`, {
+    return request<{ id: number; estLue: boolean }>(
+      `/membre/notifications/${notificationId}/lire`,
+      {
       method: 'PATCH',
       token,
-    });
+      },
+    );
   },
   markAllNotificationsRead(token: string) {
-    return request<unknown>('/membre/notifications/lire-toutes', {
+    return request<{ updatedCount: number }>('/membre/notifications/lire-toutes', {
       method: 'PATCH',
       token,
     });
@@ -1014,6 +1133,228 @@ export const api = {
     });
   },
 
+  getMyAccessContext(token: string) {
+    return request<UserAccessContext>('/access/context/me', {
+      token,
+    });
+  },
+
+  getAdminUserAccessSummary(token: string) {
+    return request<UserAccessSummaryResponse>('/admin/user-access/summary', {
+      token,
+    });
+  },
+
+  listAdminUserAccessUsers(token: string, query?: RequestOptions['query']) {
+    return request<UserAccessUsersListResponse>('/admin/user-access/users', {
+      token,
+      query: normalizeAccessControlQuery(query),
+    });
+  },
+
+  getAdminUserAccessContextV2(token: string, userId: string) {
+    return request<UserAccessContext>(`/admin/user-access/users/${userId}`, {
+      token,
+    });
+  },
+
+  updateAdminUserAccess(
+    token: string,
+    userId: string,
+    payload: {
+      replace?: boolean;
+      resetToDefault?: boolean;
+      defaultLandingPage?: string | null;
+      moduleOverrides?: Array<{ moduleKey: string; value: boolean; reason?: string }>;
+      permissionOverrides?: Array<{ permissionKey: string; value: boolean; reason?: string }>;
+      widgetOverrides?: Array<{ widgetKey: string; value: boolean; reason?: string }>;
+    },
+  ) {
+    return request<UserAccessContext>(`/admin/user-access/users/${userId}`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  resetAdminUserAccess(token: string, userId: string) {
+    return request<UserAccessContext>(`/admin/user-access/users/${userId}/reset`, {
+      method: 'POST',
+      token,
+    });
+  },
+
+  listAdminAccessProfiles(token: string, query?: RequestOptions['query']) {
+    return request<AccessProfilesListResponse>('/admin/access-profiles', {
+      token,
+      query: normalizeAccessControlQuery(query),
+    });
+  },
+
+  createAdminAccessProfile(
+    token: string,
+    payload: {
+      name: string;
+      description?: string;
+      roleParent: Role;
+      isActive?: boolean;
+      defaultLandingPage?: string;
+      allowedLanguages?: Array<'fr' | 'en' | 'ar'>;
+      defaultLanguage?: 'fr' | 'en' | 'ar';
+      rtlArabic?: boolean;
+      modules?: Array<{ moduleKey: string; isVisible: boolean }>;
+      permissions?: Array<{ permissionKey: string; isAllowed: boolean }>;
+      widgets?: Array<{ widgetKey: string; isVisible: boolean }>;
+    },
+  ) {
+    return request<AccessProfileDetail>('/admin/access-profiles', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+
+  getAdminAccessProfileDetail(token: string, profileId: number) {
+    return request<AccessProfileDetail>(`/admin/access-profiles/${profileId}`, {
+      token,
+    });
+  },
+
+  updateAdminAccessProfile(
+    token: string,
+    profileId: number,
+    payload: {
+      name?: string;
+      description?: string;
+      roleParent?: Role;
+      isActive?: boolean;
+      defaultLandingPage?: string;
+      allowedLanguages?: Array<'fr' | 'en' | 'ar'>;
+      defaultLanguage?: 'fr' | 'en' | 'ar';
+      rtlArabic?: boolean;
+      modules?: Array<{ moduleKey: string; isVisible: boolean }>;
+      permissions?: Array<{ permissionKey: string; isAllowed: boolean }>;
+      widgets?: Array<{ widgetKey: string; isVisible: boolean }>;
+    },
+  ) {
+    return request<AccessProfileDetail>(`/admin/access-profiles/${profileId}`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  duplicateAdminAccessProfile(token: string, profileId: number) {
+    return request<AccessProfileDetail>(`/admin/access-profiles/${profileId}/duplicate`, {
+      method: 'POST',
+      token,
+    });
+  },
+
+  updateAdminAccessProfileStatus(
+    token: string,
+    profileId: number,
+    payload: { isActive: boolean },
+  ) {
+    return request<AccessProfileDetail>(`/admin/access-profiles/${profileId}/status`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  listAdminAccessProfileUsers(
+    token: string,
+    profileId: number,
+    query?: RequestOptions['query'],
+  ) {
+    return request<AccessProfileUsersResponse>(`/admin/access-profiles/${profileId}/users`, {
+      token,
+      query: normalizeAccessControlQuery(query),
+    });
+  },
+
+  assignAdminUserAccessProfile(
+    token: string,
+    userId: string,
+    payload: { profileId: number },
+  ) {
+    return request<UserAccessContext>(`/admin/users/${userId}/access-profile`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+  },
+
+  getAdminUserAccessContext(token: string, userId: string) {
+    return request<UserAccessContext>(`/admin/users/${userId}/access-context`, {
+      token,
+    });
+  },
+
+  updateAdminUserAccessOverrides(
+    token: string,
+    userId: string,
+    payload: {
+      replace?: boolean;
+      moduleOverrides?: Array<{ moduleKey: string; value: boolean; reason?: string }>;
+      permissionOverrides?: Array<{ permissionKey: string; value: boolean; reason?: string }>;
+      widgetOverrides?: Array<{ widgetKey: string; value: boolean; reason?: string }>;
+    },
+  ) {
+    return request<UserAccessContext>(`/admin/users/${userId}/access-overrides`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  previewAdminAccessProfile(token: string, profileId: number) {
+    return request<AccessPreviewProfileResponse>(`/admin/access-preview/profile/${profileId}`, {
+      token,
+    });
+  },
+
+  previewAdminAccessUser(token: string, userId: string) {
+    return request<UserAccessContext>(`/admin/access-preview/user/${userId}`, {
+      token,
+    });
+  },
+
+  getAdminSupportTicketAccessContext(token: string, ticketId: number) {
+    return request<SupportTicketAccessDiagnostic>(
+      `/admin/support/tickets/${ticketId}/access-context`,
+      {
+        token,
+      },
+    );
+  },
+
+  resolveAdminSupportTicketAccess(
+    token: string,
+    ticketId: number,
+    payload: {
+      replace?: boolean;
+      resetToDefault?: boolean;
+      defaultLandingPage?: string | null;
+      moduleOverrides?: Array<{ moduleKey: string; value: boolean; reason?: string }>;
+      permissionOverrides?: Array<{ permissionKey: string; value: boolean; reason?: string }>;
+      widgetOverrides?: Array<{ widgetKey: string; value: boolean; reason?: string }>;
+      notes?: string;
+      responseMessage?: string;
+      closeTicket?: boolean;
+    },
+  ) {
+    return request<SupportTicketAccessDiagnostic>(
+      `/admin/support/tickets/${ticketId}/access-resolution`,
+      {
+        method: 'PATCH',
+        token,
+        body: payload,
+      },
+    );
+  },
+
   createSupportTicket(
     token: string,
     payload:
@@ -1023,6 +1364,12 @@ export const api = {
           categorie:
             | 'LOGIN'
             | 'ACCOUNT'
+            | 'ACCESS'
+            | 'ROLE'
+            | 'MODULE_VISIBILITY'
+            | 'PERMISSION'
+            | 'UI_BUG'
+            | 'TRANSLATION'
             | 'MESSAGING'
             | 'NOTIFICATIONS'
             | 'ARTICLES'

@@ -2,7 +2,6 @@ import { Injectable, computed, inject } from '@angular/core';
 import type {
   SupportTicketDetail,
   SupportTicketStats,
-  SupportTicketSummary,
   SupportTicketStatus,
 } from '../../core/models/models';
 import { api } from '../../core/services/api';
@@ -14,6 +13,12 @@ export type SupportTicketFilters = {
   categorie?:
     | 'LOGIN'
     | 'ACCOUNT'
+    | 'ACCESS'
+    | 'ROLE'
+    | 'MODULE_VISIBILITY'
+    | 'PERMISSION'
+    | 'UI_BUG'
+    | 'TRANSLATION'
     | 'MESSAGING'
     | 'NOTIFICATIONS'
     | 'ARTICLES'
@@ -84,6 +89,12 @@ export class SupportService {
     categorie:
       | 'LOGIN'
       | 'ACCOUNT'
+      | 'ACCESS'
+      | 'ROLE'
+      | 'MODULE_VISIBILITY'
+      | 'PERMISSION'
+      | 'UI_BUG'
+      | 'TRANSLATION'
       | 'MESSAGING'
       | 'NOTIFICATIONS'
       | 'ARTICLES'
@@ -169,6 +180,12 @@ export class SupportService {
     categorie:
       | 'LOGIN'
       | 'ACCOUNT'
+      | 'ACCESS'
+      | 'ROLE'
+      | 'MODULE_VISIBILITY'
+      | 'PERMISSION'
+      | 'UI_BUG'
+      | 'TRANSLATION'
       | 'MESSAGING'
       | 'NOTIFICATIONS'
       | 'ARTICLES'
@@ -223,6 +240,38 @@ export class SupportService {
   async downloadAttachment(attachmentId: number) {
     const token = this.ensureToken();
     return api.downloadSupportAttachment(token, attachmentId);
+  }
+
+  async getTicketAccessDiagnostic(ticketId: number) {
+    const token = this.ensureToken();
+
+    if (!this.isAdmin()) {
+      throw new Error('Acces reserve aux administrateurs.');
+    }
+
+    return api.getAdminSupportTicketAccessContext(token, ticketId);
+  }
+
+  async resolveTicketAccess(
+    ticketId: number,
+    payload: {
+      assignProfileId?: number;
+      replace?: boolean;
+      moduleOverrides?: Array<{ moduleKey: string; value: boolean; reason?: string }>;
+      permissionOverrides?: Array<{ permissionKey: string; value: boolean; reason?: string }>;
+      widgetOverrides?: Array<{ widgetKey: string; value: boolean; reason?: string }>;
+      notes?: string;
+      responseMessage?: string;
+      closeTicket?: boolean;
+    },
+  ) {
+    const token = this.ensureToken();
+
+    if (!this.isAdmin()) {
+      throw new Error('Acces reserve aux administrateurs.');
+    }
+
+    return api.resolveAdminSupportTicketAccess(token, ticketId, payload);
   }
 
   currentUserId() {

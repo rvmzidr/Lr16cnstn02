@@ -1,9 +1,11 @@
 const {
   z,
   cleanString,
+  optionalDate,
   optionalBoolean,
   optionalPositiveInt,
   optionalString,
+  optionalUuid,
   paginationSchema,
 } = require("./common");
 
@@ -116,6 +118,38 @@ const actualitesQuerySchema = z.object({
   limit: safeLimitSchema,
 });
 
+const articlesModerationQuerySchema = z.object({
+  q: optionalString(200),
+  statut: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["BROUILLON", "SOUMIS", "VALIDE", "REJETE", "PUBLIE"]).optional(),
+  ),
+  categorieId: optionalPositiveInt(),
+  equipeRechercheId: optionalPositiveInt(),
+  auteurId: optionalUuid(),
+  dateDebut: optionalDate(),
+  dateFin: optionalDate(),
+  tri: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z
+      .enum([
+        "modification",
+        "soumission",
+        "validation",
+        "publication",
+        "creation",
+        "titre",
+      ])
+      .optional(),
+  ),
+  ordre: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(["asc", "desc"]).optional(),
+  ),
+  page: paginationSchema.page,
+  limit: safeLimitSchema,
+});
+
 const adminNotificationsQuerySchema = z.object({
   type: z.preprocess(
     (value) => (value === "" || value === null || value === undefined ? "all" : value),
@@ -177,6 +211,7 @@ module.exports = {
   comptesQuerySchema,
   inscriptionsQuerySchema,
   actualitesQuerySchema,
+  articlesModerationQuerySchema,
   adminNotificationsQuerySchema,
   adminProfileUpdateBodySchema,
   adminPasswordUpdateBodySchema,

@@ -4,7 +4,7 @@ module.exports = {
     sousTitre:
       "Un espace unifie pour la gestion des membres, des articles et des actualites du laboratoire.",
     accroche:
-      "Release 1 concentree sur les besoins essentiels de publication, de validation et de gouvernance du laboratoire.",
+      "Laboratoire en \u00C9nergie et Mati\u00E8re pour le D\u00E9veloppement des Sciences Nucl\u00E9aires",
   },
   piliers: [
     {

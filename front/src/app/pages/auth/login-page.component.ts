@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
+import { AccessContextService } from '../../shared/services/access-context.service';
 import { sharedIcons } from '../../shared/lucide-icons';
 
 @Component({
@@ -78,6 +79,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
 export class LoginPageComponent {
   readonly icons = sharedIcons;
   readonly auth = inject(AuthService);
+  readonly accessContext = inject(AccessContextService);
   readonly router = inject(Router);
   readonly route = inject(ActivatedRoute);
   readonly isSubmitting = signal(false);
@@ -91,8 +93,15 @@ export class LoginPageComponent {
     this.errorMessage.set('');
     try {
       await this.auth.login(this.emailInstitutionnel, this.motDePasse);
-      const next = this.route.snapshot.queryParamMap.get('next') || '/dashboard';
-      await this.router.navigateByUrl(next);
+      const next = this.route.snapshot.queryParamMap.get('next');
+
+      if (next) {
+        await this.router.navigateByUrl(next);
+        return;
+      }
+
+      await this.accessContext.ensureLoaded(true);
+      await this.router.navigateByUrl(this.accessContext.defaultLandingPage() || '/dashboard');
     } catch (error) {
       this.errorMessage.set(error instanceof Error ? error.message : 'Connexion impossible.');
     } finally {

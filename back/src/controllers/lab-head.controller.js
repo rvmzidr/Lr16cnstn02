@@ -7,8 +7,8 @@ const getDashboardKPIs = asyncHandler(async (req, res) => {
   successResponse(res, "KPI du dashboard chef labo recuperes.", donnees);       
 });
 
-const listArticlesModeration = asyncHandler(async (_req, res) => {
-  const donnees = await labHeadService.listerArticlesModeration();
+const listArticlesModeration = asyncHandler(async (req, res) => {
+  const donnees = await labHeadService.listerArticlesModeration(req.query);
   successResponse(res, "File de moderation des articles recuperee.", donnees);
 });
 

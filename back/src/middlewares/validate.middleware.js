@@ -20,34 +20,34 @@ function formatIssueMessage(issue) {
 
   if (issue.code === "too_big") {
     if (issue.origin === "string") {
-      return `Le texte doit contenir au maximum ${issue.maximum} caracteres.`;
+      return `Le texte doit contenir au maximum ${issue.maximum} caractères.`;
     }
 
     if (issue.origin === "array") {
-      return `La liste ne peut pas contenir plus de ${issue.maximum} element(s).`;
+      return `La liste ne peut pas contenir plus de ${issue.maximum} élément(s).`;
     }
 
-    return `La valeur doit etre inferieure ou egale a ${issue.maximum}.`;
+    return `La valeur doit être inférieure ou égale à ${issue.maximum}.`;
   }
 
   if (issue.code === "too_small") {
     if (issue.origin === "string") {
-      return `Le texte doit contenir au minimum ${issue.minimum} caracteres.`;
+      return `Le texte doit contenir au minimum ${issue.minimum} caractères.`;
     }
 
     if (issue.origin === "array") {
-      return `La liste doit contenir au minimum ${issue.minimum} element(s).`;
+      return `La liste doit contenir au minimum ${issue.minimum} élément(s).`;
     }
 
-    return `La valeur doit etre superieure ou egale a ${issue.minimum}.`;
+    return `La valeur doit être supérieure ou égale à ${issue.minimum}.`;
   }
 
   if (issue.code === "invalid_type") {
-    return "Le type de donnee fourni est invalide.";
+    return "Le type de donnée fourni est invalide.";
   }
 
   if (issue.code === "invalid_value") {
-    return "La valeur fournie ne correspond pas aux options autorisees.";
+    return "La valeur fournie ne correspond pas aux options autorisées.";
   }
 
   if (issue.code === "invalid_format") {
@@ -82,7 +82,7 @@ function validate(schemas) {
 
     if (erreurs.length > 0) {
       return next(
-        new AppError("Les donnees fournies sont invalides.", 400, erreurs),
+        new AppError("Les données fournies sont invalides.", 400, erreurs),
       );
     }
 

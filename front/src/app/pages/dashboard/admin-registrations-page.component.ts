@@ -31,49 +31,52 @@ type SortOrder = 'asc' | 'desc';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-6">
-      <section class="surface-card relative overflow-hidden p-6">
-        <div class="pointer-events-none absolute -right-14 -top-16 h-44 w-44 rounded-full bg-primary/12 blur-2xl"></div>
-        <div class="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-secondary/20 blur-2xl"></div>
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
 
-        <div class="relative flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              {{
-                site.localize({
-                  fr: 'Espace administration',
-                  en: 'Administration area',
-                  ar: 'مساحة الإدارة',
-                })
-              }}
-            </p>
-            <h2 class="mt-2 text-2xl font-semibold text-foreground">
-              {{
-                site.localize({
-                  fr: 'Inscriptions utilisateurs',
-                  en: 'User registrations',
-                  ar: 'تسجيلات المستخدمين',
-                })
-              }}
-            </h2>
-            <p class="mt-2 max-w-3xl text-sm text-muted-foreground">
-              {{
-                site.localize({
-                  fr: 'Traitez les demandes acces avec un workflow complet: filtrage, consultation detaillee, validation rolee et refus motive.',
-                  en: 'Process access requests with a complete workflow: filtering, detailed review, role validation, and reasoned rejection.',
-                  ar: 'عالج طلبات الوصول عبر سير عمل كامل: تصفية ومراجعة تفصيلية واعتماد الدور ورفض مسبب.',
-                })
-              }}
-            </p>
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">
+            {{ site.localize({ fr: 'Espace administration', en: 'Administration area', ar: 'مساحة الإدارة' }) }}
+          </p>
+
+          <div class="app-page-header mt-2">
+            <div>
+              <h2 class="app-page-title">
+                {{ site.localize({ fr: 'Inscriptions utilisateurs', en: 'User registrations', ar: 'تسجيلات المستخدمين' }) }}
+              </h2>
+              <p class="app-page-description">
+                {{
+                  site.localize({
+                    fr: 'Traitez les demandes acces avec un workflow complet: filtrage, consultation detaillee, validation rolee et refus motive.',
+                    en: 'Process access requests with a complete workflow: filtering, detailed review, role validation, and reasoned rejection.',
+                    ar: 'عالج طلبات الوصول عبر سير عمل كامل: تصفية ومراجعة تفصيلية واعتماد الدور ورفض مسبب.',
+                  })
+                }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="btn-outline"
+              (click)="refresh()"
+              [disabled]="loadingList()"
+            >
+              {{ site.localize({ fr: 'Actualiser', en: 'Refresh', ar: 'تحديث' }) }}
+            </button>
           </div>
 
-          <button
-            type="button"
-            class="btn-outline"
-            (click)="refresh()"
-            [disabled]="loadingList()"
-          >
-            {{ site.localize({ fr: 'Actualiser', en: 'Refresh', ar: 'تحديث' }) }}
-          </button>
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Total dossiers', en: 'Total files', ar: 'إجمالي الملفات' }) }}: {{ registrations()?.meta?.total || 0 }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'En attente', en: 'Pending', ar: 'قيد الانتظار' }) }}: {{ registrations()?.statistiques?.enAttente || 0 }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Attestations', en: 'Certificates', ar: 'الشهادات' }) }}: {{ registrations()?.statistiques?.attestationsDisponibles || 0 }}
+            </span>
+          </div>
         </div>
       </section>
 

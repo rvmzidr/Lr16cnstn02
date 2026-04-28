@@ -11,6 +11,7 @@ import {
   SiteLanguage,
   SitePreferencesService,
 } from '../../core/services/site-preferences.service';
+import { AccessContextService } from '../services/access-context.service';
 import { sharedIcons } from '../lucide-icons';
 
 @Component({
@@ -43,7 +44,7 @@ import { sharedIcons } from '../lucide-icons';
           class="toolbar-dropdown"
           [class.toolbar-dropdown--from-rail]="compact"
         >
-          @for (option of primaryLanguages; track option.code) {
+          @for (option of primaryLanguages(); track option.code) {
             <button
               type="button"
               class="toolbar-dropdown__item"
@@ -88,8 +89,12 @@ export class ToolbarControlsComponent {
   @Input() showThemeToggle = true;
   readonly icons = sharedIcons;
   readonly site = inject(SitePreferencesService);
+  readonly accessContext = inject(AccessContextService);
   readonly languageMenuOpen = signal(false);
-  readonly primaryLanguages = this.site.languages;
+  readonly primaryLanguages = computed(() => {
+    const allowed = new Set(this.accessContext.availableLanguages());
+    return this.site.languages.filter((option) => allowed.has(option.code));
+  });
   readonly languageCode = computed(() => this.site.language().toUpperCase());
   readonly languageButtonLabel = {
     fr: 'Changer la langue',

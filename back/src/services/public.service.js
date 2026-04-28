@@ -45,6 +45,7 @@ function buildPublishedArticlesWhere(filters = {}) {
         { titre: { contains: filters.q } },
         { resume: { contains: filters.q } },
         { contenu: { contains: filters.q } },
+        { lien_doi: { contains: filters.q } },
       ],
     });
   }
@@ -106,6 +107,10 @@ async function recupererAccueilPublic() {
     }),
   ]);
 
+  const pdfAttachmentsByArticleId = await getArticlePdfAttachmentMap(
+    articlesRecents.map((article) => article.id),
+  );
+
   return {
     hero: publicContent.hero,
     piliers: publicContent.piliers,
@@ -114,7 +119,14 @@ async function recupererAccueilPublic() {
       { libelle: "Actualites publiees", valeur: actualitesPubliees },
       { libelle: "Comptes actifs", valeur: membresActifs },
     ],
-    articlesRecents: articlesRecents.map(serializeArticle),
+    articlesRecents: articlesRecents.map((article) =>
+      serializeArticle(
+        article,
+        serializeArticlePdfAttachment(
+          pdfAttachmentsByArticleId.get(String(article.id)),
+        ),
+      ),
+    ),
     actualitesRecentes: actualitesRecentes.map(serializeActualite),
   };
 }

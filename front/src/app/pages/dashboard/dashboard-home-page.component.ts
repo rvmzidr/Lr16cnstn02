@@ -7,10 +7,12 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
 import { api } from '../../core/services/api';
 import { SitePreferencesService } from '../../core/services/site-preferences.service';
 import type {
+  AccessModuleKey,
   AdminDashboardKPIs,
   Article,
   LabHeadDashboardKPIs,
@@ -19,6 +21,8 @@ import type {
   PurchaseRequest,
 } from '../../core/models/models';
 import { AnimatedCounterComponent } from '../../shared/components/animated-counter.component';
+import { AccessContextService } from '../../shared/services/access-context.service';
+import { sharedIcons } from '../../shared/lucide-icons';
 import { formatDate } from '../../core/utils/format';
 
 type QuickAction = {
@@ -38,21 +42,41 @@ type KpiCard = {
 @Component({
   selector: 'app-dashboard-home-page',
   standalone: true,
-  imports: [AnimatedCounterComponent, RouterLink],
+  imports: [AnimatedCounterComponent, RouterLink, LucideAngularModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8">
-      <section class="surface-card overflow-hidden border-l-4 p-7 lg:p-9" [style.border-left-color]="heroAccent()">
-        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div class="space-y-3">
-            <div class="tag-chip">{{ roleLabel() }}</div>
-            <h2 class="text-3xl font-semibold tracking-tight text-foreground lg:text-5xl">
-              {{ site.localize(greetingLabel) }},
-              {{ auth.session()?.utilisateur?.nomComplet || site.localize(platformLabel) }}
-            </h2>
-            <p class="max-w-3xl text-sm text-muted-foreground lg:text-base">
-              {{ roleDescription() }}
-            </p>
+      <section class="app-page-hero app-page-hero--dashboard">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
+
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">
+            <span class="inline-flex items-center gap-2">
+              <lucide-icon [img]="icons.LayoutDashboard" class="h-3.5 w-3.5"></lucide-icon>
+              {{ roleLabel() }}
+            </span>
+          </p>
+
+          <div class="app-page-header mt-2">
+            <div class="space-y-2">
+              <h2 class="app-page-title text-3xl lg:text-5xl">
+                {{ site.localize(greetingLabel) }},
+                {{ auth.session()?.utilisateur?.nomComplet || site.localize(platformLabel) }}
+              </h2>
+              <p class="app-page-description max-w-4xl">
+                {{ roleDescription() }}
+              </p>
+            </div>
+          </div>
+
+          <div class="app-page-pills mt-5">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Vue active', en: 'Active view', ar: 'العرض النشط' }) }}: {{ roleLabel() }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Accent', en: 'Accent', ar: 'التمييز' }) }}: {{ heroAccent() }}
+            </span>
           </div>
         </div>
       </section>
@@ -69,6 +93,32 @@ type KpiCard = {
         </div>
       }
 
+      @if (!loading() && visibleQuickActions().length) {
+        <section class="surface-card app-quick-actions p-5 lg:p-6">
+          <div class="space-y-1">
+            <p class="app-page-eyebrow app-page-eyebrow--light">{{ site.localize(quickActionsEyebrow) }}</p>
+            <h3 class="text-xl font-semibold text-foreground lg:text-2xl">{{ site.localize(quickActionsTitle()) }}</h3>
+            <p class="text-sm text-muted-foreground">{{ site.localize(quickActionsSubtitle()) }}</p>
+          </div>
+
+          <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (action of visibleQuickActions(); track action.route + action.label) {
+              <a
+                [routerLink]="action.route"
+                class="app-quick-action"
+                [class.app-quick-action--primary]="action.emphasis === 'primary'"
+              >
+                <span class="app-quick-action__icon">
+                  <lucide-icon [img]="quickActionIcon(action.route)" class="h-4 w-4"></lucide-icon>
+                </span>
+                <span class="app-quick-action__label">{{ action.label }}</span>
+                <lucide-icon [img]="icons.ChevronRight" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              </a>
+            }
+          </div>
+        </section>
+      }
+
       @if (loading()) {
         <section class="surface-card p-8">
           <div class="text-sm text-muted-foreground">
@@ -83,7 +133,12 @@ type KpiCard = {
               class="app-kpi-card surface-card--interactive block border-l-4"
               [style.border-left-color]="card.color"
             >
-              <div class="app-kpi-card__label">{{ card.label }}</div>
+              <div class="app-kpi-card__head">
+                <span class="app-kpi-card__icon" [style.background]="kpiIconSurface(card.color)">
+                  <lucide-icon [img]="kpiIcon(card.route)" class="h-4 w-4" [style.color]="card.color"></lucide-icon>
+                </span>
+                <div class="app-kpi-card__label">{{ card.label }}</div>
+              </div>
               <div class="app-kpi-card__value" [style.color]="card.color">
                 <app-animated-counter [value]="card.value"></app-animated-counter>
               </div>
@@ -194,7 +249,7 @@ type KpiCard = {
             </div>
 
             <div class="mt-6 space-y-3">
-              @for (item of adminRecentActivity(); track item.id) {
+              @for (item of adminRecentActivityVisible(); track item.id) {
                 <a
                   [routerLink]="item.link || '/dashboard'"
                   class="flex items-start gap-4 rounded-2xl border border-border bg-card px-4 py-4 transition hover:border-primary/25 hover:bg-muted/50"
@@ -228,7 +283,12 @@ type KpiCard = {
               class="app-kpi-card surface-card--interactive block border-l-4"
               [style.border-left-color]="card.color"
             >
-              <div class="app-kpi-card__label">{{ card.label }}</div>
+              <div class="app-kpi-card__head">
+                <span class="app-kpi-card__icon" [style.background]="kpiIconSurface(card.color)">
+                  <lucide-icon [img]="kpiIcon(card.route)" class="h-4 w-4" [style.color]="card.color"></lucide-icon>
+                </span>
+                <div class="app-kpi-card__label">{{ card.label }}</div>
+              </div>
               <div class="app-kpi-card__value" [style.color]="card.color">
                 <app-animated-counter [value]="card.value"></app-animated-counter>
               </div>
@@ -237,140 +297,151 @@ type KpiCard = {
           }
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <div class="surface-card p-6 lg:p-7">
-            <div>
-              <h3 class="text-xl font-semibold text-foreground">
-                {{ site.localize({ fr: 'File prioritaire articles', en: 'Priority article queue', ar: 'قائمة المقالات ذات الاولوية' }) }}
-              </h3>
-              <p class="mt-1 text-sm text-muted-foreground">
-                {{ site.localize({ fr: 'Suivi des articles prioritaires depuis cette vue.', en: 'Track priority articles directly from this view.', ar: 'متابعة المقالات ذات الاولوية مباشرة من هذه الصفحة.' }) }}
-              </p>
-            </div>
-
-            <div class="mt-6 space-y-3">
-              @for (item of priorityArticles(); track item.id) {
-                <div class="rounded-2xl border border-border bg-card px-4 py-4">
-                  <div class="flex flex-col gap-4">
-                    <div>
-                      <div class="font-semibold text-foreground">{{ item.title }}</div>
-                      <div class="mt-1 text-sm text-muted-foreground">
-                        {{ item.author }} • {{ item.submittedDate ? formatDate(item.submittedDate) : site.localize({ fr: 'Date indisponible', en: 'Date unavailable', ar: 'تاريخ غير متاح' }) }}
-                      </div>
-                    </div>
-                  </div>
+        @if (isModuleVisible('articles') || isModuleVisible('purchases')) {
+          <section class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            @if (isModuleVisible('articles')) {
+              <div class="surface-card p-6 lg:p-7">
+                <div>
+                  <h3 class="text-xl font-semibold text-foreground">
+                    {{ site.localize({ fr: 'File prioritaire articles', en: 'Priority article queue', ar: 'قائمة المقالات ذات الاولوية' }) }}
+                  </h3>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ site.localize({ fr: 'Suivi des articles prioritaires depuis cette vue.', en: 'Track priority articles directly from this view.', ar: 'متابعة المقالات ذات الاولوية مباشرة من هذه الصفحة.' }) }}
+                  </p>
                 </div>
-              } @empty {
-                <div class="empty-state">{{ site.localize({ fr: 'Aucun article en attente de validation.', en: 'No article pending review.', ar: 'لا توجد مقالات بانتظار المراجعة.' }) }}</div>
-              }
-            </div>
-          </div>
 
-          <div class="surface-card p-6 lg:p-7">
-            <div>
-              <h3 class="text-xl font-semibold text-foreground">
-                {{ site.localize({ fr: 'File prioritaire achats', en: 'Priority purchase queue', ar: 'قائمة المشتريات ذات الاولوية' }) }}
-              </h3>
-              <p class="mt-1 text-sm text-muted-foreground">
-                {{ site.localize({ fr: 'Suivi des demandes achats prioritaires.', en: 'Track priority purchase requests.', ar: 'متابعة طلبات الشراء ذات الاولوية.' }) }}
-              </p>
-            </div>
-
-            <div class="mt-6 space-y-3">
-              @for (item of priorityPurchases(); track item.id) {
-                <div class="rounded-2xl border border-border bg-card px-4 py-4">
-                  <div class="flex flex-col gap-4">
-                    <div>
-                      <div class="font-semibold text-foreground">
-                        {{ item.projectName || site.localize({ fr: 'Projet non renseigne', en: 'Project not specified', ar: 'مشروع غير محدد' }) }}
-                      </div>
-                      <div class="mt-1 text-sm text-muted-foreground">
-                        {{ item.requester }} • {{ item.amount !== null ? formatCurrency(item.amount) : site.localize({ fr: 'Montant non renseigne', en: 'Amount not specified', ar: 'قيمة غير محددة' }) }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              } @empty {
-                <div class="empty-state">{{ site.localize({ fr: 'Aucune demande achat en attente.', en: 'No purchase request pending.', ar: 'لا توجد طلبات شراء معلقة.' }) }}</div>
-              }
-            </div>
-          </div>
-        </section>
-
-        <section class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div class="surface-card overflow-hidden">
-            <div class="border-b border-border px-6 py-5">
-              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Etat des projets', en: 'Project status', ar: 'حالة المشاريع' }) }}</h3>
-              <p class="mt-1 text-sm text-muted-foreground">
-                {{ site.localize({ fr: 'Projets que vous pilotez avec progression temporelle.', en: 'Projects you lead with timeline progress.', ar: 'المشاريع التي تديرها مع التقدم الزمني.' }) }}
-              </p>
-            </div>
-
-            <div class="app-data-table-wrap rounded-none border-0 shadow-none">
-              <table class="table-shell">
-                <thead>
-                  <tr>
-                    <th>{{ site.localize({ fr: 'Projet', en: 'Project', ar: 'المشروع' }) }}</th>
-                    <th>{{ site.localize({ fr: 'Statut', en: 'Status', ar: 'الحالة' }) }}</th>
-                    <th>{{ site.localize({ fr: 'Membres', en: 'Members', ar: 'الاعضاء' }) }}</th>
-                    <th>{{ site.localize({ fr: 'Date fin', en: 'End date', ar: 'تاريخ النهاية' }) }}</th>
-                    <th>{{ site.localize({ fr: 'Progression', en: 'Progress', ar: 'التقدم' }) }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (project of projectStatusOverview(); track project.id) {
-                    <tr>
-                      <td class="font-medium text-foreground">{{ project.name }}</td>
-                      <td>
-                        <span class="badge-soft">{{ normalizeStatusLabel(project.status) }}</span>
-                      </td>
-                      <td>{{ project.membersCount }}</td>
-                      <td>{{ project.endDate ? formatDate(project.endDate) : site.localize({ fr: 'Non definie', en: 'Not defined', ar: 'غير محدد' }) }}</td>
-                      <td class="min-w-48">
-                        <div class="h-2 rounded-full bg-muted">
-                          <div
-                            class="h-2 rounded-full"
-                            [style.width.%]="project.progress"
-                            [style.background]="projectProgressColor(project.status)"
-                          ></div>
+                <div class="mt-6 space-y-3">
+                  @for (item of priorityArticles(); track item.id) {
+                    <div class="rounded-2xl border border-border bg-card px-4 py-4">
+                      <div class="flex flex-col gap-4">
+                        <div>
+                          <div class="font-semibold text-foreground">{{ item.title }}</div>
+                          <div class="mt-1 text-sm text-muted-foreground">
+                            {{ item.author }} • {{ item.submittedDate ? formatDate(item.submittedDate) : site.localize({ fr: 'Date indisponible', en: 'Date unavailable', ar: 'تاريخ غير متاح' }) }}
+                          </div>
                         </div>
-                        <div class="mt-2 text-xs text-muted-foreground">{{ project.progress }}%</div>
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="5">
-                        <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun projet pilote pour le moment.', en: 'No managed project for now.', ar: 'لا يوجد مشروع مدار حاليا.' }) }}</div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="space-y-6">
-            <div class="surface-card p-6 lg:p-7">
-              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Dernieres decisions articles', en: 'Latest article decisions', ar: 'احدث قرارات المقالات' }) }}</h3>
-              <div class="mt-5 space-y-3">
-                @for (decision of recentArticleDecisions(); track decision.id) {
-                  <div class="rounded-2xl border border-border bg-card px-4 py-4">
-                    <div class="font-medium text-foreground">{{ decision.title }}</div>
-                    <div class="mt-2 flex items-center justify-between gap-3 text-sm">
-                      <span class="badge-soft">{{ normalizeStatusLabel(decision.decision) }}</span>
-                      <span class="text-muted-foreground">
-                        {{ decision.date ? formatDate(decision.date) : site.localize({ fr: 'Date indisponible', en: 'Date unavailable', ar: 'تاريخ غير متاح' }) }}
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                } @empty {
-                  <div class="empty-state">{{ site.localize({ fr: 'Aucune decision recente.', en: 'No recent decision.', ar: 'لا توجد قرارات حديثة.' }) }}</div>
-                }
+                  } @empty {
+                    <div class="empty-state">{{ site.localize({ fr: 'Aucun article en attente de validation.', en: 'No article pending review.', ar: 'لا توجد مقالات بانتظار المراجعة.' }) }}</div>
+                  }
+                </div>
               </div>
-            </div>
+            }
 
-          </div>
-        </section>
+            @if (isModuleVisible('purchases')) {
+              <div class="surface-card p-6 lg:p-7">
+                <div>
+                  <h3 class="text-xl font-semibold text-foreground">
+                    {{ site.localize({ fr: 'File prioritaire achats', en: 'Priority purchase queue', ar: 'قائمة المشتريات ذات الاولوية' }) }}
+                  </h3>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ site.localize({ fr: 'Suivi des demandes achats prioritaires.', en: 'Track priority purchase requests.', ar: 'متابعة طلبات الشراء ذات الاولوية.' }) }}
+                  </p>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                  @for (item of priorityPurchases(); track item.id) {
+                    <div class="rounded-2xl border border-border bg-card px-4 py-4">
+                      <div class="flex flex-col gap-4">
+                        <div>
+                          <div class="font-semibold text-foreground">
+                            {{ item.title }}
+                          </div>
+                          <div class="mt-1 text-sm text-muted-foreground">
+                            {{ item.requester }} • {{ item.amount !== null ? formatCurrency(item.amount) : site.localize({ fr: 'Montant non renseigne', en: 'Amount not specified', ar: 'قيمة غير محددة' }) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-state">{{ site.localize({ fr: 'Aucune demande achat en attente.', en: 'No purchase request pending.', ar: 'لا توجد طلبات شراء معلقة.' }) }}</div>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+        }
+
+        @if (isModuleVisible('projects') || isModuleVisible('articles')) {
+          <section class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            @if (isModuleVisible('projects')) {
+              <div class="surface-card overflow-hidden">
+                <div class="border-b border-border px-6 py-5">
+                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Etat des projets', en: 'Project status', ar: 'حالة المشاريع' }) }}</h3>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ site.localize({ fr: 'Projets que vous pilotez avec progression temporelle.', en: 'Projects you lead with timeline progress.', ar: 'المشاريع التي تديرها مع التقدم الزمني.' }) }}
+                  </p>
+                </div>
+
+                <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+                  <table class="table-shell">
+                    <thead>
+                      <tr>
+                        <th>{{ site.localize({ fr: 'Projet', en: 'Project', ar: 'المشروع' }) }}</th>
+                        <th>{{ site.localize({ fr: 'Statut', en: 'Status', ar: 'الحالة' }) }}</th>
+                        <th>{{ site.localize({ fr: 'Membres', en: 'Members', ar: 'الاعضاء' }) }}</th>
+                        <th>{{ site.localize({ fr: 'Date fin', en: 'End date', ar: 'تاريخ النهاية' }) }}</th>
+                        <th>{{ site.localize({ fr: 'Progression', en: 'Progress', ar: 'التقدم' }) }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (project of projectStatusOverview(); track project.id) {
+                        <tr>
+                          <td class="font-medium text-foreground">{{ project.name }}</td>
+                          <td>
+                            <span class="badge-soft">{{ normalizeStatusLabel(project.status) }}</span>
+                          </td>
+                          <td>{{ project.membersCount }}</td>
+                          <td>{{ project.endDate ? formatDate(project.endDate) : site.localize({ fr: 'Non definie', en: 'Not defined', ar: 'غير محدد' }) }}</td>
+                          <td class="min-w-48">
+                            <div class="h-2 rounded-full bg-muted">
+                              <div
+                                class="h-2 rounded-full"
+                                [style.width.%]="project.progress"
+                                [style.background]="projectProgressColor(project.status)"
+                              ></div>
+                            </div>
+                            <div class="mt-2 text-xs text-muted-foreground">{{ project.progress }}%</div>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="5">
+                            <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun projet pilote pour le moment.', en: 'No managed project for now.', ar: 'لا يوجد مشروع مدار حاليا.' }) }}</div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            @if (isModuleVisible('articles')) {
+              <div class="space-y-6">
+                <div class="surface-card p-6 lg:p-7">
+                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Dernieres decisions articles', en: 'Latest article decisions', ar: 'احدث قرارات المقالات' }) }}</h3>
+                  <div class="mt-5 space-y-3">
+                    @for (decision of recentArticleDecisions(); track decision.id) {
+                      <div class="rounded-2xl border border-border bg-card px-4 py-4">
+                        <div class="font-medium text-foreground">{{ decision.title }}</div>
+                        <div class="mt-2 flex items-center justify-between gap-3 text-sm">
+                          <span class="badge-soft">{{ normalizeStatusLabel(decision.decision) }}</span>
+                          <span class="text-muted-foreground">
+                            {{ decision.date ? formatDate(decision.date) : site.localize({ fr: 'Date indisponible', en: 'Date unavailable', ar: 'تاريخ غير متاح' }) }}
+                          </span>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="empty-state">{{ site.localize({ fr: 'Aucune decision recente.', en: 'No recent decision.', ar: 'لا توجد قرارات حديثة.' }) }}</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </section>
+        }
       } @else {
         <section class="app-kpi-grid">
           @for (card of memberKpiCards(); track card.label) {
@@ -379,7 +450,12 @@ type KpiCard = {
               class="app-kpi-card surface-card--interactive block border-l-4"
               [style.border-left-color]="card.color"
             >
-              <div class="app-kpi-card__label">{{ card.label }}</div>
+              <div class="app-kpi-card__head">
+                <span class="app-kpi-card__icon" [style.background]="kpiIconSurface(card.color)">
+                  <lucide-icon [img]="kpiIcon(card.route)" class="h-4 w-4" [style.color]="card.color"></lucide-icon>
+                </span>
+                <div class="app-kpi-card__label">{{ card.label }}</div>
+              </div>
               <div class="app-kpi-card__value" [style.color]="card.color">
                 <app-animated-counter [value]="card.value"></app-animated-counter>
               </div>
@@ -388,99 +464,107 @@ type KpiCard = {
           }
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <div class="surface-card p-6 lg:p-7">
-            <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Mes articles par statut', en: 'My articles by status', ar: 'مقالاتي حسب الحالة' }) }}</h3>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {{ site.localize({ fr: 'Distribution de vos soumissions scientifiques.', en: 'Distribution of your scientific submissions.', ar: 'توزيع مساهماتك العلمية.' }) }}
-            </p>
+        @if (isModuleVisible('articles') || isModuleVisible('purchases')) {
+          <section class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            @if (isModuleVisible('articles')) {
+              <div class="surface-card p-6 lg:p-7">
+                <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Mes articles par statut', en: 'My articles by status', ar: 'مقالاتي حسب الحالة' }) }}</h3>
+                <p class="mt-1 text-sm text-muted-foreground">
+                  {{ site.localize({ fr: 'Distribution de vos soumissions scientifiques.', en: 'Distribution of your scientific submissions.', ar: 'توزيع مساهماتك العلمية.' }) }}
+                </p>
 
-            <div class="mt-6 space-y-4">
-              @for (item of memberArticleStatusChart(); track item.status) {
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between gap-3 text-sm">
-                    <span class="font-medium text-foreground">{{ normalizeStatusLabel(item.label) }}</span>
-                    <span class="text-muted-foreground">{{ item.value }}</span>
-                  </div>
-                  <div class="h-2 rounded-full bg-muted">
-                    <div
-                      class="h-2 rounded-full transition-all duration-300"
-                      [style.width.%]="barWidth(item.value, memberArticleStatusMax())"
-                      [style.background]="statusColor(item.status)"
-                    ></div>
+                <div class="mt-6 space-y-4">
+                  @for (item of memberArticleStatusChart(); track item.status) {
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between gap-3 text-sm">
+                        <span class="font-medium text-foreground">{{ normalizeStatusLabel(item.label) }}</span>
+                        <span class="text-muted-foreground">{{ item.value }}</span>
+                      </div>
+                      <div class="h-2 rounded-full bg-muted">
+                        <div
+                          class="h-2 rounded-full transition-all duration-300"
+                          [style.width.%]="barWidth(item.value, memberArticleStatusMax())"
+                          [style.background]="statusColor(item.status)"
+                        ></div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (isModuleVisible('purchases')) {
+              <div class="surface-card p-6 lg:p-7">
+                <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Demandes achat', en: 'Purchase requests', ar: 'طلبات الشراء' }) }}</h3>
+                <p class="mt-1 text-sm text-muted-foreground">
+                  {{ site.localize({ fr: 'Repartition de vos demandes selon le statut.', en: 'Distribution of your requests by status.', ar: 'توزيع طلباتك حسب الحالة.' }) }}
+                </p>
+
+                <div class="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
+                  <div
+                    class="mx-auto h-40 w-40 rounded-full border border-border"
+                    [style.background]="memberPurchaseDonutGradient()"
+                  ></div>
+
+                  <div class="flex-1 space-y-3">
+                    @for (item of memberPurchaseStatusChart(); track item.status) {
+                      <div class="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+                        <div class="flex items-center gap-3">
+                          <span
+                            class="inline-flex h-3 w-3 rounded-full"
+                            [style.background]="purchaseStatusColor(item.status)"
+                          ></span>
+                          <span class="text-sm font-medium text-foreground">{{ normalizeStatusLabel(item.status) }}</span>
+                        </div>
+                        <span class="text-sm text-muted-foreground">{{ item.value }}</span>
+                      </div>
+                    }
                   </div>
                 </div>
-              }
-            </div>
-          </div>
-
-          <div class="surface-card p-6 lg:p-7">
-            <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Demandes achat', en: 'Purchase requests', ar: 'طلبات الشراء' }) }}</h3>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {{ site.localize({ fr: 'Repartition de vos demandes selon le statut.', en: 'Distribution of your requests by status.', ar: 'توزيع طلباتك حسب الحالة.' }) }}
-            </p>
-
-            <div class="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div
-                class="mx-auto h-40 w-40 rounded-full border border-border"
-                [style.background]="memberPurchaseDonutGradient()"
-              ></div>
-
-              <div class="flex-1 space-y-3">
-                @for (item of memberPurchaseStatusChart(); track item.status) {
-                  <div class="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-                    <div class="flex items-center gap-3">
-                      <span
-                        class="inline-flex h-3 w-3 rounded-full"
-                        [style.background]="purchaseStatusColor(item.status)"
-                      ></span>
-                      <span class="text-sm font-medium text-foreground">{{ normalizeStatusLabel(item.status) }}</span>
-                    </div>
-                    <span class="text-sm text-muted-foreground">{{ item.value }}</span>
-                  </div>
-                }
               </div>
+            }
+          </section>
+        }
+
+        @if (isModuleVisible('articles')) {
+          <section class="surface-card overflow-hidden">
+            <div class="border-b border-border px-6 py-5">
+              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Articles recents', en: 'Recent articles', ar: 'المقالات الحديثة' }) }}</h3>
+              <p class="mt-1 text-sm text-muted-foreground">
+                {{ site.localize({ fr: 'Vos derniers articles modifies ou soumis.', en: 'Your latest updated or submitted articles.', ar: 'اخر مقالاتك المعدلة او المرسلة.' }) }}
+              </p>
             </div>
-          </div>
-        </section>
 
-        <section class="surface-card overflow-hidden">
-          <div class="border-b border-border px-6 py-5">
-            <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Articles recents', en: 'Recent articles', ar: 'المقالات الحديثة' }) }}</h3>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {{ site.localize({ fr: 'Vos derniers articles modifies ou soumis.', en: 'Your latest updated or submitted articles.', ar: 'اخر مقالاتك المعدلة او المرسلة.' }) }}
-            </p>
-          </div>
-
-          <div class="app-data-table-wrap rounded-none border-0 shadow-none">
-            <table class="table-shell">
-              <thead>
-                <tr>
-                  <th>{{ site.localize({ fr: 'Titre', en: 'Title', ar: 'العنوان' }) }}</th>
-                  <th>{{ site.localize({ fr: 'Statut', en: 'Status', ar: 'الحالة' }) }}</th>
-                  <th>{{ site.localize({ fr: 'Derniere mise a jour', en: 'Last update', ar: 'اخر تحديث' }) }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (article of memberRecentArticles(); track article.id) {
+            <div class="app-data-table-wrap rounded-none border-0 shadow-none">
+              <table class="table-shell">
+                <thead>
                   <tr>
-                    <td class="font-medium text-foreground">{{ article.titre }}</td>
-                    <td>
-                      <span class="badge-soft">{{ normalizeStatusLabel(article.statut) }}</span>
-                    </td>
-                    <td>{{ formatDate(article.modifieLe) }}</td>
+                    <th>{{ site.localize({ fr: 'Titre', en: 'Title', ar: 'العنوان' }) }}</th>
+                    <th>{{ site.localize({ fr: 'Statut', en: 'Status', ar: 'الحالة' }) }}</th>
+                    <th>{{ site.localize({ fr: 'Derniere mise a jour', en: 'Last update', ar: 'اخر تحديث' }) }}</th>
                   </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3">
-                      <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun article recent.', en: 'No recent article.', ar: 'لا توجد مقالات حديثة.' }) }}</div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  @for (article of memberRecentArticles(); track article.id) {
+                    <tr>
+                      <td class="font-medium text-foreground">{{ article.titre }}</td>
+                      <td>
+                        <span class="badge-soft">{{ normalizeStatusLabel(article.statut) }}</span>
+                      </td>
+                      <td>{{ formatDate(article.modifieLe) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3">
+                        <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun article recent.', en: 'No recent article.', ar: 'لا توجد مقالات حديثة.' }) }}</div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
       }
     </div>
   `,
@@ -488,6 +572,8 @@ type KpiCard = {
 export class DashboardHomePageComponent implements OnInit {
   readonly auth = inject(AuthService);
   readonly site = inject(SitePreferencesService);
+  readonly accessContext = inject(AccessContextService);
+  readonly icons = sharedIcons;
 
   readonly adminKpis = signal<AdminDashboardKPIs | null>(null);
   readonly labHeadKpis = signal<LabHeadDashboardKPIs | null>(null);
@@ -561,7 +647,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Valider les inscriptions',
             en: 'Review registrations',
-            ar: 'مراجعة التسجيلات',
+            ar: '\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062a\u0633\u062c\u064a\u0644\u0627\u062a',
           }),
           route: '/dashboard/registrations',
           emphasis: 'primary',
@@ -570,7 +656,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Gerer les utilisateurs',
             en: 'Manage users',
-            ar: 'إدارة المستخدمين',
+            ar: '\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646',
           }),
           route: '/dashboard/users',
         },
@@ -578,7 +664,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Mettre a jour les roles',
             en: 'Update roles',
-            ar: 'تحديث الأدوار',
+            ar: '\u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0623\u062f\u0648\u0627\u0631',
           }),
           route: '/dashboard/roles',
         },
@@ -586,7 +672,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Ouvrir la messagerie',
             en: 'Open messaging',
-            ar: 'فتح المراسلة',
+            ar: '\u0641\u062a\u062d \u0627\u0644\u0645\u0631\u0627\u0633\u0644\u0629',
           }),
           route: '/dashboard/messages',
         },
@@ -599,7 +685,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Revoir la file articles',
             en: 'Review article queue',
-            ar: 'مراجعة قائمة المقالات',
+            ar: '\u0645\u0631\u0627\u062c\u0639\u0629 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0642\u0627\u0644\u0627\u062a',
           }),
           route: '/dashboard/articles',
           emphasis: 'primary',
@@ -608,7 +694,7 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Gerer mes projets',
             en: 'Manage my projects',
-            ar: 'ادارة مشاريعي',
+            ar: '\u0625\u062f\u0627\u0631\u0629 \u0645\u0634\u0627\u0631\u064a\u0639\u064a',
           }),
           route: '/dashboard/projects',
         },
@@ -616,15 +702,23 @@ export class DashboardHomePageComponent implements OnInit {
           label: this.site.localize({
             fr: 'Envoyer un message',
             en: 'Send a message',
-            ar: 'ارسال رسالة',
+            ar: '\u0625\u0631\u0633\u0627\u0644 \u0631\u0633\u0627\u0644\u0629',
           }),
           route: '/dashboard/messages',
         },
         {
           label: this.site.localize({
+            fr: 'Voir les notifications',
+            en: 'Open notifications',
+            ar: '\u0639\u0631\u0636 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a',
+          }),
+          route: '/dashboard/notifications',
+        },
+        {
+          label: this.site.localize({
             fr: 'Traiter les achats',
             en: 'Process purchases',
-            ar: 'معالجة المشتريات',
+            ar: '\u0645\u0639\u0627\u0644\u062c\u0629 \u0627\u0644\u0645\u0634\u062a\u0631\u064a\u0627\u062a',
           }),
           route: '/dashboard/purchases',
         },
@@ -634,11 +728,28 @@ export class DashboardHomePageComponent implements OnInit {
     return [
       {
         label: this.site.localize({
-          fr: 'Voir mon espace',
-          en: 'Open my space',
-          ar: 'فتح مساحتي',
+          fr: 'Voir mes notifications',
+          en: 'Open notifications',
+          ar: '\u0639\u0631\u0636 \u0625\u0634\u0639\u0627\u0631\u0627\u062a\u064a',
         }),
-        route: '/dashboard',
+        route: '/dashboard/notifications',
+        emphasis: 'primary',
+      },
+      {
+        label: this.site.localize({
+          fr: 'Mes articles',
+          en: 'My articles',
+          ar: '\u0645\u0642\u0627\u0644\u0627\u062a\u064a',
+        }),
+        route: '/dashboard/articles',
+      },
+      {
+        label: this.site.localize({
+          fr: 'Messagerie',
+          en: 'Messaging',
+          ar: '\u0627\u0644\u0645\u0631\u0627\u0633\u0644\u0629',
+        }),
+        route: '/dashboard/messages',
       },
     ];
   });
@@ -646,7 +757,7 @@ export class DashboardHomePageComponent implements OnInit {
   readonly adminKpiCards = computed<KpiCard[]>(() => {
     const kpis = this.adminKpis()?.kpis;
 
-    return [
+    const cards: KpiCard[] = [
       {
         label: this.site.localize({
           fr: 'Inscriptions en attente',
@@ -723,23 +834,26 @@ export class DashboardHomePageComponent implements OnInit {
         color: '#ff5252',
       },
     ];
+
+    return cards.filter((card) => this.isRouteVisible(card.route));
   });
 
   readonly labKpiCards = computed<KpiCard[]>(() => {
     const kpis = this.labHeadKpis()?.kpis;
+    const notifications = this.memberNotifications();
 
-    return [
+    const cards: KpiCard[] = [
       {
         label: this.site.localize({
           fr: 'Articles en attente',
           en: 'Pending articles',
-          ar: 'مقالات قيد الانتظار',
+          ar: '\u0645\u0642\u0627\u0644\u0627\u062a \u0642\u064a\u062f \u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631',
         }),
         value: kpis?.articlesPendingReview || 0,
         meta: this.site.localize({
           fr: 'Validation scientifique requise',
           en: 'Scientific validation required',
-          ar: 'يتطلب اعتمادا علميا',
+          ar: '\u064a\u062a\u0637\u0644\u0628 \u0627\u0639\u062a\u0645\u0627\u062f\u0627 \u0639\u0644\u0645\u064a\u0627',
         }),
         route: '/dashboard/articles',
         color: '#ffab00',
@@ -748,13 +862,13 @@ export class DashboardHomePageComponent implements OnInit {
         label: this.site.localize({
           fr: 'Projets actifs geres',
           en: 'Managed active projects',
-          ar: 'مشاريع نشطة تحت الادارة',
+          ar: '\u0645\u0634\u0627\u0631\u064a\u0639 \u0646\u0634\u0637\u0629 \u062a\u062d\u062a \u0627\u0644\u0625\u062f\u0627\u0631\u0629',
         }),
         value: kpis?.activeManagedProjects || 0,
         meta: this.site.localize({
           fr: 'Pilotage en cours',
           en: 'Ongoing steering',
-          ar: 'متابعة جارية',
+          ar: '\u0645\u062a\u0627\u0628\u0639\u0629 \u062c\u0627\u0631\u064a\u0629',
         }),
         route: '/dashboard/projects',
         color: '#00c8ff',
@@ -763,13 +877,13 @@ export class DashboardHomePageComponent implements OnInit {
         label: this.site.localize({
           fr: 'Demandes achat a decider',
           en: 'Purchase requests to decide',
-          ar: 'طلبات شراء بانتظار القرار',
+          ar: '\u0637\u0644\u0628\u0627\u062a \u0634\u0631\u0627\u0621 \u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0627\u0644\u0642\u0631\u0627\u0631',
         }),
         value: kpis?.purchaseRequestsAwaitingDecision || 0,
         meta: this.site.localize({
           fr: 'Decision attendue',
           en: 'Decision required',
-          ar: 'قرار مطلوب',
+          ar: '\u0642\u0631\u0627\u0631 \u0645\u0637\u0644\u0648\u0628',
         }),
         route: '/dashboard/purchases',
         color: '#ff5252',
@@ -778,18 +892,35 @@ export class DashboardHomePageComponent implements OnInit {
         label: this.site.localize({
           fr: 'Membres mobilises',
           en: 'Engaged members',
-          ar: 'اعضاء مشاركون',
+          ar: '\u0623\u0639\u0636\u0627\u0621 \u0645\u0634\u0627\u0631\u0643\u0648\u0646',
         }),
         value: kpis?.teamMembers || 0,
         meta: this.site.localize({
           fr: 'Ressources actives sur vos projets',
           en: 'Active resources on your projects',
-          ar: 'موارد نشطة في مشاريعك',
+          ar: '\u0645\u0648\u0627\u0631\u062f \u0646\u0634\u0637\u0629 \u0641\u064a \u0645\u0634\u0627\u0631\u064a\u0639\u0643',
         }),
         route: '/dashboard/projects',
         color: '#00e676',
       },
+      {
+        label: this.site.localize({
+          fr: 'Notifications non lues',
+          en: 'Unread notifications',
+          ar: '\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u063a\u064a\u0631 \u0645\u0642\u0631\u0648\u0621\u0629',
+        }),
+        value: notifications.filter((item) => !item.estLue).length,
+        meta: this.site.localize({
+          fr: 'Alertes de suivi pour vos decisions',
+          en: 'Operational alerts for your decisions',
+          ar: '\u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0645\u062a\u0627\u0628\u0639\u0629 \u0644\u0642\u0631\u0627\u0631\u0627\u062a\u0643',
+        }),
+        route: '/dashboard/notifications',
+        color: '#ff5252',
+      },
     ];
+
+    return cards.filter((card) => this.isRouteVisible(card.route));
   });
 
   readonly memberKpiCards = computed<KpiCard[]>(() => {
@@ -798,7 +929,7 @@ export class DashboardHomePageComponent implements OnInit {
     const purchases = this.memberPurchases();
     const notifications = this.memberNotifications();
 
-    return [
+    const cards: KpiCard[] = [
       {
         label: this.site.localize({
           fr: 'Mes articles',
@@ -835,7 +966,11 @@ export class DashboardHomePageComponent implements OnInit {
           en: 'Open purchase requests',
           ar: 'طلبات شراء مفتوحة',
         }),
-        value: purchases.filter((item) => item.statut === 'EN_ATTENTE').length,
+        value: purchases.filter((item) =>
+          ['EN_ATTENTE', 'BROUILLON', 'PDF_GENERE', 'TELECHARGEE', 'EN_ATTENTE_SIGNATURE_CHEF'].includes(
+            item.statut,
+          ),
+        ).length,
         meta: this.site.localize({
           fr: 'En attente de decision',
           en: 'Pending decision',
@@ -860,6 +995,8 @@ export class DashboardHomePageComponent implements OnInit {
         color: '#ff5252',
       },
     ];
+
+    return cards.filter((card) => this.isRouteVisible(card.route));
   });
 
   readonly adminAccountStatusChart = computed(
@@ -873,6 +1010,9 @@ export class DashboardHomePageComponent implements OnInit {
   );
   readonly adminRecentActivity = computed(
     () => this.adminKpis()?.recentActivity || [],
+  );
+  readonly adminRecentActivityVisible = computed(() =>
+    this.adminRecentActivity().filter((item) => this.isRouteVisible(item.link || '/dashboard')),
   );
   readonly priorityArticles = computed(
     () => this.labHeadKpis()?.priorityQueue.articles || [],
@@ -920,8 +1060,64 @@ export class DashboardHomePageComponent implements OnInit {
 
   readonly greetingLabel = { fr: 'Bonjour', en: 'Hello', ar: 'مرحبا' };
   readonly platformLabel = { fr: 'Plateforme', en: 'Platform', ar: 'المنصة' };
+  readonly quickActionsEyebrow = {
+    fr: 'Actions rapides',
+    en: 'Quick actions',
+    ar: 'إجراءات سريعة',
+  };
+  readonly quickActionsTitle = computed(() => {
+    if (this.isAdmin()) {
+      return {
+        fr: 'Raccourcis administrateur',
+        en: 'Admin shortcuts',
+        ar: '\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a \u0627\u0644\u0645\u0633\u0624\u0648\u0644',
+      };
+    }
+
+    if (this.isLabHead()) {
+      return {
+        fr: 'Raccourcis chef de laboratoire',
+        en: 'Lab head shortcuts',
+        ar: '\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a \u0631\u0626\u064a\u0633 \u0627\u0644\u0645\u062e\u062a\u0628\u0631',
+      };
+    }
+
+    return {
+      fr: 'Raccourcis membre',
+      en: 'Member shortcuts',
+      ar: '\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a \u0627\u0644\u0639\u0636\u0648',
+    };
+  });
+  readonly quickActionsSubtitle = computed(() => {
+    if (this.isAdmin()) {
+      return {
+        fr: 'Accedez rapidement aux modules de supervision, de roles et de support.',
+        en: 'Quick access to supervision, roles, and support modules.',
+        ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0625\u0634\u0631\u0627\u0641 \u0648\u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0648\u0627\u0644\u062f\u0639\u0645.',
+      };
+    }
+
+    if (this.isLabHead()) {
+      return {
+        fr: 'Accedez rapidement aux articles, achats, messages et notifications du laboratoire.',
+        en: 'Jump quickly to lab articles, purchases, messages, and notifications.',
+        ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0645\u0642\u0627\u0644\u0627\u062a \u0627\u0644\u0645\u062e\u062a\u0628\u0631 \u0648\u0627\u0644\u0645\u0634\u062a\u0631\u064a\u0627\u062a \u0648\u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0648\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a.',
+      };
+    }
+
+    return {
+      fr: 'Accedez rapidement a vos notifications, articles et echanges internes.',
+      en: 'Quick access to your notifications, articles, and internal exchanges.',
+      ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0625\u0634\u0639\u0627\u0631\u0627\u062a\u0643 \u0648\u0645\u0642\u0627\u0644\u0627\u062a\u0643 \u0648\u0627\u0644\u062a\u0628\u0627\u062f\u0644\u0627\u062a \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u0629.',
+    };
+  });
+
+  readonly visibleQuickActions = computed(() =>
+    this.quickActions().filter((item) => this.isRouteVisible(item.route)),
+  );
 
   async ngOnInit() {
+    await this.accessContext.ensureLoaded();
     await this.loadDashboard();
   }
 
@@ -948,20 +1144,53 @@ export class DashboardHomePageComponent implements OnInit {
         this.memberPurchases.set([]);
         this.memberNotifications.set([]);
       } else if (this.isLabHead()) {
-        const labHeadData = await api.getLabHeadDashboardKPIs(this.token);
+        const canViewNotifications =
+          this.isModuleVisible('notifications') &&
+          this.accessContext.isPermissionAllowed('canViewNotifications');
+        const notificationsPromise = canViewNotifications
+          ? api.listNotifications(this.token, { limit: 20 })
+          : Promise.resolve({
+              elements: [],
+              unreadCount: 0,
+            } as { elements: NotificationItem[]; unreadCount: number });
+
+        const [labHeadData, notificationsResponse] = await Promise.all([
+          api.getLabHeadDashboardKPIs(this.token),
+          notificationsPromise,
+        ]);
         this.labHeadKpis.set(labHeadData);
         this.adminKpis.set(null);
         this.memberArticles.set([]);
         this.memberProjects.set([]);
         this.memberPurchases.set([]);
-        this.memberNotifications.set([]);
+        this.memberNotifications.set(notificationsResponse.elements);
       } else {
+        const canViewArticles = this.isModuleVisible('articles');
+        const canViewProjects = this.isModuleVisible('projects');
+        const canViewPurchases = this.isModuleVisible('purchases');
+        const canViewNotifications =
+          this.isModuleVisible('notifications') &&
+          this.accessContext.isPermissionAllowed('canViewNotifications');
+
+        const articlesPromise = canViewArticles
+          ? api.listMemberArticles(this.token)
+          : Promise.resolve({ articles: [] } as { articles: Article[] });
+        const projectsPromise = canViewProjects
+          ? api.listProjects(this.token, { limit: 20 })
+          : Promise.resolve({ elements: [] } as { elements: Project[] });
+        const purchasesPromise = canViewPurchases
+          ? api.listPurchaseRequests(this.token, { limit: 20 })
+          : Promise.resolve({ elements: [] } as { elements: PurchaseRequest[] });
+        const notificationsPromise = canViewNotifications
+          ? api.listNotifications(this.token, { limit: 20 })
+          : Promise.resolve({ elements: [] } as { elements: NotificationItem[] });
+
         const [articlesResponse, projectsResponse, purchasesResponse, notificationsResponse] =
           await Promise.all([
-            api.listMemberArticles(this.token),
-            api.listProjects(this.token, { limit: 20 }),
-            api.listPurchaseRequests(this.token, { limit: 20 }),
-            api.listNotifications(this.token, { limit: 20 }),
+            articlesPromise,
+            projectsPromise,
+            purchasesPromise,
+            notificationsPromise,
           ]);
 
         this.adminKpis.set(null);
@@ -990,6 +1219,120 @@ export class DashboardHomePageComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  isModuleVisible(moduleKey: AccessModuleKey) {
+    return this.accessContext.isModuleVisible(moduleKey);
+  }
+
+  private isRouteVisible(route: string) {
+    const moduleKey = this.routeToModule(route);
+    if (!moduleKey) {
+      return true;
+    }
+
+    if (moduleKey === 'settings') {
+      return (
+        this.accessContext.isModuleVisible('profile_settings') ||
+        this.accessContext.isModuleVisible('admin_settings')
+      );
+    }
+
+    if (moduleKey === 'notifications') {
+      return (
+        this.accessContext.isModuleVisible('notifications') &&
+        this.accessContext.isPermissionAllowed('canViewNotifications')
+      );
+    }
+
+    return this.accessContext.isModuleVisible(moduleKey);
+  }
+
+  private routeToModule(route: string): AccessModuleKey | 'settings' | null {
+    if (!route || typeof route !== 'string') {
+      return null;
+    }
+
+    const normalized = route.split('?')[0] || route;
+
+    if (normalized.startsWith('/dashboard/messages')) {
+      return 'messaging';
+    }
+    if (normalized.startsWith('/dashboard/notifications')) {
+      return 'notifications';
+    }
+    if (normalized.startsWith('/dashboard/support')) {
+      return 'support';
+    }
+    if (normalized.startsWith('/dashboard/articles')) {
+      return 'articles';
+    }
+    if (normalized.startsWith('/dashboard/purchases')) {
+      return 'purchases';
+    }
+    if (normalized.startsWith('/dashboard/projects')) {
+      return 'projects';
+    }
+    if (normalized.startsWith('/dashboard/users')) {
+      return 'admin_users';
+    }
+    if (normalized.startsWith('/dashboard/registrations')) {
+      return 'admin_registrations';
+    }
+    if (normalized.startsWith('/dashboard/roles')) {
+      return 'admin_roles';
+    }
+    if (
+      normalized.startsWith('/dashboard/user-access') ||
+      normalized.startsWith('/dashboard/access-control')
+    ) {
+      return 'access_control';
+    }
+    if (normalized.startsWith('/dashboard/settings')) {
+      return 'settings';
+    }
+    if (normalized === '/dashboard' || normalized.startsWith('/dashboard/overview')) {
+      return 'dashboard_home';
+    }
+
+    return null;
+  }
+
+  quickActionIcon(route: string) {
+    if (route.startsWith('/dashboard/registrations')) {
+      return this.icons.FileSearch;
+    }
+    if (route.startsWith('/dashboard/users')) {
+      return this.icons.Users;
+    }
+    if (route.startsWith('/dashboard/roles')) {
+      return this.icons.KeyRound;
+    }
+    if (route.startsWith('/dashboard/articles')) {
+      return this.icons.FileText;
+    }
+    if (route.startsWith('/dashboard/projects')) {
+      return this.icons.FolderKanban;
+    }
+    if (route.startsWith('/dashboard/messages')) {
+      return this.icons.MessagesSquare;
+    }
+    if (route.startsWith('/dashboard/notifications')) {
+      return this.icons.Bell;
+    }
+    if (route.startsWith('/dashboard/purchases')) {
+      return this.icons.ShoppingCart;
+    }
+
+    return this.icons.LayoutDashboard;
+  }
+
+  kpiIcon(route: string) {
+    return this.quickActionIcon(route);
+  }
+
+  kpiIconSurface(color: string) {
+    return `color-mix(in srgb, ${color} 18%, white)`;
   }
 
   adminArticleStatusMax() {
@@ -1094,9 +1437,11 @@ export class DashboardHomePageComponent implements OnInit {
         return '#7f94b0';
       case 'SOUMIS':
       case 'EN_ATTENTE':
+      case 'EN_ATTENTE_SIGNATURE_CHEF':
         return '#ffab00';
       case 'VALIDE':
       case 'ACCEPTEE':
+      case 'SIGNEE':
         return '#00e676';
       case 'REJETE':
       case 'REFUSE':
@@ -1104,9 +1449,13 @@ export class DashboardHomePageComponent implements OnInit {
         return '#ff5252';
       case 'PUBLIE':
       case 'COMMANDEE':
+      case 'PDF_GENERE':
         return '#00c8ff';
+      case 'TELECHARGEE':
       case 'LIVREE':
         return '#1d4ed8';
+      case 'TRANSMISE_ADMINISTRATION':
+        return '#0f766e';
       default:
         return 'var(--primary)';
     }

@@ -33,26 +33,39 @@ import { MessagesService } from '../../shared/services/messages.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="space-y-4">
-      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <h2 class="text-2xl font-bold text-foreground">{{ site.localize(messagesTitle) }}</h2>
-          <span class="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-secondary-foreground">
-            {{
-              site.localize({
-                fr: unreadCount() + ' message(s) non lu(s)',
-                en: unreadCount() + ' unread message(s)',
-                ar: unreadCount() + ' رسالة/رسائل غير مقروءة',
-              })
-            }}
-          </span>
-        </div>
+    <div class="space-y-6">
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
 
-        <button type="button" class="btn-primary min-h-11 shrink-0 px-5" (click)="openNewMessageModal()">
-          <lucide-icon [img]="icons.MessagesSquare" class="h-4 w-4"></lucide-icon>
-          {{ site.localize(newMessageLabel) }}
-        </button>
-      </div>
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">{{ site.localize(messagesEyebrow) }}</p>
+
+          <div class="app-page-header mt-2">
+            <div class="space-y-1.5">
+              <h2 class="app-page-title">{{ site.localize(messagesTitle) }}</h2>
+              <p class="app-page-description">{{ site.localize(messagesDescription) }}</p>
+            </div>
+
+            <button type="button" class="btn-secondary min-h-11 shrink-0 px-5" (click)="openNewMessageModal()">
+              <lucide-icon [img]="icons.MessagesSquare" class="h-4 w-4"></lucide-icon>
+              {{ site.localize(newMessageLabel) }}
+            </button>
+          </div>
+
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{
+                site.localize({
+                  fr: unreadCount() + ' message(s) non lu(s)',
+                  en: unreadCount() + ' unread message(s)',
+                  ar: unreadCount() + ' رسالة/رسائل غير مقروءة',
+                })
+              }}
+            </span>
+          </div>
+        </div>
+      </section>
 
       <div class="h-[calc(100vh-220px)] min-h-[30rem] overflow-hidden rounded-xl border border-border bg-card">
         <div class="grid h-full md:grid-cols-3">
@@ -93,13 +106,13 @@ import { MessagesService } from '../../shared/services/messages.service';
       </div>
 
       @if (statusMessage()) {
-        <div class="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
           {{ statusMessage() }}
         </div>
       }
 
       @if (errorMessage()) {
-        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div class="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
           {{ errorMessage() }}
         </div>
       }
@@ -209,6 +222,11 @@ export class MessagesPageComponent implements OnInit {
   });
 
   readonly messagesTitle = { fr: 'Messagerie', en: 'Messaging', ar: 'الرسائل' };
+  readonly messagesEyebrow = {
+    fr: 'Communication interne',
+    en: 'Internal communication',
+    ar: 'التواصل الداخلي',
+  };
   readonly messagesDescription = {
     fr: 'Conversations directes et groupes avec historique persistant, notifications et pieces jointes.',
     en: 'Direct and group conversations with persistent history, notifications, and attachments.',

@@ -26,14 +26,34 @@ import { RoleService } from '../../shared/services/role.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-7">
-      <div class="app-page-header">
-        <div class="space-y-1.5">
-          <h2 class="app-page-title">{{ site.localize(pageTitle) }}</h2>
-          <p class="app-page-description">
-            {{ site.localize(pageDescription) }}
-          </p>
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
+
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">{{ site.localize(pageEyebrow) }}</p>
+
+          <div class="app-page-header mt-2">
+            <div class="space-y-1.5">
+              <h2 class="app-page-title">{{ site.localize(pageTitle) }}</h2>
+              <p class="app-page-description">
+                {{ site.localize(pageDescription) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Canaux actifs', en: 'Active channels', ar: 'القنوات النشطة' }) }}:
+              {{ (preferences.canalApplication ? 1 : 0) + (preferences.canalEmail ? 1 : 0) }}/2
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Alertes actives', en: 'Active alerts', ar: 'التنبيهات النشطة' }) }}:
+              {{ (preferences.notifComptes ? 1 : 0) + (preferences.notifMessages ? 1 : 0) }}/2
+            </span>
+          </div>
         </div>
-      </div>
+      </section>
 
       @if (loadingPage()) {
         <div class="surface-card rounded-2xl border border-border bg-muted/20 px-5 py-10 text-center text-sm text-muted-foreground">
@@ -85,12 +105,12 @@ import { RoleService } from '../../shared/services/role.service';
             </div>
 
             @if (profileMessage()) {
-              <div class="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
                 {{ profileMessage() }}
               </div>
             }
             @if (profileError()) {
-              <div class="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
                 {{ profileError() }}
               </div>
             }
@@ -166,12 +186,12 @@ import { RoleService } from '../../shared/services/role.service';
             </div>
 
             @if (passwordMessage()) {
-              <div class="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
                 {{ passwordMessage() }}
               </div>
             }
             @if (passwordError()) {
-              <div class="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
                 {{ passwordError() }}
               </div>
             }
@@ -260,12 +280,12 @@ import { RoleService } from '../../shared/services/role.service';
           </div>
 
           @if (preferencesMessage()) {
-            <div class="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
               {{ preferencesMessage() }}
             </div>
           }
           @if (preferencesError()) {
-            <div class="mt-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
               {{ preferencesError() }}
             </div>
           }
@@ -307,6 +327,11 @@ export class AdminSettingsPageComponent implements OnInit {
     fr: 'Parametres administrateur',
     en: 'Admin settings',
     ar: 'إعدادات الإدارة',
+  };
+  readonly pageEyebrow = {
+    fr: 'Administration securisee',
+    en: 'Secure administration',
+    ar: 'إدارة آمنة',
   };
   readonly pageDescription = {
     fr: 'Gerer votre profil, la securite du compte et les preferences de notification.',

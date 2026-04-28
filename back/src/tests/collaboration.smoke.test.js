@@ -228,7 +228,6 @@ test("Release 2 smoke suite", async () => {
     );
 
     const purchaseForm = new FormData();
-    purchaseForm.set("projetId", String(projectId));
     purchaseForm.set("objet", "Spectrometre portable");
     purchaseForm.set("description", "Acquisition pour campagne de mesures.");
     purchaseForm.set("quantite", "2");

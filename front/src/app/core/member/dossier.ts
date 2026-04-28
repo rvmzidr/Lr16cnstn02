@@ -30,6 +30,7 @@ export function createEmptyRegistrationPayload(
     cin: '',
     passeport: '',
     emailInstitutionnel: '',
+    emailSecondaire: '',
     telephone: '',
     adresse: '',
     grade: '',
@@ -70,6 +71,7 @@ export function createRegistrationPayloadFromUser(
     cin: blankString(utilisateur.cin),
     passeport: blankString(utilisateur.passeport),
     emailInstitutionnel: utilisateur.emailInstitutionnel,
+    emailSecondaire: blankString(utilisateur.emailSecondaire),
     telephone: blankString(utilisateur.telephone),
     adresse: blankString(utilisateur.adresse),
     grade: blankString(utilisateur.profil?.grade),
@@ -238,6 +240,7 @@ export function appendRegistrationPayloadToFormData(
   formData.set('cin', payload.cin);
   formData.set('passeport', payload.passeport);
   formData.set('emailInstitutionnel', payload.emailInstitutionnel);
+  formData.set('emailSecondaire', payload.emailSecondaire);
   formData.set('telephone', payload.telephone);
   formData.set('adresse', payload.adresse);
   formData.set('grade', payload.grade);

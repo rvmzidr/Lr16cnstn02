@@ -32,6 +32,7 @@ model articles {
   titre            String              @db.VarChar(500)
   resume           String              @db.Text
   contenu          String              @db.Text
+  lien_doi         String?             @db.VarChar(1024)
   deposant_id      String              @db.Char(36)
   categorie_id     BigInt?
   statut           type_statut_article @default(BROUILLON)
@@ -116,13 +117,29 @@ model decisions_demande {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model demandes_achat {
   id                                                    BigInt                 @id @default(autoincrement())
-  projet_id                                             BigInt
+  projet_id                                             BigInt?
   cree_par                                              String                 @db.Char(36)
   objet                                                 String                 @db.VarChar(255)
   description                                           String                 @db.Text
   quantite                                              Int                    @default(1)
   estimation_cout                                       Decimal?               @db.Decimal(14, 3)
   justification_scientifique                            String                 @db.Text
+  date_demande                                          DateTime?              @db.Date
+  rubrique_budgetaire                                   String?                @db.VarChar(120)
+  demandeur_nom                                         String?                @db.VarChar(120)
+  demandeur_prenom                                      String?                @db.VarChar(120)
+  direction_service_labo                                String?                @db.VarChar(255)
+  expression_details                                    Json?
+  total_general                                         Decimal?               @db.Decimal(14, 3)
+  types_pieces_jointes                                  Json?
+  autre_piece_jointe                                    String?                @db.VarChar(255)
+  nombre_pieces_jointes                                 Int                    @default(0)
+  pdf_nom_fichier                                       String?                @db.VarChar(255)
+  pdf_chemin_fichier                                    String?                @db.Text
+  pdf_type_mime                                         String?                @db.VarChar(150)
+  pdf_taille_octets                                     BigInt?
+  pdf_genere_le                                         DateTime?              @db.Timestamp(6)
+  pdf_telecharge_le                                     DateTime?              @db.Timestamp(6)
   statut                                                type_statut_demande    @default(EN_ATTENTE)
   urgente                                               Boolean                @default(false)
   date_decision                                         DateTime?              @db.Timestamp(6)
@@ -135,7 +152,7 @@ model demandes_achat {
   decisions_demande                                     decisions_demande?
   utilisateurs_demandes_achat_cree_parToutilisateurs    utilisateurs           @relation("demandes_achat_cree_parToutilisateurs", fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_createur")
   utilisateurs_demandes_achat_decidee_parToutilisateurs utilisateurs?          @relation("demandes_achat_decidee_parToutilisateurs", fields: [decidee_par], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_decideur")
-  projets                                               projets                @relation(fields: [projet_id], references: [id], onUpdate: NoAction, map: "fk_demandes_achat_projet")
+  projets                                               projets?               @relation(fields: [projet_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_demandes_achat_projet")
   historiques_demande                                   historiques_demande[]
   notifications                                         notifications[]
 
@@ -388,6 +405,7 @@ model support_tickets {
   modifie_le                   DateTime             @default(now()) @db.Timestamp(6)
   demandeur                    utilisateurs          @relation("support_ticket_demandeur", fields: [demandeur_id], references: [id], onUpdate: NoAction, map: "fk_support_ticket_demandeur")
   admin_assigne                utilisateurs?         @relation("support_ticket_admin_assigne", fields: [admin_assigne_id], references: [id], onUpdate: NoAction, map: "fk_support_ticket_admin_assigne")
+  support_ticket_access_resolutions                             support_ticket_access_resolutions[]
   support_pieces_jointes                                  support_pieces_jointes[]
   support_reponses                                        support_reponses[]
 
@@ -397,6 +415,138 @@ model support_tickets {
   @@index([categorie], map: "idx_support_tickets_categorie")
   @@index([priorite], map: "idx_support_tickets_priorite")
   @@index([cree_le], map: "idx_support_tickets_cree_le")
+}
+
+model access_profiles {
+  id                          BigInt                               @id @default(autoincrement())
+  nom                         String                               @db.VarChar(120)
+  description                 String?                              @db.Text
+  role_parent                 type_role
+  actif                       Boolean                              @default(true)
+  page_accueil_defaut         String                               @default("/dashboard") @db.VarChar(255)
+  langues_autorisees          String?                              @db.Text
+  langue_par_defaut           String?                              @db.VarChar(8)
+  rtl_force_arabe             Boolean                              @default(true)
+  cree_par                    String?                              @db.Char(36)
+  cree_le                     DateTime                             @default(now()) @db.Timestamp(6)
+  modifie_le                  DateTime                             @default(now()) @db.Timestamp(6)
+  access_profile_modules      access_profile_modules[]
+  access_profile_permissions  access_profile_permissions[]
+  access_profile_user_assignments access_profile_user_assignments[]
+  access_profile_widgets      access_profile_widgets[]
+  createur                    utilisateurs?                        @relation("access_profile_createur", fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_access_profiles_createur")
+  support_ticket_access_resolutions support_ticket_access_resolutions[]
+
+  @@unique([nom, role_parent], map: "uq_access_profiles_nom_role")
+  @@index([role_parent], map: "idx_access_profiles_role_parent")
+  @@index([actif], map: "idx_access_profiles_actif")
+}
+
+model access_profile_modules {
+  id           BigInt         @id @default(autoincrement())
+  profile_id   BigInt
+  module_key   String         @db.VarChar(80)
+  est_visible  Boolean        @default(true)
+  cree_le      DateTime       @default(now()) @db.Timestamp(6)
+  modifie_le   DateTime       @default(now()) @db.Timestamp(6)
+  access_profile access_profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_access_profile_modules_profile")
+
+  @@unique([profile_id, module_key], map: "uq_access_profile_modules_profile_module")
+  @@index([module_key], map: "idx_access_profile_modules_key")
+}
+
+model access_profile_permissions {
+  id             BigInt         @id @default(autoincrement())
+  profile_id     BigInt
+  permission_key String         @db.VarChar(120)
+  est_autorise   Boolean        @default(false)
+  cree_le        DateTime       @default(now()) @db.Timestamp(6)
+  modifie_le     DateTime       @default(now()) @db.Timestamp(6)
+  access_profile access_profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_access_profile_permissions_profile")
+
+  @@unique([profile_id, permission_key], map: "uq_access_profile_permissions_profile_permission")
+  @@index([permission_key], map: "idx_access_profile_permissions_key")
+}
+
+model access_profile_widgets {
+  id            BigInt         @id @default(autoincrement())
+  profile_id    BigInt
+  widget_key    String         @db.VarChar(80)
+  est_visible   Boolean        @default(true)
+  cree_le       DateTime       @default(now()) @db.Timestamp(6)
+  modifie_le    DateTime       @default(now()) @db.Timestamp(6)
+  access_profile access_profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_access_profile_widgets_profile")
+
+  @@unique([profile_id, widget_key], map: "uq_access_profile_widgets_profile_widget")
+  @@index([widget_key], map: "idx_access_profile_widgets_key")
+}
+
+model access_profile_user_assignments {
+  id            BigInt          @id @default(autoincrement())
+  utilisateur_id String         @db.Char(36)
+  profile_id    BigInt
+  assigne_par   String?         @db.Char(36)
+  cree_le       DateTime        @default(now()) @db.Timestamp(6)
+  modifie_le    DateTime        @default(now()) @db.Timestamp(6)
+  access_profile access_profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_access_profile_assignments_profile")
+  assigneur     utilisateurs?    @relation("access_profile_assignment_admin", fields: [assigne_par], references: [id], onUpdate: NoAction, map: "fk_access_profile_assignments_admin")
+  utilisateur   utilisateurs     @relation("access_profile_assignment_user", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_access_profile_assignments_user")
+
+  @@unique([utilisateur_id], map: "uq_access_profile_assignments_user")
+  @@index([profile_id], map: "idx_access_profile_assignments_profile")
+}
+
+model user_access_overrides {
+  id             BigInt         @id @default(autoincrement())
+  utilisateur_id String         @db.Char(36)
+  module_key     String?        @db.VarChar(80)
+  permission_key String?        @db.VarChar(120)
+  widget_key     String?        @db.VarChar(80)
+  valeur_bool    Boolean
+  raison         String?        @db.Text
+  cree_par       String?        @db.Char(36)
+  cree_le        DateTime       @default(now()) @db.Timestamp(6)
+  modifie_le     DateTime       @default(now()) @db.Timestamp(6)
+  createur       utilisateurs?  @relation("user_access_override_admin", fields: [cree_par], references: [id], onUpdate: NoAction, map: "fk_user_access_overrides_admin")
+  utilisateur    utilisateurs   @relation("user_access_override_user", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_access_overrides_user")
+
+  @@index([utilisateur_id], map: "idx_user_access_overrides_user")
+  @@index([module_key], map: "idx_user_access_overrides_module")
+  @@index([permission_key], map: "idx_user_access_overrides_permission")
+  @@index([widget_key], map: "idx_user_access_overrides_widget")
+}
+
+model user_access_preferences {
+  id                   BigInt        @id @default(autoincrement())
+  utilisateur_id       String        @db.Char(36)
+  page_accueil_override String       @db.VarChar(255)
+  cree_par             String?       @db.Char(36)
+  cree_le              DateTime      @default(now()) @db.Timestamp(6)
+  modifie_le           DateTime      @default(now()) @db.Timestamp(6)
+  createur             utilisateurs? @relation("user_access_preference_admin", fields: [cree_par], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_user_access_preferences_admin")
+  utilisateur          utilisateurs  @relation("user_access_preference_user", fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_access_preferences_user")
+
+  @@unique([utilisateur_id], map: "uq_user_access_preferences_user")
+  @@index([cree_par], map: "idx_user_access_preferences_admin")
+}
+
+model support_ticket_access_resolutions {
+  id            BigInt          @id @default(autoincrement())
+  ticket_id     BigInt
+  admin_id      String          @db.Char(36)
+  utilisateur_id String         @db.Char(36)
+  profile_id    BigInt?
+  notes         String?         @db.Text
+  cree_le       DateTime        @default(now()) @db.Timestamp(6)
+  modifie_le    DateTime        @default(now()) @db.Timestamp(6)
+  admin         utilisateurs    @relation("support_access_resolution_admin", fields: [admin_id], references: [id], onUpdate: NoAction, map: "fk_support_access_resolutions_admin")
+  profile       access_profiles? @relation(fields: [profile_id], references: [id], onUpdate: NoAction, map: "fk_support_access_resolutions_profile")
+  ticket        support_tickets @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_support_access_resolutions_ticket")
+  utilisateur   utilisateurs    @relation("support_access_resolution_user", fields: [utilisateur_id], references: [id], onUpdate: NoAction, map: "fk_support_access_resolutions_user")
+
+  @@index([ticket_id], map: "idx_support_access_resolutions_ticket")
+  @@index([utilisateur_id], map: "idx_support_access_resolutions_user")
+  @@index([profile_id], map: "idx_support_access_resolutions_profile")
 }
 
 model support_reponses {
@@ -581,10 +731,19 @@ model utilisateurs {
   preferences_notification                                           preferences_notification?
   profil                                                             profils_utilisateur?        @relation("profil_utilisateur")
   projets                                                            projets[]
+  access_profiles_crees                                              access_profiles[]            @relation("access_profile_createur")
+  access_profile_assignment                                          access_profile_user_assignments[] @relation("access_profile_assignment_user")
+  access_profile_assigned_by                                         access_profile_user_assignments[] @relation("access_profile_assignment_admin")
   support_tickets_assignes                                            support_tickets[]            @relation("support_ticket_admin_assigne")
   support_tickets_demandes                                            support_tickets[]            @relation("support_ticket_demandeur")
   support_reponses_auteur                                             support_reponses[]           @relation("support_reponse_auteur")
   support_pieces_jointes_auteur                                       support_pieces_jointes[]     @relation("support_piece_jointe_auteur")
+  support_access_resolutions_admin                                    support_ticket_access_resolutions[] @relation("support_access_resolution_admin")
+  support_access_resolutions_user                                     support_ticket_access_resolutions[] @relation("support_access_resolution_user")
+  user_access_overrides                                               user_access_overrides[]      @relation("user_access_override_user")
+  user_access_overrides_created                                       user_access_overrides[]      @relation("user_access_override_admin")
+  user_access_preferences                                             user_access_preferences[]    @relation("user_access_preference_user")
+  user_access_preferences_created                                     user_access_preferences[]    @relation("user_access_preference_admin")
   validateur_compte                                                  utilisateurs?               @relation("utilisateurs_validateur", fields: [valide_par], references: [id], onUpdate: NoAction, map: "fk_utilisateurs_validateur")
   utilisateurs_valides                                               utilisateurs[]              @relation("utilisateurs_validateur")
   versions_article                                                   versions_article[]          @relation("versions_article_sauvegarde")
@@ -681,6 +840,12 @@ enum type_notification {
 enum type_categorie_support {
   LOGIN
   ACCOUNT
+  ACCESS
+  ROLE
+  MODULE_VISIBILITY
+  PERMISSION
+  UI_BUG
+  TRANSLATION
   MESSAGING
   NOTIFICATIONS
   ARTICLES
@@ -730,6 +895,12 @@ enum type_statut_compte {
 }
 
 enum type_statut_demande {
+  BROUILLON
+  PDF_GENERE
+  TELECHARGEE
+  EN_ATTENTE_SIGNATURE_CHEF
+  SIGNEE
+  TRANSMISE_ADMINISTRATION
   EN_ATTENTE
   ACCEPTEE
   REJETEE

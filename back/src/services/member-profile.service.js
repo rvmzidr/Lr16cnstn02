@@ -4,6 +4,9 @@ const path = require("path");
 const prisma = require("../config/prisma");
 const {
   DOCTORANT_ATTESTATION_MIME_TYPES,
+  MAX_PROFILE_PHOTO_BYTES,
+  PROFILE_PHOTO_MIME_TYPES,
+  PROFILE_PHOTO_STORAGE_DIR,
   DOCTORANT_ATTESTATION_STORAGE_DIR,
   LABORATOIRE_DEFAULTS,
 } = require("../config/member-profile");
@@ -172,6 +175,10 @@ async function recupererReferencesMembre(client = prisma) {
         ? `Pr. ${responsableLaboratoire.prenom} ${responsableLaboratoire.nom.toUpperCase()}`
         : LABORATOIRE_DEFAULTS.responsable,
     },
+    televersementPhotoProfil: {
+      formats: PROFILE_PHOTO_MIME_TYPES,
+      tailleMaxOctets: MAX_PROFILE_PHOTO_BYTES,
+    },
   };
 }
 
@@ -333,6 +340,7 @@ function buildStoredFileName(file) {
     "application/pdf": ".pdf",
     "image/jpeg": ".jpg",
     "image/png": ".png",
+    "image/webp": ".webp",
   };
 
   return `${Date.now()}-${crypto.randomUUID()}${
@@ -356,6 +364,60 @@ async function stageDoctorantAttestation(file) {
 
   const nomStocke = buildStoredFileName(file);
   const chemin = path.join(DOCTORANT_ATTESTATION_STORAGE_DIR, nomStocke);
+
+  await fs.writeFile(chemin, file.buffer);
+
+  return {
+    nomOriginal: file.originalname,
+    nomStocke,
+    chemin,
+    typeMime: file.mimetype,
+    tailleOctets: BigInt(file.size),
+  };
+}
+
+function resolveProfilePhotoPath(storedFileName) {
+  if (!storedFileName) {
+    return null;
+  }
+
+  return path.join(PROFILE_PHOTO_STORAGE_DIR, storedFileName);
+}
+
+function inferProfilePhotoMimeType(storedFileName) {
+  const extension = path.extname(storedFileName || "").toLowerCase();
+
+  if (extension === ".jpg" || extension === ".jpeg") {
+    return "image/jpeg";
+  }
+
+  if (extension === ".png") {
+    return "image/png";
+  }
+
+  if (extension === ".webp") {
+    return "image/webp";
+  }
+
+  return "application/octet-stream";
+}
+
+async function stageProfilePhoto(file) {
+  if (!file) {
+    return null;
+  }
+
+  if (!PROFILE_PHOTO_MIME_TYPES.includes(file.mimetype)) {
+    throw new AppError(
+      "Le format de la photo de profil doit etre JPG, PNG ou WEBP.",
+      400,
+    );
+  }
+
+  await fs.mkdir(PROFILE_PHOTO_STORAGE_DIR, { recursive: true });
+
+  const nomStocke = buildStoredFileName(file);
+  const chemin = resolveProfilePhotoPath(nomStocke);
 
   await fs.writeFile(chemin, file.buffer);
 
@@ -563,6 +625,48 @@ async function recupererAttestationDoctorantOuErreur(userId, client = prisma) {
   };
 }
 
+async function recupererPhotoProfilOuErreur(userId, client = prisma) {
+  const utilisateur = await client.utilisateurs.findUnique({
+    where: { id: userId },
+    select: {
+      prenom: true,
+      nom: true,
+      profil: {
+        select: {
+          photo_url: true,
+        },
+      },
+    },
+  });
+
+  if (!utilisateur) {
+    throw new AppError("Utilisateur introuvable.", 404);
+  }
+
+  const storedFileName = utilisateur.profil?.photo_url;
+
+  if (!storedFileName) {
+    throw new AppError("Aucune photo de profil n'est disponible.", 404);
+  }
+
+  const filePath = resolveProfilePhotoPath(storedFileName);
+
+  try {
+    await fs.access(filePath);
+  } catch (_error) {
+    throw new AppError(
+      "Le fichier de la photo de profil est introuvable sur le serveur.",
+      404,
+    );
+  }
+
+  return {
+    path: filePath,
+    mimeType: inferProfilePhotoMimeType(storedFileName),
+    downloadName: storedFileName,
+  };
+}
+
 module.exports = {
   normalizeMemberDossierPayload,
   verifierReferencesProfil,
@@ -570,8 +674,11 @@ module.exports = {
   verifierDisponibiliteIdentifiants,
   getDoctorantAttestationDescriptor,
   stageDoctorantAttestation,
+  stageProfilePhoto,
   cleanupStoredFile,
   buildUtilisateurData,
   enregistrerDossierMembre,
   recupererAttestationDoctorantOuErreur,
+  recupererPhotoProfilOuErreur,
+  resolveProfilePhotoPath,
 };

@@ -22,14 +22,37 @@ import { sharedIcons } from '../../shared/lucide-icons';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8">
-      <div class="app-page-header">
-        <div>
-          <h2 class="app-page-title">{{ site.localize(usersTitle) }}</h2>
-          <p class="app-page-description">
-            {{ site.localize(usersDescription) }}
+      <section class="app-page-hero">
+        <div class="app-page-hero__orb app-page-hero__orb--primary"></div>
+        <div class="app-page-hero__orb app-page-hero__orb--secondary"></div>
+
+        <div class="app-page-hero__content">
+          <p class="app-page-eyebrow">
+            {{ site.localize({ fr: 'Espace administration', en: 'Administration area', ar: 'مساحة الإدارة' }) }}
           </p>
+
+          <div class="app-page-header mt-2">
+            <div>
+              <h2 class="app-page-title">{{ site.localize(usersTitle) }}</h2>
+              <p class="app-page-description">
+                {{ site.localize(usersDescription) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="app-page-pills">
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Total', en: 'Total', ar: 'الإجمالي' }) }}: {{ accounts()?.statistiques?.total || 0 }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Actifs', en: 'Active', ar: 'نشطة' }) }}: {{ accounts()?.statistiques?.actifs || 0 }}
+            </span>
+            <span class="app-page-pill">
+              {{ site.localize({ fr: 'Desactives', en: 'Disabled', ar: 'معطلة' }) }}: {{ accounts()?.statistiques?.desactives || 0 }}
+            </span>
+          </div>
         </div>
-      </div>
+      </section>
 
       <section class="app-kpi-grid">
         @for (card of summaryCards(); track card.label) {
