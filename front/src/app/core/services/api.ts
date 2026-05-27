@@ -1486,4 +1486,29 @@ export const api = {
       token,
     });
   },
+
+  // --- AI (Release 3) ---
+  aiChat(token: string, payload: { message: string, history: any[] }) {
+    return request<{ reply: string }>('/ai/chat', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+  },
+
+  aiSummarize(token: string, payload: { articleText: string }) {
+    return request<{ summary: string }>('/ai/resume', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+  },
+
+  aiSemanticSearch(token: string, payload: { query: string }) {
+    return request<{ results: any[] }>('/ai/search', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+  }
 };

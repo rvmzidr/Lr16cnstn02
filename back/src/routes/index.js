@@ -11,6 +11,7 @@ const messagesRoutes = require("./messages.routes");
 const supportRoutes = require("./support.routes");
 
 const router = express.Router();
+const aiRoutes = require("./ai.routes");
 
 router.use("/public", publicRoutes);
 router.use("/auth", authRoutes);
@@ -22,5 +23,6 @@ router.use("/access", accessRoutes);
 router.use("/chef-labo", labHeadRoutes);
 router.use("/messages", messagesRoutes);
 router.use("/support", supportRoutes);
+router.use("/ai", aiRoutes);
 
 module.exports = router;

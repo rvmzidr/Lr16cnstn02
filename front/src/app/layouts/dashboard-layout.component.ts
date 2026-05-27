@@ -190,7 +190,7 @@ type DashboardMenuItem = {
             </div>
 
             <div class="flex items-center gap-3">
-              <app-toolbar-controls [showThemeToggle]="false"></app-toolbar-controls>
+              <app-toolbar-controls [showThemeToggle]="true"></app-toolbar-controls>
 
               @if (canAccessNotifications()) {
                 <button
@@ -396,6 +396,29 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       path: '/dashboard/notifications',
       icon: this.icons.Bell,
       roles: ['admin', 'chef', 'membre'],
+    },
+    // --- Intelligence Artificielle (Release 3) ---
+    {
+      key: 'ai-search',
+      label: { fr: 'Recherche IA', en: 'AI Search', ar: 'بحث ذكي' },
+      path: '/dashboard/recherche-semantique',
+      icon: this.icons.Sparkles,
+      roles: ['chef', 'membre'],
+    },
+
+    {
+      key: 'ai-analytics',
+      label: { fr: 'Analytiques IA', en: 'AI Analytics', ar: 'تحليلات ذكية' },
+      path: '/dashboard/analytiques',
+      icon: this.icons.Activity,
+      roles: ['admin', 'chef'],
+    },
+    {
+      key: 'ai-audit',
+      label: { fr: 'Audit & Prédictions', en: 'Audit & Predictions', ar: 'سجل ذكي' },
+      path: '/dashboard/audit',
+      icon: this.icons.ShieldAlert,
+      roles: ['admin'],
     },
   ];
 

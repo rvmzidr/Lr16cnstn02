@@ -145,6 +145,13 @@ export const routes: Routes = [
         canActivate: [accessModuleGuard('dashboard_home')],
       },
       {
+        path: 'unauthorized',
+        loadComponent: () =>
+          import('./pages/dashboard/unauthorized-page.component').then(
+            (m) => m.UnauthorizedPageComponent,
+          ),
+      },
+      {
         path: 'overview',
         loadComponent: () =>
           import('./pages/dashboard/dashboard-home-page.component').then(
@@ -260,6 +267,43 @@ export const routes: Routes = [
           ),
         canActivate: [dashboardRoleGuard(['admin']), accessModuleGuard('admin_settings')],
       },
+      // --- AI Routes (Release 3) ---
+      {
+        path: 'recherche-semantique',
+        loadComponent: () =>
+          import('./pages/dashboard/semantic-search-page.component').then(
+            (m) => m.SemanticSearchPageComponent,
+          ),
+      },
+      {
+        path: 'resume-ia',
+        loadComponent: () =>
+          import('./pages/dashboard/article-summary-page.component').then(
+            (m) => m.ArticleSummaryPageComponent,
+          ),
+      },
+      {
+        path: 'assistant-ia',
+        loadComponent: () =>
+          import('./pages/dashboard/intelligent-assistant-page.component').then(
+            (m) => m.IntelligentAssistantPageComponent,
+          ),
+      },
+      {
+        path: 'analytiques',
+        loadComponent: () =>
+          import('./pages/dashboard/analytic-dashboard-page.component').then(
+            (m) => m.AnalyticDashboardPageComponent,
+          ),
+      },
+      {
+        path: 'audit',
+        loadComponent: () =>
+          import('./pages/dashboard/audit-log-page.component').then(
+            (m) => m.AuditLogPageComponent,
+          ),
+      },
+      // ----------------------------
       {
         path: 'articles-view',
         redirectTo: 'articles',

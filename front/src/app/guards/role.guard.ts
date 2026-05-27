@@ -12,7 +12,7 @@ export function dashboardRoleGuard(allowedRoles: DashboardRole[]): CanActivateFn
 
     return roleService.hasAnyRole(allowedRoles)
       ? true
-      : router.createUrlTree(['/dashboard']);
+      : router.createUrlTree(['/dashboard/unauthorized']);
   };
 }
 
@@ -25,7 +25,7 @@ export function accessModuleGuard(moduleKey: AccessModuleKey): CanActivateFn {
 
     return accessContext.isModuleVisible(moduleKey)
       ? true
-      : router.createUrlTree([accessContext.defaultLandingPage() || '/dashboard']);
+      : router.createUrlTree(['/dashboard/unauthorized']);
   };
 }
 
@@ -40,6 +40,6 @@ export function accessPermissionGuard(
 
     return accessContext.isPermissionAllowed(permissionKey)
       ? true
-      : router.createUrlTree([accessContext.defaultLandingPage() || '/dashboard']);
+      : router.createUrlTree(['/dashboard/unauthorized']);
   };
 }

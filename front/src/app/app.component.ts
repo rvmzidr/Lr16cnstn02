@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { BackToTopComponent } from './shared/components/back-to-top.component';
 import { ToolbarControlsComponent } from './shared/components/toolbar-controls.component';
+import { AiChatWidgetComponent } from './shared/components/ai-chat-widget/ai-chat-widget.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BackToTopComponent, ToolbarControlsComponent],
+  imports: [RouterOutlet, BackToTopComponent, ToolbarControlsComponent, AiChatWidgetComponent],
   template: `
     <div class="min-h-screen">
       <router-outlet />
@@ -18,6 +19,7 @@ import { ToolbarControlsComponent } from './shared/components/toolbar-controls.c
         </div>
       }
       <app-back-to-top />
+      <app-ai-chat-widget />
     </div>
   `,
 })

@@ -12,6 +12,7 @@ import {
   DomSanitizer,
   SafeResourceUrl,
 } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import type {
   Article,
@@ -93,7 +94,7 @@ function countOccurrences(value: string, query: string) {
 @Component({
   selector: 'app-articles-page',
   standalone: true,
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-6">
@@ -132,6 +133,13 @@ function countOccurrences(value: string, query: string) {
                   {{ site.localize(newArticleButtonLabel) }}
                 </button>
               }
+
+              <a routerLink="/dashboard/resume-ia" class="btn-secondary bg-indigo-600 hover:bg-indigo-700 text-white">
+                <span class="app-inline-icon app-inline-icon--light">
+                  <lucide-icon [img]="icons.Wand2" class="h-4 w-4"></lucide-icon>
+                </span>
+                Résumé IA
+              </a>
             </div>
           </div>
         </div>
