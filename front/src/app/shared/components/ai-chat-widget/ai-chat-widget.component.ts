@@ -143,20 +143,19 @@ export class AiChatWidgetComponent implements AfterViewChecked {
     this.loading.set(true);
     
     try {
-      // Allow visitors to chat too (public API call), pass token if available
       const session = this.authService.session();
-      const token = session ? session.accessToken : '';
+      const token = session?.accessToken ?? '';
 
-      // we use aiChat from api with token (even if empty, we might need a public endpoint or modify api)
-      const response = await api.aiChat(token, { 
-        message: userMsg, 
-        history: hist 
+      const response = await api.aiChat(token, {
+        message: userMsg,
+        history: hist
       });
-      
+
       this.messages.set([...this.messages(), { role: 'model', content: response.reply }]);
     } catch (err) {
-      console.error(err);
-      this.messages.set([...this.messages(), { role: 'model', content: "Désolé, une erreur est survenue lors de la connexion à l'IA." }]);
+      console.error('AI Chat error:', err);
+      const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
+      this.messages.set([...this.messages(), { role: 'model', content: `Désolé, je ne peux pas répondre pour le moment.\n\nErreur : ${errorMsg}` }]);
     } finally {
       this.loading.set(false);
     }

@@ -78,8 +78,7 @@ import { AuthService } from '../../core/services/auth.service';
             
             <div class="p-6 flex-1 overflow-y-auto">
               <!-- Result Content -->
-              <div class="prose prose-sm dark:prose-invert max-w-none text-card-foreground whitespace-pre-wrap leading-relaxed" 
-                   [innerHTML]="summary()"></div>
+              <p class="text-card-foreground whitespace-pre-wrap leading-relaxed text-sm">{{ summary() }}</p>
               
               <!-- Suggestions Box -->
               <div class="mt-8 p-4 bg-accent/10 border border-accent/30 rounded-xl space-y-3">
@@ -123,28 +122,25 @@ export class ArticleSummaryPageComponent {
 
   async generateSummary() {
     if (!this.sourceText.trim() || this.loading()) return;
-    
+
     this.loading.set(true);
-    
+    this.summary.set(null);
+
     try {
       const session = this.authService.session();
       if (!session) throw new Error("Non autorisé");
 
-      const response = await api.aiSummarize(session.accessToken, { 
+      const response = await api.aiSummarize(session.accessToken, {
         articleText: this.sourceText
       });
-      
+
       this.summary.set(response.summary);
     } catch (err) {
-      console.error(err);
-      // Fallback
-      setTimeout(() => {
-        this.summary.set("**Résumé (Simulation)**\n\nCet article scientifique traite de l'importance de l'application des méthodes analytiques nucléaires, spécifiquement l'analyse par activation neutronique, pour évaluer les éléments traces dans des matrices environnementales.\n\nLes résultats montrent une grande précision dans l'identification des polluants majeurs.");
-        this.loading.set(false);
-      }, 1500);
+      console.error('AI Summarize error:', err);
+      const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
+      this.summary.set(`Impossible de générer le résumé.\n\nErreur : ${errorMsg}`);
     } finally {
-      if(!errFallback) { this.loading.set(false); }
+      this.loading.set(false);
     }
   }
 }
-let errFallback = false;

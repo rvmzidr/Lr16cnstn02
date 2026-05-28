@@ -150,8 +150,9 @@ export class IntelligentAssistantPageComponent implements AfterViewChecked {
       
       this.messages.set([...this.messages(), { role: 'model', content: response.reply }]);
     } catch (err) {
-      console.error(err);
-      this.messages.set([...this.messages(), { role: 'model', content: "Désolé, je ne peux pas me connecter au serveur d'IA pour le moment. L'intégration Gemini est en cours d'installation côté backend." }]);
+      console.error('AI Assistant error:', err);
+      const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
+      this.messages.set([...this.messages(), { role: 'model', content: `Désolé, je ne peux pas répondre pour le moment.\n\nErreur : ${errorMsg}` }]);
     } finally {
       this.loading.set(false);
     }

@@ -98,11 +98,11 @@ import { LucideAngularModule, ShieldAlert, AlertTriangle, ShieldCheck, History }
               <div>
                 <h3 class="font-bold text-rose-500">Alerte Prédictive Critique</h3>
                 <p class="text-sm text-foreground/80 mt-1">L'IA détecte une probabilité de <strong>92%</strong> d'accès non autorisé depuis l'IP <code>192.168.1.105</code> (Tentatives multiples hors heures ouvrables).</p>
-                <button (click)="bloquerIp()" class="mt-3 bg-rose-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-rose-600 transition-colors disabled:opacity-50">
-                  {{ ipBlocked ? 'IP Bloquée' : 'Bloquer l\\'IP' }}
+                <button (click)="bloquerIp()" [disabled]="ipBlocked" class="mt-3 bg-rose-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-rose-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  {{ ipBlocked ? 'IP Bloquée' : "Bloquer l'IP" }}
                 </button>
                 <p *ngIf="ipBlocked" class="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
-                  <lucide-icon name="shield-check" class="w-3 h-3"></lucide-icon> L'adresse IP a été bloquée avec succès.
+                  <lucide-icon name="shield-check" class="w-3 h-3"></lucide-icon> L'adresse IP 192.168.1.105 a été bloquée avec succès.
                 </p>
               </div>
             </div>
@@ -175,8 +175,5 @@ export class AuditLogPageComponent {
 
   bloquerIp() {
     this.ipBlocked = true;
-    setTimeout(() => {
-      alert("L'adresse IP 192.168.1.105 a été bloquée au niveau du pare-feu.");
-    }, 300);
   }
 }

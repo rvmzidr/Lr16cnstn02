@@ -274,6 +274,7 @@ export const routes: Routes = [
           import('./pages/dashboard/semantic-search-page.component').then(
             (m) => m.SemanticSearchPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin', 'chef', 'membre'])],
       },
       {
         path: 'resume-ia',
@@ -281,6 +282,7 @@ export const routes: Routes = [
           import('./pages/dashboard/article-summary-page.component').then(
             (m) => m.ArticleSummaryPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['chef', 'membre'])],
       },
       {
         path: 'assistant-ia',
@@ -288,6 +290,7 @@ export const routes: Routes = [
           import('./pages/dashboard/intelligent-assistant-page.component').then(
             (m) => m.IntelligentAssistantPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin', 'chef', 'membre'])],
       },
       {
         path: 'analytiques',
@@ -295,6 +298,7 @@ export const routes: Routes = [
           import('./pages/dashboard/analytic-dashboard-page.component').then(
             (m) => m.AnalyticDashboardPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin', 'chef'])],
       },
       {
         path: 'audit',
@@ -302,6 +306,7 @@ export const routes: Routes = [
           import('./pages/dashboard/audit-log-page.component').then(
             (m) => m.AuditLogPageComponent,
           ),
+        canActivate: [dashboardRoleGuard(['admin'])],
       },
       // ----------------------------
       {

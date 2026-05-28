@@ -399,19 +399,32 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     },
     // --- Intelligence Artificielle (Release 3) ---
     {
-      key: 'ai-search',
-      label: { fr: 'Recherche IA', en: 'AI Search', ar: 'بحث ذكي' },
-      path: '/dashboard/recherche-semantique',
+      key: 'ai-assistant',
+      label: { fr: 'Assistant IA', en: 'AI Assistant', ar: 'مساعد ذكي' },
+      path: '/dashboard/assistant-ia',
       icon: this.icons.Sparkles,
+      roles: ['admin', 'chef', 'membre'],
+    },
+    {
+      key: 'ai-search',
+      label: { fr: 'Recherche sémantique', en: 'Semantic Search', ar: 'بحث دلالي' },
+      path: '/dashboard/recherche-semantique',
+      icon: this.icons.Search,
+      roles: ['admin', 'chef', 'membre'],
+    },
+    {
+      key: 'ai-summary',
+      label: { fr: 'Résumé article IA', en: 'AI Article Summary', ar: 'ملخص ذكي' },
+      path: '/dashboard/resume-ia',
+      icon: this.icons.Wand2,
       roles: ['chef', 'membre'],
     },
-
     {
       key: 'ai-analytics',
       label: { fr: 'Analytiques IA', en: 'AI Analytics', ar: 'تحليلات ذكية' },
       path: '/dashboard/analytiques',
       icon: this.icons.Activity,
-      roles: ['admin', 'chef'],
+      roles: ['admin'],
     },
     {
       key: 'ai-audit',
