@@ -109,6 +109,11 @@ export class ForgotPasswordPageComponent {
   readonly successMessage = signal('');
   readonly errorMessage = signal('');
   emailInstitutionnel = '';
+  readonly successCopy = {
+    fr: "Si un compte existe pour cette adresse, un lien de réinitialisation vous a été envoyé. Vérifiez votre boîte mail (et le dossier spam).",
+    en: 'If an account exists for this address, a reset link has been sent. Please check your inbox (and spam folder).',
+    ar: 'إذا كان هناك حساب مرتبط بهذا العنوان، فقد تم إرسال رابط إعادة التعيين. يرجى التحقق من بريدك الإلكتروني (ومجلد الرسائل غير المرغوب فيها).',
+  };
   readonly accountSecurityLabel = {
     fr: 'Sécurité du compte',
     en: 'Account security',
@@ -183,14 +188,10 @@ export class ForgotPasswordPageComponent {
       const response = await api.forgotPassword({
         emailInstitutionnel: this.emailInstitutionnel,
       });
-      this.successMessage.set(
-        response.resetUrl ||
-          this.site.localize({
-            fr: 'Lien généré avec succès.',
-            en: 'Link generated successfully.',
-            ar: 'تم إنشاء الرابط بنجاح.',
-          }),
-      );
+      this.successMessage.set(this.site.localize(this.successCopy));
+      if (response.resetUrl) {
+        console.info('[dev] Lien de réinitialisation :', response.resetUrl);
+      }
     } catch (error) {
       this.errorMessage.set(
         error instanceof Error

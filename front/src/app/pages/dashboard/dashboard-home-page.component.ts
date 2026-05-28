@@ -74,9 +74,6 @@ type KpiCard = {
             <span class="app-page-pill">
               {{ site.localize({ fr: 'Vue active', en: 'Active view', ar: 'العرض النشط' }) }}: {{ roleLabel() }}
             </span>
-            <span class="app-page-pill">
-              {{ site.localize({ fr: 'Accent', en: 'Accent', ar: 'التمييز' }) }}: {{ heroAccent() }}
-            </span>
           </div>
         </div>
       </section>
@@ -152,7 +149,7 @@ type KpiCard = {
             <div>
               <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Comptes par statut', en: 'Accounts by status', ar: 'الحسابات حسب الحالة' }) }}</h3>
               <p class="mt-1 text-sm text-muted-foreground">
-                {{ site.localize({ fr: 'Repartition des comptes pour la supervision technique.', en: 'Account distribution for technical supervision.', ar: 'توزيع الحسابات من أجل الإشراف التقني.' }) }}
+                {{ site.localize({ fr: 'Répartition des comptes pour la supervision technique.', en: 'Account distribution for technical supervision.', ar: 'توزيع الحسابات من أجل الإشراف التقني.' }) }}
               </p>
             </div>
 
@@ -214,7 +211,7 @@ type KpiCard = {
         <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <div class="surface-card p-6 lg:p-7">
             <div>
-              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Repartition des roles', en: 'Role distribution', ar: 'توزيع الأدوار' }) }}</h3>
+              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Répartition des rôles', en: 'Role distribution', ar: 'توزيع الأدوار' }) }}</h3>
               <p class="mt-1 text-sm text-muted-foreground">
                 {{ site.localize({ fr: 'Distribution actuelle des droits applicatifs.', en: 'Current distribution of application permissions.', ar: 'التوزيع الحالي لصلاحيات التطبيق.' }) }}
               </p>
@@ -233,7 +230,7 @@ type KpiCard = {
                   <span class="text-sm text-muted-foreground">{{ item.value }}</span>
                 </div>
               } @empty {
-                <div class="empty-state">{{ site.localize({ fr: 'Aucune donnee role disponible.', en: 'No role data available.', ar: 'لا توجد بيانات أدوار متاحة.' }) }}</div>
+                <div class="empty-state">{{ site.localize({ fr: 'Aucune donnée de rôle disponible.', en: 'No role data available.', ar: 'لا توجد بيانات أدوار متاحة.' }) }}</div>
               }
             </div>
           </div>
@@ -241,9 +238,9 @@ type KpiCard = {
           <div class="surface-card p-6 lg:p-7">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Activite recente', en: 'Recent activity', ar: 'النشاط الأخير' }) }}</h3>
+                <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Activité récente', en: 'Recent activity', ar: 'النشاط الأخير' }) }}</h3>
                 <p class="mt-1 text-sm text-muted-foreground">
-                  {{ site.localize({ fr: 'Les 10 derniers evenements detectes sur la plateforme.', en: 'The last 10 events detected on the platform.', ar: 'آخر 10 أحداث تم رصدها على المنصة.' }) }}
+                  {{ site.localize({ fr: 'Les 10 derniers événements détectés sur la plateforme.', en: 'The last 10 events detected on the platform.', ar: 'آخر 10 أحداث تم رصدها على المنصة.' }) }}
                 </p>
               </div>
             </div>
@@ -270,7 +267,7 @@ type KpiCard = {
                   </div>
                 </a>
               } @empty {
-                <div class="empty-state">{{ site.localize({ fr: 'Aucune activite recente.', en: 'No recent activity.', ar: 'لا يوجد نشاط حديث.' }) }}</div>
+                <div class="empty-state">{{ site.localize({ fr: 'Aucune activité récente.', en: 'No recent activity.', ar: 'لا يوجد نشاط حديث.' }) }}</div>
               }
             </div>
           </div>
@@ -349,7 +346,7 @@ type KpiCard = {
                             {{ item.title }}
                           </div>
                           <div class="mt-1 text-sm text-muted-foreground">
-                            {{ item.requester }} • {{ item.amount !== null ? formatCurrency(item.amount) : site.localize({ fr: 'Montant non renseigne', en: 'Amount not specified', ar: 'قيمة غير محددة' }) }}
+                            {{ item.requester }} • {{ item.amount !== null ? formatCurrency(item.amount) : site.localize({ fr: 'Montant non renseigné', en: 'Amount not specified', ar: 'قيمة غير محددة' }) }}
                           </div>
                         </div>
                       </div>
@@ -368,9 +365,10 @@ type KpiCard = {
             @if (isModuleVisible('projects')) {
               <div class="surface-card overflow-hidden">
                 <div class="border-b border-border px-6 py-5">
-                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Etat des projets', en: 'Project status', ar: 'حالة المشاريع' }) }}</h3>
+                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'État des projets', en: 'Project status', ar: 'حالة المشاريع' }) }}</h3>
                   <p class="mt-1 text-sm text-muted-foreground">
                     {{ site.localize({ fr: 'Projets que vous pilotez avec progression temporelle.', en: 'Projects you lead with timeline progress.', ar: 'المشاريع التي تديرها مع التقدم الزمني.' }) }}
+
                   </p>
                 </div>
 
@@ -393,7 +391,7 @@ type KpiCard = {
                             <span class="badge-soft">{{ normalizeStatusLabel(project.status) }}</span>
                           </td>
                           <td>{{ project.membersCount }}</td>
-                          <td>{{ project.endDate ? formatDate(project.endDate) : site.localize({ fr: 'Non definie', en: 'Not defined', ar: 'غير محدد' }) }}</td>
+                          <td>{{ project.endDate ? formatDate(project.endDate) : site.localize({ fr: 'Non définie', en: 'Not defined', ar: 'غير محدد' }) }}</td>
                           <td class="min-w-48">
                             <div class="h-2 rounded-full bg-muted">
                               <div
@@ -408,7 +406,7 @@ type KpiCard = {
                       } @empty {
                         <tr>
                           <td colspan="5">
-                            <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun projet pilote pour le moment.', en: 'No managed project for now.', ar: 'لا يوجد مشروع مدار حاليا.' }) }}</div>
+                            <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun projet piloté pour le moment.', en: 'No managed project for now.', ar: 'لا يوجد مشروع مدار حاليا.' }) }}</div>
                           </td>
                         </tr>
                       }
@@ -421,7 +419,7 @@ type KpiCard = {
             @if (isModuleVisible('articles')) {
               <div class="space-y-6">
                 <div class="surface-card p-6 lg:p-7">
-                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Dernieres decisions articles', en: 'Latest article decisions', ar: 'احدث قرارات المقالات' }) }}</h3>
+                  <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Dernières décisions articles', en: 'Latest article decisions', ar: 'احدث قرارات المقالات' }) }}</h3>
                   <div class="mt-5 space-y-3">
                     @for (decision of recentArticleDecisions(); track decision.id) {
                       <div class="rounded-2xl border border-border bg-card px-4 py-4">
@@ -434,7 +432,7 @@ type KpiCard = {
                         </div>
                       </div>
                     } @empty {
-                      <div class="empty-state">{{ site.localize({ fr: 'Aucune decision recente.', en: 'No recent decision.', ar: 'لا توجد قرارات حديثة.' }) }}</div>
+                      <div class="empty-state">{{ site.localize({ fr: 'Aucune décision récente.', en: 'No recent decision.', ar: 'لا توجد قرارات حديثة.' }) }}</div>
                     }
                   </div>
                 </div>
@@ -497,7 +495,7 @@ type KpiCard = {
               <div class="surface-card p-6 lg:p-7">
                 <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Demandes achat', en: 'Purchase requests', ar: 'طلبات الشراء' }) }}</h3>
                 <p class="mt-1 text-sm text-muted-foreground">
-                  {{ site.localize({ fr: 'Repartition de vos demandes selon le statut.', en: 'Distribution of your requests by status.', ar: 'توزيع طلباتك حسب الحالة.' }) }}
+                  {{ site.localize({ fr: 'Répartition de vos demandes selon le statut.', en: 'Distribution of your requests by status.', ar: 'توزيع طلباتك حسب الحالة.' }) }}
                 </p>
 
                 <div class="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
@@ -529,9 +527,9 @@ type KpiCard = {
         @if (isModuleVisible('articles')) {
           <section class="surface-card overflow-hidden">
             <div class="border-b border-border px-6 py-5">
-              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Articles recents', en: 'Recent articles', ar: 'المقالات الحديثة' }) }}</h3>
+              <h3 class="text-xl font-semibold text-foreground">{{ site.localize({ fr: 'Articles récents', en: 'Recent articles', ar: 'المقالات الحديثة' }) }}</h3>
               <p class="mt-1 text-sm text-muted-foreground">
-                {{ site.localize({ fr: 'Vos derniers articles modifies ou soumis.', en: 'Your latest updated or submitted articles.', ar: 'اخر مقالاتك المعدلة او المرسلة.' }) }}
+                {{ site.localize({ fr: 'Vos derniers articles modifiés ou soumis.', en: 'Your latest updated or submitted articles.', ar: 'اخر مقالاتك المعدلة او المرسلة.' }) }}
               </p>
             </div>
 
@@ -541,7 +539,7 @@ type KpiCard = {
                   <tr>
                     <th>{{ site.localize({ fr: 'Titre', en: 'Title', ar: 'العنوان' }) }}</th>
                     <th>{{ site.localize({ fr: 'Statut', en: 'Status', ar: 'الحالة' }) }}</th>
-                    <th>{{ site.localize({ fr: 'Derniere mise a jour', en: 'Last update', ar: 'اخر تحديث' }) }}</th>
+                    <th>{{ site.localize({ fr: 'Dernière mise à jour', en: 'Last update', ar: 'اخر تحديث' }) }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -556,7 +554,7 @@ type KpiCard = {
                   } @empty {
                     <tr>
                       <td colspan="3">
-                        <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun article recent.', en: 'No recent article.', ar: 'لا توجد مقالات حديثة.' }) }}</div>
+                        <div class="empty-state m-4">{{ site.localize({ fr: 'Aucun article récent.', en: 'No recent article.', ar: 'لا توجد مقالات حديثة.' }) }}</div>
                       </td>
                     </tr>
                   }
@@ -617,14 +615,14 @@ export class DashboardHomePageComponent implements OnInit {
   readonly roleDescription = computed(() => {
     if (this.isAdmin()) {
       return this.site.localize({
-        fr: 'Supervision des comptes, validation des inscriptions, gestion des roles et suivi des flux techniques (messages/notifications).',
+        fr: 'Supervision des comptes, validation des inscriptions, gestion des rôles et suivi des flux techniques (messages/notifications).',
         en: 'Oversee accounts, validate registrations, manage roles, and monitor technical flows (messages/notifications).',
         ar: 'الإشراف على الحسابات، اعتماد التسجيلات، إدارة الأدوار، ومتابعة التدفقات التقنية (الرسائل/الإشعارات).',
       });
     }
     if (this.isLabHead()) {
       return this.site.localize({
-        fr: 'Pilotage scientifique du laboratoire, arbitrage des articles et decisions rapides sur les demandes prioritaires.',
+        fr: 'Pilotage scientifique du laboratoire, arbitrage des articles et décisions rapides sur les demandes prioritaires.',
         en: 'Scientific leadership of the lab, article arbitration, and fast decisions on priority requests.',
         ar: 'قيادة علمية للمختبر، تحكيم المقالات، واتخاذ قرارات سريعة بشأن الطلبات ذات الأولوية.',
       });
@@ -635,10 +633,6 @@ export class DashboardHomePageComponent implements OnInit {
       ar: 'مساحة عمل عضو المختبر.',
     });
   });
-
-  readonly heroAccent = computed(() =>
-    this.isAdmin() ? '#00c8ff' : this.isLabHead() ? '#00e676' : 'var(--primary)',
-  );
 
   readonly quickActions = computed<QuickAction[]>(() => {
     if (this.isAdmin()) {
@@ -654,7 +648,7 @@ export class DashboardHomePageComponent implements OnInit {
         },
         {
           label: this.site.localize({
-            fr: 'Gerer les utilisateurs',
+            fr: 'Gérer les utilisateurs',
             en: 'Manage users',
             ar: '\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646',
           }),
@@ -662,7 +656,7 @@ export class DashboardHomePageComponent implements OnInit {
         },
         {
           label: this.site.localize({
-            fr: 'Mettre a jour les roles',
+            fr: 'Mettre à jour les rôles',
             en: 'Update roles',
             ar: '\u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0623\u062f\u0648\u0627\u0631',
           }),
@@ -692,7 +686,7 @@ export class DashboardHomePageComponent implements OnInit {
         },
         {
           label: this.site.localize({
-            fr: 'Gerer mes projets',
+            fr: 'Gérer mes projets',
             en: 'Manage my projects',
             ar: '\u0625\u062f\u0627\u0631\u0629 \u0645\u0634\u0627\u0631\u064a\u0639\u064a',
           }),
@@ -766,7 +760,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: kpis?.pendingRegistrations || 0,
         meta: this.site.localize({
-          fr: 'Dossiers a traiter',
+          fr: 'Dossiers à traiter',
           en: 'Files to process',
           ar: 'ملفات للمعالجة',
         }),
@@ -781,7 +775,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: kpis?.activeAccounts || 0,
         meta: this.site.localize({
-          fr: 'Acces autorises',
+          fr: 'Accès autorisés',
           en: 'Authorized access',
           ar: 'وصول مصرح',
         }),
@@ -790,13 +784,13 @@ export class DashboardHomePageComponent implements OnInit {
       },
       {
         label: this.site.localize({
-          fr: 'Changements de role (30j)',
+          fr: 'Changements de rôle (30j)',
           en: 'Role changes (30d)',
           ar: 'تغييرات الأدوار (30 يوما)',
         }),
         value: kpis?.roleChangesLast30Days || 0,
         meta: this.site.localize({
-          fr: 'Evolutions de droits recentes',
+          fr: 'Évolutions de droits récentes',
           en: 'Recent permission updates',
           ar: 'تحديثات صلاحيات حديثة',
         }),
@@ -811,7 +805,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: kpis?.unreadMessages || 0,
         meta: this.site.localize({
-          fr: 'A consulter en priorite',
+          fr: 'À consulter en priorité',
           en: 'To review as priority',
           ar: 'للمراجعة بأولوية',
         }),
@@ -826,7 +820,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: kpis?.unreadNotifications || 0,
         meta: this.site.localize({
-          fr: 'Alertes a consulter',
+          fr: 'Alertes à consulter',
           en: 'Alerts to review',
           ar: 'تنبيهات للمراجعة',
         }),
@@ -860,7 +854,7 @@ export class DashboardHomePageComponent implements OnInit {
       },
       {
         label: this.site.localize({
-          fr: 'Projets actifs geres',
+          fr: 'Projets actifs gérés',
           en: 'Managed active projects',
           ar: '\u0645\u0634\u0627\u0631\u064a\u0639 \u0646\u0634\u0637\u0629 \u062a\u062d\u062a \u0627\u0644\u0625\u062f\u0627\u0631\u0629',
         }),
@@ -875,13 +869,13 @@ export class DashboardHomePageComponent implements OnInit {
       },
       {
         label: this.site.localize({
-          fr: 'Demandes achat a decider',
+          fr: 'Demandes achat à décider',
           en: 'Purchase requests to decide',
           ar: '\u0637\u0644\u0628\u0627\u062a \u0634\u0631\u0627\u0621 \u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0627\u0644\u0642\u0631\u0627\u0631',
         }),
         value: kpis?.purchaseRequestsAwaitingDecision || 0,
         meta: this.site.localize({
-          fr: 'Decision attendue',
+          fr: 'Décision attendue',
           en: 'Decision required',
           ar: '\u0642\u0631\u0627\u0631 \u0645\u0637\u0644\u0648\u0628',
         }),
@@ -890,7 +884,7 @@ export class DashboardHomePageComponent implements OnInit {
       },
       {
         label: this.site.localize({
-          fr: 'Membres mobilises',
+          fr: 'Membres mobilisés',
           en: 'Engaged members',
           ar: '\u0623\u0639\u0636\u0627\u0621 \u0645\u0634\u0627\u0631\u0643\u0648\u0646',
         }),
@@ -911,7 +905,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: notifications.filter((item) => !item.estLue).length,
         meta: this.site.localize({
-          fr: 'Alertes de suivi pour vos decisions',
+          fr: 'Alertes de suivi pour vos décisions',
           en: 'Operational alerts for your decisions',
           ar: '\u062a\u0646\u0628\u064a\u0647\u0627\u062a \u0645\u062a\u0627\u0628\u0639\u0629 \u0644\u0642\u0631\u0627\u0631\u0627\u062a\u0643',
         }),
@@ -972,7 +966,7 @@ export class DashboardHomePageComponent implements OnInit {
           ),
         ).length,
         meta: this.site.localize({
-          fr: 'En attente de decision',
+          fr: 'En attente de décision',
           en: 'Pending decision',
           ar: 'بانتظار القرار',
         }),
@@ -987,7 +981,7 @@ export class DashboardHomePageComponent implements OnInit {
         }),
         value: notifications.filter((item) => !item.estLue).length,
         meta: this.site.localize({
-          fr: 'Alertes a traiter',
+          fr: 'Alertes à traiter',
           en: 'Alerts to process',
           ar: 'تنبيهات للمعالجة',
         }),
@@ -1091,7 +1085,7 @@ export class DashboardHomePageComponent implements OnInit {
   readonly quickActionsSubtitle = computed(() => {
     if (this.isAdmin()) {
       return {
-        fr: 'Accedez rapidement aux modules de supervision, de roles et de support.',
+        fr: 'Accédez rapidement aux modules de supervision, de rôles et de support.',
         en: 'Quick access to supervision, roles, and support modules.',
         ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0625\u0634\u0631\u0627\u0641 \u0648\u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0648\u0627\u0644\u062f\u0639\u0645.',
       };
@@ -1099,14 +1093,14 @@ export class DashboardHomePageComponent implements OnInit {
 
     if (this.isLabHead()) {
       return {
-        fr: 'Accedez rapidement aux articles, achats, messages et notifications du laboratoire.',
+        fr: 'Accédez rapidement aux articles, achats, messages et notifications du laboratoire.',
         en: 'Jump quickly to lab articles, purchases, messages, and notifications.',
         ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0645\u0642\u0627\u0644\u0627\u062a \u0627\u0644\u0645\u062e\u062a\u0628\u0631 \u0648\u0627\u0644\u0645\u0634\u062a\u0631\u064a\u0627\u062a \u0648\u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0648\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a.',
       };
     }
 
     return {
-      fr: 'Accedez rapidement a vos notifications, articles et echanges internes.',
+      fr: 'Accédez rapidement à vos notifications, articles et échanges internes.',
       en: 'Quick access to your notifications, articles, and internal exchanges.',
       ar: '\u0627\u0646\u062a\u0642\u0644 \u0628\u0633\u0631\u0639\u0629 \u0625\u0644\u0649 \u0625\u0634\u0639\u0627\u0631\u0627\u062a\u0643 \u0648\u0645\u0642\u0627\u0644\u0627\u062a\u0643 \u0648\u0627\u0644\u062a\u0628\u0627\u062f\u0644\u0627\u062a \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u0629.',
     };
@@ -1555,18 +1549,18 @@ export class DashboardHomePageComponent implements OnInit {
         return this.site.localize({ fr: 'Valide', en: 'Approved', ar: 'معتمد' });
       case 'PUBLIE':
         return this.site.localize({
-          fr: 'Publie',
+          fr: 'Publié',
           en: 'Published',
           ar: 'منشور',
         });
       case 'REFUSE':
       case 'REJETEE':
-        return this.site.localize({ fr: 'Refuse', en: 'Rejected', ar: 'مرفوض' });
+        return this.site.localize({ fr: 'Refusé', en: 'Rejected', ar: 'مرفوض' });
       case 'ACTIF':
         return this.site.localize({ fr: 'Actif', en: 'Active', ar: 'نشط' });
       case 'DESACTIVE':
         return this.site.localize({
-          fr: 'Desactive',
+          fr: 'Désactivé',
           en: 'Disabled',
           ar: 'معطل',
         });
@@ -1578,37 +1572,37 @@ export class DashboardHomePageComponent implements OnInit {
         });
       case 'TERMINE':
         return this.site.localize({
-          fr: 'Termine',
+          fr: 'Terminé',
           en: 'Completed',
           ar: 'مكتمل',
         });
       case 'ARCHIVE':
         return this.site.localize({
-          fr: 'Archive',
+          fr: 'Archivé',
           en: 'Archived',
           ar: 'مؤرشف',
         });
       case 'ACCEPTEE':
       case 'ACCEPTER':
         return this.site.localize({
-          fr: 'Acceptee',
+          fr: 'Acceptée',
           en: 'Accepted',
           ar: 'مقبول',
         });
       case 'REJETER':
         return this.site.localize({
-          fr: 'Rejetee',
+          fr: 'Rejetée',
           en: 'Rejected',
           ar: 'مرفوض',
         });
       case 'COMMANDEE':
         return this.site.localize({
-          fr: 'Commandee',
+          fr: 'Commandée',
           en: 'Ordered',
           ar: 'تم الطلب',
         });
       case 'LIVREE':
-        return this.site.localize({ fr: 'Livree', en: 'Delivered', ar: 'تم التسليم' });
+        return this.site.localize({ fr: 'Livrée', en: 'Delivered', ar: 'تم التسليم' });
       default:
         return normalized;
     }
@@ -1666,7 +1660,7 @@ export class DashboardHomePageComponent implements OnInit {
       await api.validateArticle(this.token, articleId);
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Article valide depuis la file prioritaire.',
+          fr: 'Article validé depuis la file prioritaire.',
           en: 'Article approved from the priority queue.',
           ar: 'تم اعتماد المقال من قائمة الاولوية.',
         }),
@@ -1709,7 +1703,7 @@ export class DashboardHomePageComponent implements OnInit {
       });
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Article refuse depuis la file prioritaire.',
+          fr: 'Article refusé depuis la file prioritaire.',
           en: 'Article rejected from the priority queue.',
           ar: 'تم رفض المقال من قائمة الاولوية.',
         }),
@@ -1743,7 +1737,7 @@ export class DashboardHomePageComponent implements OnInit {
             ar: 'ادخل سبب رفض الطلب:',
           }),
           this.site.localize({
-            fr: 'Budget ou justification a completer.',
+            fr: 'Budget ou justification à compléter.',
             en: 'Budget or justification must be completed.',
             ar: 'يجب استكمال الميزانية او التبرير.',
           }),
@@ -1767,7 +1761,7 @@ export class DashboardHomePageComponent implements OnInit {
               ar: 'تم قبول طلب الشراء.',
             })
           : this.site.localize({
-              fr: 'Demande achat rejetee.',
+              fr: 'Demande achat rejetée.',
               en: 'Purchase request rejected.',
               ar: 'تم رفض طلب الشراء.',
             }),

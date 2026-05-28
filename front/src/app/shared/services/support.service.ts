@@ -246,7 +246,7 @@ export class SupportService {
     const token = this.ensureToken();
 
     if (!this.isAdmin()) {
-      throw new Error('Acces reserve aux administrateurs.');
+      throw new Error('Accès réservé aux administrateurs.');
     }
 
     return api.getAdminSupportTicketAccessContext(token, ticketId);
@@ -268,7 +268,7 @@ export class SupportService {
     const token = this.ensureToken();
 
     if (!this.isAdmin()) {
-      throw new Error('Acces reserve aux administrateurs.');
+      throw new Error('Accès réservé aux administrateurs.');
     }
 
     return api.resolveAdminSupportTicketAccess(token, ticketId, payload);

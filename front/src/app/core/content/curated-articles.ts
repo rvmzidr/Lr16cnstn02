@@ -40,21 +40,21 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-smr-safety-2025',
     title: {
-      fr: 'Surete des petits reacteurs modulaires pour un mix energetique resilient',
+      fr: 'Sûreté des petits réacteurs modulaires pour un mix énergétique résilient',
       en: 'Small modular reactor safety for a resilient energy mix',
       es: 'Seguridad de pequenos reactores modulares para una matriz energetica resiliente',
       de: 'Sicherheit kleiner modularer Reaktoren fuer einen resilienten Energiemix',
       it: 'Sicurezza dei piccoli reattori modulari per un mix energetico resiliente',
     },
     summary: {
-      fr: 'Synthese des approches recentes en defense en profondeur, supervision numerique et qualification des materiaux pour les filieres SMR.',
+      fr: 'Synthèse des approches récentes en défense en profondeur, supervision numérique et qualification des matériaux pour les filières SMR.',
       en: 'Synthesis of recent approaches in defense-in-depth, digital monitoring, and material qualification for SMR pathways.',
       es: 'Sintesis de enfoques recientes sobre defensa en profundidad, supervision digital y calificacion de materiales para tecnologias SMR.',
       de: 'Uebersicht aktueller Ansaetze zu Tiefenverteidigung, digitaler Ueberwachung und Materialqualifizierung fuer SMR-Konzepte.',
       it: 'Sintesi degli approcci recenti su difesa in profondita, monitoraggio digitale e qualificazione dei materiali per soluzioni SMR.',
     },
     source: {
-      fr: 'AIEA - Serie Energie Nucleaire',
+      fr: 'AIEA - Série Énergie Nucléaire',
       en: 'IAEA - Nuclear Energy Series',
       es: 'OIEA - Serie de Energia Nuclear',
       de: 'IAEO - Reihe Kernenergie',
@@ -73,21 +73,21 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-radiopharma-2025',
     title: {
-      fr: 'Production locale de radioisotopes medicaux et securisation de la chaine clinique',
+      fr: 'Production locale de radioisotopes médicaux et sécurisation de la chaîne clinique',
       en: 'Local production of medical radioisotopes and clinical supply chain resilience',
       es: 'Produccion local de radioisotopos medicos y seguridad de la cadena clinica',
       de: 'Lokale Produktion medizinischer Radioisotope und sichere klinische Lieferkette',
       it: 'Produzione locale di radioisotopi medici e sicurezza della filiera clinica',
     },
     summary: {
-      fr: "Etat de l'art sur la production de Lu-177, Ac-225 et autres isotopes therapeutiques, avec focus sur qualite, tracabilite et acces patient.",
+      fr: "État de l'art sur la production de Lu-177, Ac-225 et autres isotopes thérapeutiques, avec focus sur qualité, traçabilité et accès patient.",
       en: 'State-of-the-art review on Lu-177, Ac-225 and other therapeutic isotopes with focus on quality, traceability, and patient access.',
       es: 'Revision del estado del arte sobre Lu-177, Ac-225 y otros isotopos terapeuticos, con foco en calidad, trazabilidad y acceso del paciente.',
       de: 'Ueberblick zu Lu-177, Ac-225 und weiteren therapeutischen Isotopen mit Fokus auf Qualitaet, Rueckverfolgbarkeit und Patientenzugang.',
       it: 'Panoramica su Lu-177, Ac-225 e altri isotopi terapeutici con focus su qualita, tracciabilita e accesso del paziente.',
     },
     source: {
-      fr: 'AIEA - Sante Humaine',
+      fr: 'AIEA - Santé Humaine',
       en: 'IAEA - Human Health',
       es: 'OIEA - Salud Humana',
       de: 'IAEO - Menschliche Gesundheit',
@@ -106,14 +106,14 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-neutron-activation-2024',
     title: {
-      fr: 'Analyse par activation neutronique pour la securite alimentaire et environnementale',
+      fr: 'Analyse par activation neutronique pour la sécurité alimentaire et environnementale',
       en: 'Neutron activation analysis for food and environmental safety',
       es: 'Analisis por activacion neutronica para seguridad alimentaria y ambiental',
       de: 'Neutronenaktivierungsanalyse fuer Lebensmittel- und Umweltsicherheit',
       it: 'Analisi per attivazione neutronica per sicurezza alimentare e ambientale',
     },
     summary: {
-      fr: 'Applications de la NAA pour detecter traces metalliques et contaminants dans les matrices complexes, avec protocoles de validation inter-laboratoires.',
+      fr: 'Applications de la NAA pour détecter traces métalliques et contaminants dans les matrices complexes, avec protocoles de validation inter-laboratoires.',
       en: 'NAA applications to detect metal traces and contaminants in complex matrices using inter-laboratory validation protocols.',
       es: 'Aplicaciones de NAA para detectar trazas metalicas y contaminantes en matrices complejas con protocolos de validacion interlaboratorio.',
       de: 'Anwendungen der NAA zur Detektion von Metallspuren und Kontaminanten in komplexen Matrizen mit interlaborativen Validierungsprotokollen.',
@@ -139,14 +139,14 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-dosimetry-ai-2025',
     title: {
-      fr: 'Dosimetrie intelligente assistee par IA pour environnements a risque',
+      fr: 'Dosimétrie intelligente assistée par IA pour environnements à risque',
       en: 'AI-assisted intelligent dosimetry for high-risk environments',
       es: 'Dosimetria inteligente asistida por IA para entornos de riesgo',
       de: 'KI-gestuetzte intelligente Dosimetrie fuer Risikoumgebungen',
       it: 'Dosimetria intelligente assistita da IA per ambienti a rischio',
     },
     summary: {
-      fr: 'Revue des modeles IA hybrides combines a des capteurs multi-sources pour estimer les doses en temps reel et ameliorer la decision operationnelle.',
+      fr: 'Revue des modèles IA hybrides combinés à des capteurs multi-sources pour estimer les doses en temps réel et améliorer la décision opérationnelle.',
       en: 'Review of hybrid AI models combined with multi-source sensors to estimate real-time doses and improve operational decisions.',
       es: 'Revision de modelos hibridos de IA combinados con sensores multisource para estimar dosis en tiempo real y mejorar decisiones operativas.',
       de: 'Ueberblick ueber hybride KI-Modelle mit Multi-Source-Sensorik zur Echtzeit-Dosisabschaetzung und besseren operativen Entscheidungen.',
@@ -172,14 +172,14 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-waste-materials-2024',
     title: {
-      fr: 'Materiaux avances pour le confinement des dechets radioactifs a longue duree',
+      fr: 'Matériaux avancés pour le confinement des déchets radioactifs à longue durée',
       en: 'Advanced materials for long-term radioactive waste confinement',
       es: 'Materiales avanzados para confinamiento de residuos radiactivos a largo plazo',
       de: 'Fortschrittliche Materialien zur Langzeit-Einschluss radioaktiver Abfaelle',
       it: 'Materiali avanzati per il confinamento a lungo termine dei rifiuti radioattivi',
     },
     summary: {
-      fr: 'Panorama des verres, ceramiques et matrices composites pour le stockage geologique, avec analyses de durabilite et de corrosion acceleree.',
+      fr: 'Panorama des verres, céramiques et matrices composites pour le stockage géologique, avec analyses de durabilité et de corrosion accélérée.',
       en: 'Overview of glass, ceramic and composite matrices for geological storage with durability and accelerated corrosion analyses.',
       es: 'Panorama de vidrios, ceramicas y matrices compuestas para almacenamiento geologico con analisis de durabilidad y corrosion acelerada.',
       de: 'Ueberblick zu Glas-, Keramik- und Verbundmatrizen fuer geologische Endlagerung mit Dauerhaftigkeits- und Korrosionsanalysen.',
@@ -205,14 +205,14 @@ export const curatedArticles: CuratedArticle[] = [
   {
     id: 'curated-fusion-diagnostics-2025',
     title: {
-      fr: 'Instrumentation de nouvelle generation pour diagnostics des plasmas de fusion',
+      fr: 'Instrumentation de nouvelle génération pour diagnostics des plasmas de fusion',
       en: 'Next-generation instrumentation for fusion plasma diagnostics',
       es: 'Instrumentacion de nueva generacion para diagnostico de plasmas de fusion',
       de: 'Instrumentierung der naechsten Generation fuer Fusionsplasma-Diagnostik',
       it: 'Strumentazione di nuova generazione per diagnostica dei plasmi di fusione',
     },
     summary: {
-      fr: 'Focus sur spectrometrie, detecteurs rapides et traitement signal robuste pour les grands instruments de recherche en fusion.',
+      fr: 'Focus sur spectrométrie, détecteurs rapides et traitement signal robuste pour les grands instruments de recherche en fusion.',
       en: 'Focus on spectrometry, fast detectors, and robust signal processing for major fusion research facilities.',
       es: 'Enfoque en espectrometria, detectores rapidos y procesamiento robusto de senal para grandes instalaciones de investigacion en fusion.',
       de: 'Fokus auf Spektrometrie, schnelle Detektoren und robuste Signalverarbeitung fuer grosse Fusionsforschungsanlagen.',

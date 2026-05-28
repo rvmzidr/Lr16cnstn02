@@ -228,7 +228,7 @@ export class MessagesPageComponent implements OnInit {
     ar: 'التواصل الداخلي',
   };
   readonly messagesDescription = {
-    fr: 'Conversations directes et groupes avec historique persistant, notifications et pieces jointes.',
+    fr: 'Conversations directes et groupes avec historique persistant, notifications et pièces jointes.',
     en: 'Direct and group conversations with persistent history, notifications, and attachments.',
     ar: 'محادثات مباشرة وجماعية مع سجل دائم وإشعارات ومرفقات.',
   };
@@ -243,12 +243,12 @@ export class MessagesPageComponent implements OnInit {
     ar: 'محادثة جديدة',
   };
   readonly newMessageModalDescription = {
-    fr: 'Choisissez un message direct ou creez un groupe en selectionnant plusieurs destinataires.',
+    fr: 'Choisissez un message direct ou créez un groupe en sélectionnant plusieurs destinataires.',
     en: 'Choose direct messaging or create a group by selecting multiple recipients.',
     ar: 'اختر رسالة مباشرة أو أنشئ مجموعة بتحديد عدة مستلمين.',
   };
   readonly openConversationLabel = {
-    fr: 'Creer / Ouvrir',
+    fr: 'Créer / Ouvrir',
     en: 'Create / Open',
     ar: 'إنشاء / فتح',
   };
@@ -430,7 +430,7 @@ export class MessagesPageComponent implements OnInit {
     if (!conversationId) {
       this.errorMessage.set(
         this.site.localize({
-          fr: 'Selectionnez une conversation avant envoi.',
+          fr: 'Sélectionnez une conversation avant envoi.',
           en: 'Select a conversation before sending.',
           ar: 'حدد محادثة قبل الإرسال.',
         }),
@@ -441,7 +441,7 @@ export class MessagesPageComponent implements OnInit {
     if (!content && !attachment) {
       this.errorMessage.set(
         this.site.localize({
-          fr: 'Le message doit contenir un texte ou une piece jointe.',
+          fr: 'Le message doit contenir un texte ou une pièce jointe.',
           en: 'Message must contain text or an attachment.',
           ar: 'يجب أن تحتوي الرسالة على نص أو مرفق.',
         }),
@@ -506,7 +506,7 @@ export class MessagesPageComponent implements OnInit {
         this.getReadableError(
           error,
           this.site.localize({
-            fr: 'Ouverture de la piece jointe impossible.',
+            fr: 'Ouverture de la pièce jointe impossible.',
             en: 'Unable to open attachment.',
             ar: 'تعذر فتح المرفق.',
           }),
@@ -601,7 +601,7 @@ export class MessagesPageComponent implements OnInit {
     if (!this.canConfirmConversationCreation()) {
       this.errorMessage.set(
         this.site.localize({
-          fr: 'Veuillez completer les informations requises.',
+          fr: 'Veuillez compléter les informations requises.',
           en: 'Please complete the required information.',
           ar: 'يرجى إكمال المعلومات المطلوبة.',
         }),
@@ -647,7 +647,7 @@ export class MessagesPageComponent implements OnInit {
         this.getReadableError(
           error,
           this.site.localize({
-            fr: 'Creation de conversation impossible.',
+            fr: 'Création de conversation impossible.',
             en: 'Unable to create conversation.',
             ar: 'تعذر إنشاء المحادثة.',
           }),

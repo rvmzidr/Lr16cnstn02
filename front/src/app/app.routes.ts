@@ -296,8 +296,16 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        path: 'news',
+        loadComponent: () =>
+          import('./pages/dashboard/news-management-page.component').then(
+            (m) => m.NewsManagementPageComponent,
+          ),
+        canActivate: [dashboardRoleGuard(['chef'])],
+      },
+      {
         path: 'chef/actualites',
-        redirectTo: '',
+        redirectTo: 'news',
         pathMatch: 'full',
       },
       {

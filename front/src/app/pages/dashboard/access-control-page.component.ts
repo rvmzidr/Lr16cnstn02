@@ -181,7 +181,7 @@ const MODULE_COPY: Record<AccessModuleKey, LocalizedCopy> = {
   admin_users: { fr: 'Admin utilisateurs', en: 'Admin users', ar: 'إدارة المستخدمين' },
   admin_registrations: { fr: 'Admin inscriptions', en: 'Admin registrations', ar: 'إدارة التسجيلات' },
   admin_roles: { fr: 'Admin roles', en: 'Admin roles', ar: 'إدارة الأدوار' },
-  access_control: { fr: "Controle d'acces", en: 'Access control', ar: 'التحكم في الوصول' },
+  access_control: { fr: "Contrôle d'accès", en: 'Access control', ar: 'التحكم في الوصول' },
   admin_settings: { fr: 'Admin parametres', en: 'Admin settings', ar: 'إعدادات الإدارة' },
 };
 
@@ -189,15 +189,15 @@ const PERMISSION_COPY: Record<AccessPermissionKey, LocalizedCopy> = {
   canViewDashboard: { fr: 'Voir dashboard', en: 'View dashboard', ar: 'عرض اللوحة' },
   canViewMessaging: { fr: 'Voir messagerie', en: 'View messaging', ar: 'عرض المراسلة' },
   canSendMessages: { fr: 'Envoyer messages', en: 'Send messages', ar: 'إرسال الرسائل' },
-  canCreatePurchaseRequest: { fr: 'Creer demande achat', en: 'Create purchase request', ar: 'إنشاء طلب شراء' },
+  canCreatePurchaseRequest: { fr: 'Créer demande achat', en: 'Create purchase request', ar: 'إنشاء طلب شراء' },
   canViewOwnArticles: { fr: 'Voir articles', en: 'View own articles', ar: 'عرض المقالات' },
-  canCreateArticle: { fr: 'Creer article', en: 'Create article', ar: 'إنشاء مقال' },
+  canCreateArticle: { fr: 'Créer article', en: 'Create article', ar: 'إنشاء مقال' },
   canEditOwnDraft: { fr: 'Modifier brouillon', en: 'Edit own draft', ar: 'تعديل المسودة' },
   canValidateArticle: { fr: 'Valider article', en: 'Validate article', ar: 'اعتماد المقال' },
   canChangeRole: { fr: 'Changer role', en: 'Change role', ar: 'تغيير الدور' },
-  canManageUsers: { fr: 'Gerer utilisateurs', en: 'Manage users', ar: 'إدارة المستخدمين' },
-  canManageAccessProfiles: { fr: 'Gerer acces', en: 'Manage access', ar: 'إدارة الوصول' },
-  canManageProjects: { fr: 'Gerer projets', en: 'Manage projects', ar: 'إدارة المشاريع' },
+  canManageUsers: { fr: 'Gérer utilisateurs', en: 'Manage users', ar: 'إدارة المستخدمين' },
+  canManageAccessProfiles: { fr: 'Gérer accès', en: 'Manage access', ar: 'إدارة الوصول' },
+  canManageProjects: { fr: 'Gérer projets', en: 'Manage projects', ar: 'إدارة المشاريع' },
   canManageSupport: { fr: 'Gerer support', en: 'Manage support', ar: 'إدارة الدعم' },
   canViewNotifications: { fr: 'Voir notifications', en: 'View notifications', ar: 'عرض الإشعارات' },
 };
@@ -818,17 +818,17 @@ export class AccessControlPageComponent implements OnInit {
   });
 
   readonly pageTitle: LocalizedCopy = {
-    fr: 'Gestion des acces utilisateurs',
+    fr: 'Gestion des accès utilisateurs',
     en: 'User access management',
     ar: 'ادارة صلاحيات المستخدمين',
   };
   readonly pageEyebrow: LocalizedCopy = {
-    fr: 'Controle de securite',
+    fr: 'Contrôle de sécurité',
     en: 'Security control',
     ar: 'تحكم أمني',
   };
   readonly pageDescription: LocalizedCopy = {
-    fr: 'Acces automatiques par role + doctorant, ajustements directs par utilisateur, reset et integration support.',
+    fr: 'Accès automatiques par rôle + doctorant, ajustements directs par utilisateur, reset et intégration support.',
     en: 'Automatic access by role + doctorant, direct per-user adjustments, reset, and support integration.',
     ar: 'صلاحيات تلقائية حسب الدور وحالة الدكتوراه مع تعديلات مباشرة ودعم متكامل.',
   };
@@ -836,7 +836,7 @@ export class AccessControlPageComponent implements OnInit {
   readonly kpiTotalUsersLabel: LocalizedCopy = { fr: 'Total utilisateurs', en: 'Total users', ar: 'اجمالي المستخدمين' };
   readonly kpiDoctorantsLabel: LocalizedCopy = { fr: 'Membres doctorants', en: 'Doctorant members', ar: 'اعضاء دكتوراه' };
   readonly kpiUsersWithOverridesLabel: LocalizedCopy = { fr: 'Avec overrides', en: 'With overrides', ar: 'مع استثناءات' };
-  readonly kpiOpenTicketsLabel: LocalizedCopy = { fr: 'Tickets acces ouverts', en: 'Open access tickets', ar: 'تذاكر وصول مفتوحة' };
+  readonly kpiOpenTicketsLabel: LocalizedCopy = { fr: 'Tickets accès ouverts', en: 'Open access tickets', ar: 'تذاكر وصول مفتوحة' };
 
   readonly searchUserPlaceholder: LocalizedCopy = { fr: 'Rechercher utilisateur...', en: 'Search user...', ar: 'ابحث عن مستخدم...' };
   readonly allRolesLabel: LocalizedCopy = { fr: 'Tous les roles', en: 'All roles', ar: 'كل الادوار' };
@@ -846,27 +846,27 @@ export class AccessControlPageComponent implements OnInit {
   readonly allMembersLabel: LocalizedCopy = { fr: 'Tous membres', en: 'All members', ar: 'كل الاعضاء' };
   readonly doctorantsOnlyLabel: LocalizedCopy = { fr: 'Doctorants uniquement', en: 'Doctorants only', ar: 'الدكتوراه فقط' };
   readonly nonDoctorantsOnlyLabel: LocalizedCopy = { fr: 'Hors doctorants', en: 'Non-doctorants', ar: 'غير دكتوراه' };
-  readonly allOverrideStatesLabel: LocalizedCopy = { fr: 'Tous etats overrides', en: 'All override states', ar: 'كل حالات الاستثناء' };
+  readonly allOverrideStatesLabel: LocalizedCopy = { fr: 'Tous états overrides', en: 'All override states', ar: 'كل حالات الاستثناء' };
   readonly withOverridesLabel: LocalizedCopy = { fr: 'Avec overrides', en: 'With overrides', ar: 'مع استثناءات' };
   readonly withoutOverridesLabel: LocalizedCopy = { fr: 'Sans overrides', en: 'Without overrides', ar: 'بدون استثناءات' };
   readonly searchLabel: LocalizedCopy = { fr: 'Rechercher', en: 'Search', ar: 'بحث' };
-  readonly resetLabel: LocalizedCopy = { fr: 'Reinitialiser', en: 'Reset', ar: 'اعادة تعيين' };
+  readonly resetLabel: LocalizedCopy = { fr: 'Réinitialiser', en: 'Reset', ar: 'اعادة تعيين' };
   readonly loadingUsersLabel: LocalizedCopy = { fr: 'Chargement utilisateurs...', en: 'Loading users...', ar: 'جار تحميل المستخدمين...' };
-  readonly noUsersLabel: LocalizedCopy = { fr: 'Aucun utilisateur trouve.', en: 'No users found.', ar: 'لا يوجد مستخدم.' };
+  readonly noUsersLabel: LocalizedCopy = { fr: 'Aucun utilisateur trouvé.', en: 'No users found.', ar: 'لا يوجد مستخدم.' };
   readonly doctorantBadgeLabel: LocalizedCopy = { fr: 'Doctorant', en: 'Doctorant', ar: 'دكتوراه' };
   readonly standardBadgeLabel: LocalizedCopy = { fr: 'Standard', en: 'Standard', ar: 'قياسي' };
   readonly overridesLabelInline: LocalizedCopy = { fr: 'overrides', en: 'overrides', ar: 'استثناءات' };
 
-  readonly selectedUserTitle: LocalizedCopy = { fr: 'Utilisateur selectionne', en: 'Selected user', ar: 'المستخدم المحدد' };
+  readonly selectedUserTitle: LocalizedCopy = { fr: 'Utilisateur sélectionné', en: 'Selected user', ar: 'المستخدم المحدد' };
   readonly userLabel: LocalizedCopy = { fr: 'Utilisateur', en: 'User', ar: 'المستخدم' };
   readonly roleLabelText: LocalizedCopy = { fr: 'Role', en: 'Role', ar: 'الدور' };
-  readonly defaultSourceLabel: LocalizedCopy = { fr: 'Source par defaut', en: 'Default source', ar: 'مصدر افتراضي' };
+  readonly defaultSourceLabel: LocalizedCopy = { fr: 'Source par défaut', en: 'Default source', ar: 'مصدر افتراضي' };
   readonly defaultLandingLabel: LocalizedCopy = { fr: 'Landing par defaut', en: 'Default landing', ar: 'الصفحة الافتراضية' };
   readonly effectiveLandingLabel: LocalizedCopy = { fr: 'Landing effective', en: 'Effective landing', ar: 'الصفحة الفعلية' };
   readonly visibleModulesLabel: LocalizedCopy = { fr: 'Modules visibles', en: 'Visible modules', ar: 'الوحدات الظاهرة' };
   readonly majorPermissionsLabel: LocalizedCopy = { fr: 'Permissions majeures', en: 'Major permissions', ar: 'الصلاحيات الرئيسية' };
 
-  readonly adjustAccessTitle: LocalizedCopy = { fr: 'Ajuster les acces', en: 'Adjust access', ar: 'تعديل الصلاحيات' };
+  readonly adjustAccessTitle: LocalizedCopy = { fr: 'Ajuster les accès', en: 'Adjust access', ar: 'تعديل الصلاحيات' };
   readonly changeReasonPlaceholder: LocalizedCopy = {
     fr: 'Raison des changements (optionnel)',
     en: 'Reason for changes (optional)',
@@ -885,7 +885,7 @@ export class AccessControlPageComponent implements OnInit {
   readonly modulesLabel: LocalizedCopy = { fr: 'Modules', en: 'Modules', ar: 'الوحدات' };
   readonly permissionsLabel: LocalizedCopy = { fr: 'Permissions', en: 'Permissions', ar: 'الصلاحيات' };
   readonly widgetsLabel: LocalizedCopy = { fr: 'Widgets', en: 'Widgets', ar: 'الادوات' };
-  readonly saveAccessLabel: LocalizedCopy = { fr: 'Enregistrer acces', en: 'Save access', ar: 'حفظ الصلاحيات' };
+  readonly saveAccessLabel: LocalizedCopy = { fr: 'Enregistrer accès', en: 'Save access', ar: 'حفظ الصلاحيات' };
   readonly resetToDefaultLabel: LocalizedCopy = {
     fr: 'Reset aux regles automatiques',
     en: 'Reset to automatic defaults',
@@ -898,19 +898,19 @@ export class AccessControlPageComponent implements OnInit {
   readonly diagnoseTicketLabel: LocalizedCopy = { fr: 'Diagnostiquer', en: 'Diagnose', ar: 'تشخيص' };
   readonly openSupportLabel: LocalizedCopy = { fr: 'Ouvrir support', en: 'Open support', ar: 'فتح الدعم' };
   readonly noLinkedTicketsLabel: LocalizedCopy = { fr: 'Aucun ticket lie.', en: 'No linked ticket.', ar: 'لا توجد تذاكر مرتبطة.' };
-  readonly ticketDiagnosticTitle: LocalizedCopy = { fr: "Diagnostic ticket d'acces", en: 'Access ticket diagnostics', ar: 'تشخيص تذكرة الوصول' };
+  readonly ticketDiagnosticTitle: LocalizedCopy = { fr: "Diagnostic ticket d'accès", en: 'Access ticket diagnostics', ar: 'تشخيص تذكرة الوصول' };
   readonly openRequesterLabel: LocalizedCopy = { fr: 'Ouvrir demandeur', en: 'Open requester', ar: 'فتح صاحب الطلب' };
-  readonly categoryLabelText: LocalizedCopy = { fr: 'Categorie', en: 'Category', ar: 'الفئة' };
+  readonly categoryLabelText: LocalizedCopy = { fr: 'Catégorie', en: 'Category', ar: 'الفئة' };
   readonly statusLabelText: LocalizedCopy = { fr: 'Statut', en: 'Status', ar: 'الحالة' };
   readonly requesterLabel: LocalizedCopy = { fr: 'Demandeur', en: 'Requester', ar: 'صاحب الطلب' };
-  readonly previousResolutionsLabel: LocalizedCopy = { fr: 'Resolutions precedentes', en: 'Previous resolutions', ar: 'المعالجات السابقة' };
+  readonly previousResolutionsLabel: LocalizedCopy = { fr: 'Résolutions précédentes', en: 'Previous resolutions', ar: 'المعالجات السابقة' };
   readonly noResolutionHistoryLabel: LocalizedCopy = { fr: 'Aucun historique.', en: 'No history.', ar: 'لا يوجد سجل.' };
 
-  readonly applySupportResolutionTitle: LocalizedCopy = { fr: 'Appliquer une resolution', en: 'Apply resolution', ar: 'تطبيق معالجة' };
+  readonly applySupportResolutionTitle: LocalizedCopy = { fr: 'Appliquer une résolution', en: 'Apply resolution', ar: 'تطبيق معالجة' };
   readonly resolutionNotesLabel: LocalizedCopy = { fr: 'Notes internes', en: 'Internal notes', ar: 'ملاحظات داخلية' };
-  readonly responseMessageLabel: LocalizedCopy = { fr: 'Message reponse ticket', en: 'Ticket reply message', ar: 'رسالة رد التذكرة' };
+  readonly responseMessageLabel: LocalizedCopy = { fr: 'Message réponse ticket', en: 'Ticket reply message', ar: 'رسالة رد التذكرة' };
   readonly closeTicketAfterResolutionLabel: LocalizedCopy = {
-    fr: 'Marquer ticket resolu apres correction',
+    fr: 'Marquer ticket résolu après correction',
     en: 'Mark ticket resolved after fix',
     ar: 'تمييز التذكرة كمحلولة بعد التصحيح',
   };
@@ -972,7 +972,7 @@ export class AccessControlPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Chargement du resume impossible.',
+              fr: 'Chargement du résumé impossible.',
               en: 'Unable to load summary.',
               ar: 'تعذر تحميل الملخص.',
             }),
@@ -1094,7 +1094,7 @@ export class AccessControlPageComponent implements OnInit {
       this.userEditReason.set('');
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Acces utilisateur mis a jour.',
+          fr: 'Accès utilisateur mis à jour.',
           en: 'User access updated.',
           ar: 'تم تحديث صلاحيات المستخدم.',
         }),
@@ -1106,7 +1106,7 @@ export class AccessControlPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Mise a jour des acces impossible.',
+              fr: 'Mise à jour des accès impossible.',
               en: 'Unable to update access.',
               ar: 'تعذر تحديث الصلاحيات.',
             }),
@@ -1132,7 +1132,7 @@ export class AccessControlPageComponent implements OnInit {
       this.userEditReason.set('');
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Acces utilisateur reinitialise sur les regles automatiques.',
+          fr: 'Accès utilisateur réinitialisé sur les règles automatiques.',
           en: 'User access reset to automatic defaults.',
           ar: 'تمت اعادة صلاحيات المستخدم الى القواعد التلقائية.',
         }),
@@ -1144,7 +1144,7 @@ export class AccessControlPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Reinitialisation des acces impossible.',
+              fr: 'Réinitialisation des accès impossible.',
               en: 'Unable to reset access.',
               ar: 'تعذر اعادة تعيين الصلاحيات.',
             }),
@@ -1273,7 +1273,7 @@ export class AccessControlPageComponent implements OnInit {
 
       this.statusMessage.set(
         this.site.localize({
-          fr: "Resolution d'acces appliquee avec succes.",
+          fr: "Résolution d'accès appliquée avec succès.",
           en: 'Access resolution applied successfully.',
           ar: 'تم تطبيق معالجة الصلاحيات بنجاح.',
         }),
@@ -1416,7 +1416,7 @@ export class AccessControlPageComponent implements OnInit {
       if (!normalizedLanding) {
         throw new Error(
           this.site.localize({
-            fr: 'Le landing override ne peut pas etre vide.',
+            fr: 'Le landing override ne peut pas être vide.',
             en: 'Landing override cannot be empty.',
             ar: 'لا يمكن ان تكون صفحة البداية فارغة.',
           }),

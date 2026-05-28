@@ -1,5 +1,6 @@
 const express = require("express");
 const publicController = require("../controllers/public.controller");
+const { contactLimiter } = require("../middlewares/rate-limit.middleware");
 const validate = require("../middlewares/validate.middleware");
 const {
   actualiteListQuerySchema,
@@ -15,6 +16,7 @@ router.get("/a-propos", publicController.getAPropos);
 router.get("/contact", publicController.getContact);
 router.post(
   "/contact",
+  contactLimiter,
   validate({ body: contactMessageBodySchema }),
   publicController.postContact,
 );

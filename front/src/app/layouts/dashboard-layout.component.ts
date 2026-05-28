@@ -370,6 +370,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       roles: ['admin'],
     },
     {
+      key: 'news',
+      label: { fr: 'Actualités', en: 'News', ar: 'الأخبار' },
+      path: '/dashboard/news',
+      icon: this.icons.Newspaper,
+      roles: ['chef'],
+    },
+    {
       key: 'purchases',
       label: { fr: 'Achats', en: 'Purchases', ar: 'المشتريات' },
       path: '/dashboard/purchases',

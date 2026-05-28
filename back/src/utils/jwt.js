@@ -1,5 +1,14 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
+
+function passwordFingerprint(motDePasseHash) {
+  return crypto
+    .createHash("sha256")
+    .update(String(motDePasseHash))
+    .digest("hex")
+    .slice(0, 16);
+}
 
 function signAccessToken(user) {
   return jwt.sign(
@@ -20,7 +29,7 @@ function signResetToken(user) {
     {
       sub: user.id,
       purpose: "reset-password",
-      version: user.mot_de_passe_hash,
+      version: passwordFingerprint(user.mot_de_passe_hash),
     },
     env.jwtSecret,
     { expiresIn: "30m" },
@@ -46,4 +55,5 @@ module.exports = {
   signResetToken,
   verifyAccessToken,
   verifyResetToken,
+  passwordFingerprint,
 };

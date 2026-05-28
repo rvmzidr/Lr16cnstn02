@@ -324,22 +324,22 @@ export class AdminSettingsPageComponent implements OnInit {
   readonly preferencesMessage = signal('');
   readonly preferencesError = signal('');
   readonly pageTitle = {
-    fr: 'Parametres administrateur',
+    fr: 'Paramètres administrateur',
     en: 'Admin settings',
     ar: 'إعدادات الإدارة',
   };
   readonly pageEyebrow = {
-    fr: 'Administration securisee',
+    fr: 'Administration sécurisée',
     en: 'Secure administration',
     ar: 'إدارة آمنة',
   };
   readonly pageDescription = {
-    fr: 'Gerer votre profil, la securite du compte et les preferences de notification.',
+    fr: 'Gérez votre profil, la sécurité du compte et les préférences de notification.',
     en: 'Manage your profile, account security, and notification preferences.',
     ar: 'إدارة الملف الشخصي وأمان الحساب وتفضيلات الإشعارات.',
   };
   readonly loadingLabel = {
-    fr: 'Chargement des parametres...',
+    fr: 'Chargement des paramètres...',
     en: 'Loading settings...',
     ar: 'جار تحميل الإعدادات...',
   };
@@ -355,9 +355,9 @@ export class AdminSettingsPageComponent implements OnInit {
     en: 'Institutional email',
     ar: 'البريد المؤسسي',
   };
-  readonly securityCardTitle = { fr: 'Securite', en: 'Security', ar: 'الأمان' };
+  readonly securityCardTitle = { fr: 'Sécurité', en: 'Security', ar: 'الأمان' };
   readonly securityCardDescription = {
-    fr: 'Mettez a jour le mot de passe avec verification immediate.',
+    fr: 'Mettez à jour le mot de passe avec vérification immédiate.',
     en: 'Update your password with immediate verification.',
     ar: 'حدّث كلمة المرور مع تحقق فوري.',
   };
@@ -377,7 +377,7 @@ export class AdminSettingsPageComponent implements OnInit {
     ar: 'تأكيد كلمة المرور الجديدة',
   };
   readonly notificationPrefsTitle = {
-    fr: 'Preferences de notifications',
+    fr: 'Préférences de notifications',
     en: 'Notification preferences',
     ar: 'تفضيلات الإشعارات',
   };
@@ -402,7 +402,7 @@ export class AdminSettingsPageComponent implements OnInit {
     ar: 'قناة البريد الإلكتروني',
   };
   readonly emailChannelDescription = {
-    fr: 'Reception des alertes par email',
+    fr: 'Réception des alertes par email',
     en: 'Receive alerts by email',
     ar: 'استلام التنبيهات عبر البريد الإلكتروني',
   };
@@ -437,17 +437,17 @@ export class AdminSettingsPageComponent implements OnInit {
     ar: 'حفظ الملف الشخصي',
   };
   readonly updatingLabel = {
-    fr: 'Mise a jour...',
+    fr: 'Mise à jour...',
     en: 'Updating...',
     ar: 'جار التحديث...',
   };
   readonly updatePasswordLabel = {
-    fr: 'Mettre a jour le mot de passe',
+    fr: 'Mettre à jour le mot de passe',
     en: 'Update password',
     ar: 'تحديث كلمة المرور',
   };
   readonly savePreferencesLabel = {
-    fr: 'Enregistrer les preferences',
+    fr: 'Enregistrer les préférences',
     en: 'Save preferences',
     ar: 'حفظ التفضيلات',
   };
@@ -583,7 +583,7 @@ export class AdminSettingsPageComponent implements OnInit {
     if (!this.hasProfileChanges({ nomComplet, emailInstitutionnel })) {
       this.profileMessage.set(
         this.site.localize({
-          fr: 'Aucune modification detectee.',
+          fr: 'Aucune modification détectée.',
           en: 'No changes detected.',
           ar: 'لم يتم اكتشاف أي تغييرات.',
         }),
@@ -612,7 +612,7 @@ export class AdminSettingsPageComponent implements OnInit {
       }
       this.profileMessage.set(
         this.site.localize({
-          fr: 'Profil mis a jour avec succes.',
+          fr: 'Profil mis à jour avec succès.',
           en: 'Profile updated successfully.',
           ar: 'تم تحديث الملف الشخصي بنجاح.',
         }),
@@ -622,7 +622,7 @@ export class AdminSettingsPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Mise a jour impossible.',
+              fr: 'Mise à jour impossible.',
               en: 'Update failed.',
               ar: 'فشل التحديث.',
             }),
@@ -663,7 +663,7 @@ export class AdminSettingsPageComponent implements OnInit {
     if (nouveauMotDePasse.length < 8) {
       this.passwordError.set(
         this.site.localize({
-          fr: 'Le nouveau mot de passe doit contenir au moins 8 caracteres.',
+          fr: 'Le nouveau mot de passe doit contenir au moins 8 caractères.',
           en: 'The new password must contain at least 8 characters.',
           ar: 'يجب أن تحتوي كلمة المرور الجديدة على 8 أحرف على الأقل.',
         }),
@@ -674,7 +674,7 @@ export class AdminSettingsPageComponent implements OnInit {
     if (nouveauMotDePasse === motDePasseActuel) {
       this.passwordError.set(
         this.site.localize({
-          fr: 'Le nouveau mot de passe doit etre different de l\'ancien.',
+          fr: 'Le nouveau mot de passe doit être différent de l\'ancien.',
           en: 'The new password must be different from the current one.',
           ar: 'يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية.',
         }),
@@ -708,7 +708,7 @@ export class AdminSettingsPageComponent implements OnInit {
       };
       this.passwordMessage.set(
         this.site.localize({
-          fr: 'Mot de passe mis a jour avec succes.',
+          fr: 'Mot de passe mis à jour avec succès.',
           en: 'Password updated successfully.',
           ar: 'تم تحديث كلمة المرور بنجاح.',
         }),
@@ -718,7 +718,7 @@ export class AdminSettingsPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Mise a jour impossible.',
+              fr: 'Mise à jour impossible.',
               en: 'Update failed.',
               ar: 'فشل التحديث.',
             }),
@@ -745,7 +745,7 @@ export class AdminSettingsPageComponent implements OnInit {
     if (!this.hasPreferencesChanges(payload)) {
       this.preferencesMessage.set(
         this.site.localize({
-          fr: 'Aucune modification detectee.',
+          fr: 'Aucune modification détectée.',
           en: 'No changes detected.',
           ar: 'لم يتم اكتشاف أي تغييرات.',
         }),
@@ -760,7 +760,7 @@ export class AdminSettingsPageComponent implements OnInit {
       this.initialPreferences = this.snapshotPreferences(this.preferences);
       this.preferencesMessage.set(
         this.site.localize({
-          fr: 'Preferences enregistrees.',
+          fr: 'Préférences enregistrées.',
           en: 'Preferences saved.',
           ar: 'تم حفظ التفضيلات.',
         }),

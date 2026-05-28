@@ -8,6 +8,7 @@ const {
 } = require("../config/member-profile");
 const AppError = require("../utils/app-error");
 const {
+  passwordFingerprint,
   signAccessToken,
   signResetToken,
   verifyResetToken,
@@ -184,19 +185,26 @@ async function demanderReinitialisationMotDePasse(payload) {
     )
   ) {
     return {
-      resetToken: null,
-      resetUrl: null,
       expireDansMinutes: 30,
     };
   }
 
   const resetToken = signResetToken(utilisateur);
+  const resetUrl = `${env.frontendUrl}/reinitialiser-mot-de-passe?token=${encodeURIComponent(
+    resetToken,
+  )}`;
+
+  // TODO Release 3 : envoyer resetUrl par email (Resend / SMTP).
+  // En production, le token ne doit jamais transiter dans la reponse API.
+  if (env.nodeEnv !== "production") {
+    return {
+      resetToken,
+      resetUrl,
+      expireDansMinutes: 30,
+    };
+  }
 
   return {
-    resetToken,
-    resetUrl: `${env.frontendUrl}/reinitialiser-mot-de-passe?token=${encodeURIComponent(
-      resetToken,
-    )}`,
     expireDansMinutes: 30,
   };
 }
@@ -221,7 +229,7 @@ async function reinitialiserMotDePasse(payload) {
     throw new AppError("Utilisateur introuvable.", 404);
   }
 
-  if (utilisateur.mot_de_passe_hash !== tokenPayload.version) {
+  if (passwordFingerprint(utilisateur.mot_de_passe_hash) !== tokenPayload.version) {
     throw new AppError(
       "Le token de reinitialisation n'est plus valide. Veuillez recommencer la procedure.",
       400,
