@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://lr16cnstn02-backend.onrender.com/api/:path*"
+      "destination": "https://REMPLACER_PAR_URL_RAILWAY/api/:path*"
     },
     {
       "source": "/(.*)",
