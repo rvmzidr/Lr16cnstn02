@@ -52,9 +52,7 @@ export class SitePreferencesService {
       } else if (storedTheme === 'light') {
         this.isDarkMode.set(false);
       } else {
-        this.isDarkMode.set(
-          window.matchMedia('(prefers-color-scheme: dark)').matches,
-        );
+        this.isDarkMode.set(false);
       }
     }
 
