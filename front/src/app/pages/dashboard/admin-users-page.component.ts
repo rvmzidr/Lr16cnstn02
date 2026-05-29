@@ -48,7 +48,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
               {{ site.localize({ fr: 'Actifs', en: 'Active', ar: 'نشطة' }) }}: {{ accounts()?.statistiques?.actifs || 0 }}
             </span>
             <span class="app-page-pill">
-              {{ site.localize({ fr: 'Desactives', en: 'Disabled', ar: 'معطلة' }) }}: {{ accounts()?.statistiques?.desactives || 0 }}
+              {{ site.localize({ fr: 'Désactivés', en: 'Disabled', ar: 'معطلة' }) }}: {{ accounts()?.statistiques?.desactives || 0 }}
             </span>
           </div>
         </div>
@@ -160,12 +160,12 @@ export class AdminUsersPageComponent implements OnInit {
     ar: 'إدارة المستخدمين',
   };
   readonly usersDescription = {
-    fr: 'Activation, desactivation et supervision technique des comptes.',
+    fr: 'Activation, désactivation et supervision technique des comptes.',
     en: 'Activation, deactivation, and technical supervision of accounts.',
     ar: 'تفعيل وتعطيل الحسابات والإشراف التقني عليها.',
   };
   readonly searchPlaceholder = {
-    fr: 'Rechercher un utilisateur (nom, email, role, statut)...',
+    fr: 'Rechercher un utilisateur (nom, email, rôle, statut)...',
     en: 'Search a user (name, email, role, status)...',
     ar: 'ابحث عن مستخدم (الاسم، البريد، الدور، الحالة)...',
   };
@@ -175,13 +175,13 @@ export class AdminUsersPageComponent implements OnInit {
     ar: 'الحسابات',
   };
   readonly accountsShownLabel = {
-    fr: 'compte(s) affiche(s).',
+    fr: 'compte(s) affiché(s).',
     en: 'account(s) shown.',
     ar: 'حساب/حسابات معروضة.',
   };
   readonly activateLabel = { fr: 'Activer', en: 'Activate', ar: 'تفعيل' };
   readonly deactivateLabel = {
-    fr: 'Desactiver',
+    fr: 'Désactiver',
     en: 'Deactivate',
     ar: 'تعطيل',
   };
@@ -200,20 +200,20 @@ export class AdminUsersPageComponent implements OnInit {
       }),
       value: this.accounts()?.statistiques.actifs || 0,
       meta: this.site.localize({
-        fr: 'Acces autorises',
+        fr: 'Accès autorisés',
         en: 'Access enabled',
         ar: 'وصول مفعّل',
       }),
     },
     {
       label: this.site.localize({
-        fr: 'Comptes desactives',
+        fr: 'Comptes désactivés',
         en: 'Disabled accounts',
         ar: 'حسابات معطلة',
       }),
       value: this.accounts()?.statistiques.desactives || 0,
       meta: this.site.localize({
-        fr: 'Acces suspendus',
+        fr: 'Accès suspendus',
         en: 'Access suspended',
         ar: 'وصول موقوف',
       }),
@@ -312,11 +312,11 @@ export class AdminUsersPageComponent implements OnInit {
     }
 
     if (status === 'REJETE') {
-      return this.site.localize({ fr: 'Rejete', en: 'Rejected', ar: 'مرفوض' });
+      return this.site.localize({ fr: 'Rejeté', en: 'Rejected', ar: 'مرفوض' });
     }
 
     if (status === 'DESACTIVE') {
-      return this.site.localize({ fr: 'Desactive', en: 'Disabled', ar: 'معطل' });
+      return this.site.localize({ fr: 'Désactivé', en: 'Disabled', ar: 'معطل' });
     }
 
     return status;
@@ -350,7 +350,7 @@ export class AdminUsersPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Erreur chargement utilisateurs.',
+              fr: 'Erreur de chargement des utilisateurs.',
               en: 'Failed to load users.',
               ar: 'تعذر تحميل المستخدمين.',
             }),
@@ -363,7 +363,7 @@ export class AdminUsersPageComponent implements OnInit {
       await api.activateAccount(this.token, userId);
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Compte active.',
+          fr: 'Compte activé.',
           en: 'Account activated.',
           ar: 'تم تفعيل الحساب.',
         }),
@@ -387,7 +387,7 @@ export class AdminUsersPageComponent implements OnInit {
       await api.deactivateAccount(this.token, userId);
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Compte desactive.',
+          fr: 'Compte désactivé.',
           en: 'Account deactivated.',
           ar: 'تم تعطيل الحساب.',
         }),
@@ -398,7 +398,7 @@ export class AdminUsersPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Erreur lors de la desactivation.',
+              fr: 'Erreur lors de la désactivation.',
               en: 'Deactivation failed.',
               ar: 'فشل التعطيل.',
             }),

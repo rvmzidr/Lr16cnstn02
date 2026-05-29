@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const morgan = require("morgan");
 const env = require("./config/env");
 const apiRoutes = require("./routes");
@@ -11,6 +12,12 @@ const {
 const app = express();
 const allowedOrigins = new Set(env.frontendOrigins);
 
+app.disable("x-powered-by");
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 app.use(
   cors({
     origin(origin, callback) {
@@ -25,7 +32,7 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(morgan(env.nodeEnv === "development" ? "dev" : "combined"));
 
 app.get("/api/health", (_req, res) => {

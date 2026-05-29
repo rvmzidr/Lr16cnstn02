@@ -48,7 +48,7 @@ type SortOrder = 'asc' | 'desc';
               <p class="app-page-description">
                 {{
                   site.localize({
-                    fr: 'Traitez les demandes acces avec un workflow complet: filtrage, consultation detaillee, validation rolee et refus motive.',
+                    fr: "Traitez les demandes d'accès avec un workflow complet : filtrage, consultation détaillée, validation par rôle et refus motivé.",
                     en: 'Process access requests with a complete workflow: filtering, detailed review, role validation, and reasoned rejection.',
                     ar: 'عالج طلبات الوصول عبر سير عمل كامل: تصفية ومراجعة تفصيلية واعتماد الدور ورفض مسبب.',
                   })
@@ -106,7 +106,7 @@ type SortOrder = 'asc' | 'desc';
               class="input-shell pl-11"
               [placeholder]="
                 site.localize({
-                  fr: 'Nom, email, role demande...',
+                  fr: 'Nom, email, rôle demandé...',
                   en: 'Name, email, requested role...',
                   ar: 'الاسم، البريد، الدور المطلوب...',
                 })
@@ -133,7 +133,7 @@ type SortOrder = 'asc' | 'desc';
             (ngModelChange)="roleFilter.set($event)"
           >
             <option [ngValue]="'TOUS'">
-              {{ site.localize({ fr: 'Tous les roles', en: 'All roles', ar: 'كل الأدوار' }) }}
+              {{ site.localize({ fr: 'Tous les rôles', en: 'All roles', ar: 'كل الأدوار' }) }}
             </option>
             @for (role of visibleRoles(); track role) {
               <option [ngValue]="role">{{ formatRole(role) }}</option>
@@ -146,7 +146,7 @@ type SortOrder = 'asc' | 'desc';
             (ngModelChange)="sortOrder.set($event)"
           >
             <option [ngValue]="'desc'">
-              {{ site.localize({ fr: 'Plus recents', en: 'Newest first', ar: 'الأحدث أولا' }) }}
+              {{ site.localize({ fr: 'Plus récents', en: 'Newest first', ar: 'الأحدث أولا' }) }}
             </option>
             <option [ngValue]="'asc'">
               {{ site.localize({ fr: 'Plus anciens', en: 'Oldest first', ar: 'الأقدم أولا' }) }}
@@ -176,7 +176,7 @@ type SortOrder = 'asc' | 'desc';
                 (click)="resetFilters()"
                 [disabled]="loadingList()"
               >
-                {{ site.localize({ fr: 'Reinitialiser', en: 'Reset', ar: 'إعادة الضبط' }) }}
+                {{ site.localize({ fr: 'Réinitialiser', en: 'Reset', ar: 'إعادة الضبط' }) }}
               </button>
             }
           </div>
@@ -224,7 +224,7 @@ type SortOrder = 'asc' | 'desc';
 
                     <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                       <span class="rounded-full border border-border px-2 py-1 text-muted-foreground">
-                        {{ site.localize({ fr: 'Role demande', en: 'Requested role', ar: 'الدور المطلوب' }) }}: {{ formatRole(item.roleDemande || 'MEMBRE') }}
+                        {{ site.localize({ fr: 'Rôle demandé', en: 'Requested role', ar: 'الدور المطلوب' }) }}: {{ formatRole(item.roleDemande || 'MEMBRE') }}
                       </span>
 
                       <span [class]="statusBadgeClass(item.statut)">
@@ -249,7 +249,7 @@ type SortOrder = 'asc' | 'desc';
 
                       @if (item.motifRejet) {
                         <span class="rounded-full bg-rose-100 px-2 py-1 font-semibold text-rose-700">
-                          {{ site.localize({ fr: 'Motif enregistre', en: 'Reason saved', ar: 'تم حفظ السبب' }) }}
+                          {{ site.localize({ fr: 'Motif enregistré', en: 'Reason saved', ar: 'تم حفظ السبب' }) }}
                         </span>
                       }
                     </div>
@@ -257,7 +257,7 @@ type SortOrder = 'asc' | 'desc';
 
                   <div class="w-full space-y-2 sm:w-auto">
                     <label class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                      {{ site.localize({ fr: 'Role attribue', en: 'Assigned role', ar: 'الدور المسند' }) }}
+                      {{ site.localize({ fr: 'Rôle attribué', en: 'Assigned role', ar: 'الدور المسند' }) }}
                     </label>
                     <select
                       class="select-shell min-w-[13rem]"
@@ -277,7 +277,7 @@ type SortOrder = 'asc' | 'desc';
                         (click)="openDetails(item)"
                         [disabled]="isBusy(item.id)"
                       >
-                        {{ site.localize({ fr: 'Details', en: 'Details', ar: 'التفاصيل' }) }}
+                        {{ site.localize({ fr: 'Détails', en: 'Details', ar: 'التفاصيل' }) }}
                       </button>
 
                       <button
@@ -325,7 +325,7 @@ type SortOrder = 'asc' | 'desc';
                 (click)="goToPreviousPage()"
                 [disabled]="loadingList() || !(pageMeta()?.hasPreviousPage)"
               >
-                {{ site.localize({ fr: 'Precedent', en: 'Previous', ar: 'السابق' }) }}
+                {{ site.localize({ fr: 'Précédent', en: 'Previous', ar: 'السابق' }) }}
               </button>
 
               <p class="text-sm text-muted-foreground">
@@ -380,7 +380,7 @@ type SortOrder = 'asc' | 'desc';
         </div>
 
         @if (loadingDetail()) {
-          <div class="empty-state">{{ site.localize({ fr: 'Chargement du dossier detaille...', en: 'Loading detailed file...', ar: 'جار تحميل الملف التفصيلي...' }) }}</div>
+          <div class="empty-state">{{ site.localize({ fr: 'Chargement du dossier détaillé...', en: 'Loading detailed file...', ar: 'جار تحميل الملف التفصيلي...' }) }}</div>
         } @else {
           @if (detailRegistration(); as detail) {
             <div class="space-y-6">
@@ -391,8 +391,8 @@ type SortOrder = 'asc' | 'desc';
                 </article>
 
                 <article class="rounded-2xl border border-border bg-muted/30 p-3">
-                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Telephone', en: 'Phone', ar: 'الهاتف' }) }}</p>
-                  <p class="mt-1 text-sm font-medium text-foreground">{{ detail.telephone || site.localize({ fr: 'Non renseigne', en: 'Not provided', ar: 'غير متوفر' }) }}</p>
+                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Téléphone', en: 'Phone', ar: 'الهاتف' }) }}</p>
+                  <p class="mt-1 text-sm font-medium text-foreground">{{ detail.telephone || site.localize({ fr: 'Non renseigné', en: 'Not provided', ar: 'غير متوفر' }) }}</p>
                 </article>
 
                 <article class="rounded-2xl border border-border bg-muted/30 p-3">
@@ -401,13 +401,13 @@ type SortOrder = 'asc' | 'desc';
                 </article>
 
                 <article class="rounded-2xl border border-border bg-muted/30 p-3">
-                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Role demande', en: 'Requested role', ar: 'الدور المطلوب' }) }}</p>
+                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Rôle demandé', en: 'Requested role', ar: 'الدور المطلوب' }) }}</p>
                   <p class="mt-1 text-sm font-medium text-foreground">{{ formatRole(detail.roleDemande || 'MEMBRE') }}</p>
                 </article>
 
                 <article class="rounded-2xl border border-border bg-muted/30 p-3">
-                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Role actuel', en: 'Current role', ar: 'الدور الحالي' }) }}</p>
-                  <p class="mt-1 text-sm font-medium text-foreground">{{ detail.role ? formatRole(detail.role) : site.localize({ fr: 'Aucun role', en: 'No role', ar: 'بدون دور' }) }}</p>
+                  <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">{{ site.localize({ fr: 'Rôle actuel', en: 'Current role', ar: 'الدور الحالي' }) }}</p>
+                  <p class="mt-1 text-sm font-medium text-foreground">{{ detail.role ? formatRole(detail.role) : site.localize({ fr: 'Aucun rôle', en: 'No role', ar: 'بدون دور' }) }}</p>
                 </article>
 
                 <article class="rounded-2xl border border-border bg-muted/30 p-3">
@@ -419,26 +419,26 @@ type SortOrder = 'asc' | 'desc';
               @if (detail.profil) {
                 <section class="rounded-2xl border border-border p-4">
                   <h4 class="text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    {{ site.localize({ fr: 'Profil academique', en: 'Academic profile', ar: 'الملف الأكاديمي' }) }}
+                    {{ site.localize({ fr: 'Profil académique', en: 'Academic profile', ar: 'الملف الأكاديمي' }) }}
                   </h4>
 
                   <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     <article>
                       <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Grade', en: 'Grade', ar: 'الرتبة' }) }}</p>
-                      <p class="text-sm font-medium text-foreground">{{ detail.profil.grade || site.localize({ fr: 'Non renseigne', en: 'Not provided', ar: 'غير متوفر' }) }}</p>
+                      <p class="text-sm font-medium text-foreground">{{ detail.profil.grade || site.localize({ fr: 'Non renseigné', en: 'Not provided', ar: 'غير متوفر' }) }}</p>
                     </article>
 
                     <article>
                       <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Institution', en: 'Institution', ar: 'المؤسسة' }) }}</p>
                       <p class="text-sm font-medium text-foreground">
-                        {{ detail.profil.institutionAffectation?.nom || site.localize({ fr: 'Non renseignee', en: 'Not provided', ar: 'غير متوفرة' }) }}
+                        {{ detail.profil.institutionAffectation?.nom || site.localize({ fr: 'Non renseignée', en: 'Not provided', ar: 'غير متوفرة' }) }}
                       </p>
                     </article>
 
                     <article>
-                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Equipe', en: 'Team', ar: 'الفريق' }) }}</p>
+                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Équipe', en: 'Team', ar: 'الفريق' }) }}</p>
                       <p class="text-sm font-medium text-foreground">
-                        {{ detail.profil.equipeRecherche?.nom || site.localize({ fr: 'Non renseignee', en: 'Not provided', ar: 'غير متوفرة' }) }}
+                        {{ detail.profil.equipeRecherche?.nom || site.localize({ fr: 'Non renseignée', en: 'Not provided', ar: 'غير متوفرة' }) }}
                       </p>
                     </article>
                   </div>
@@ -453,16 +453,16 @@ type SortOrder = 'asc' | 'desc';
 
                   <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     <article>
-                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Universite inscription', en: 'Enrollment university', ar: 'جامعة التسجيل' }) }}</p>
+                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: "Université d'inscription", en: 'Enrollment university', ar: 'جامعة التسجيل' }) }}</p>
                       <p class="text-sm font-medium text-foreground">
-                        {{ detail.doctorat.universiteInscription || site.localize({ fr: 'Non renseignee', en: 'Not provided', ar: 'غير متوفرة' }) }}
+                        {{ detail.doctorat.universiteInscription || site.localize({ fr: 'Non renseignée', en: 'Not provided', ar: 'غير متوفرة' }) }}
                       </p>
                     </article>
 
                     <article>
-                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Directeur de these', en: 'Thesis advisor', ar: 'المشرف على الأطروحة' }) }}</p>
+                      <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Directeur de thèse', en: 'Thesis advisor', ar: 'المشرف على الأطروحة' }) }}</p>
                       <p class="text-sm font-medium text-foreground">
-                        {{ detail.doctorat.directeurThese || site.localize({ fr: 'Non renseigne', en: 'Not provided', ar: 'غير متوفر' }) }}
+                        {{ detail.doctorat.directeurThese || site.localize({ fr: 'Non renseigné', en: 'Not provided', ar: 'غير متوفر' }) }}
                       </p>
                     </article>
 
@@ -481,7 +481,7 @@ type SortOrder = 'asc' | 'desc';
                         class="btn-outline"
                         (click)="downloadAttestation(detail.id)"
                       >
-                        {{ site.localize({ fr: 'Telecharger attestation doctorant', en: 'Download PhD certificate', ar: 'تنزيل شهادة الدكتوراه' }) }}
+                        {{ site.localize({ fr: "Télécharger l'attestation doctorant", en: 'Download PhD certificate', ar: 'تنزيل شهادة الدكتوراه' }) }}
                       </button>
                     </div>
                   }
@@ -541,7 +541,7 @@ type SortOrder = 'asc' | 'desc';
           (ngModelChange)="rejectReason.set($event)"
           [placeholder]="
             site.localize({
-              fr: 'Exemple: dossier incomplet, informations identite invalides, documents manquants...',
+              fr: 'Exemple: dossier incomplet, informations identité invalides, documents manquants...',
               en: 'Example: incomplete file, invalid identity information, missing documents...',
               ar: 'مثال: ملف غير مكتمل، معلومات هوية غير صالحة، وثائق ناقصة...',
             })
@@ -614,7 +614,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
     {
       value: 'REJETE',
       label: this.site.localize({
-        fr: 'Statut: Rejete',
+        fr: 'Statut: Rejeté',
         en: 'Status: Rejected',
         ar: 'الحالة: مرفوض',
       }),
@@ -622,7 +622,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
     {
       value: 'DESACTIVE',
       label: this.site.localize({
-        fr: 'Statut: Desactive',
+        fr: 'Statut: Désactivé',
         en: 'Status: Disabled',
         ar: 'الحالة: معطل',
       }),
@@ -651,7 +651,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
         label: this.site.localize({ fr: 'En attente', en: 'Pending', ar: 'قيد الانتظار' }),
         value: stats?.enAttente || 0,
         meta: this.site.localize({
-          fr: 'Dossiers a traiter immediatement',
+          fr: 'Dossiers à traiter immédiatement',
           en: 'Files to process immediately',
           ar: 'ملفات للمعالجة الفورية',
         }),
@@ -661,17 +661,17 @@ export class AdminRegistrationsPageComponent implements OnInit {
         label: this.site.localize({ fr: 'Comptes actifs', en: 'Active accounts', ar: 'الحسابات النشطة' }),
         value: stats?.actives || 0,
         meta: this.site.localize({
-          fr: 'Comptes deja actives',
+          fr: 'Comptes déjà activés',
           en: 'Already activated accounts',
           ar: 'حسابات تم تفعيلها',
         }),
         icon: this.icons.Check,
       },
       {
-        label: this.site.localize({ fr: 'Comptes rejetes', en: 'Rejected accounts', ar: 'الحسابات المرفوضة' }),
+        label: this.site.localize({ fr: 'Comptes rejetés', en: 'Rejected accounts', ar: 'الحسابات المرفوضة' }),
         value: stats?.refusees || 0,
         meta: this.site.localize({
-          fr: 'Dossiers refuses',
+          fr: 'Dossiers refusés',
           en: 'Rejected files',
           ar: 'ملفات مرفوضة',
         }),
@@ -685,7 +685,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
         }),
         value: stats?.attestationsDisponibles || 0,
         meta: this.site.localize({
-          fr: 'Pieces jointes telechargeables',
+          fr: 'Pièces jointes téléchargeables',
           en: 'Downloadable attachments',
           ar: 'مرفقات قابلة للتنزيل',
         }),
@@ -776,9 +776,9 @@ export class AdminRegistrationsPageComponent implements OnInit {
       case 'ACTIF':
         return this.site.localize({ fr: 'Actif', en: 'Active', ar: 'نشط' });
       case 'REJETE':
-        return this.site.localize({ fr: 'Rejete', en: 'Rejected', ar: 'مرفوض' });
+        return this.site.localize({ fr: 'Rejeté', en: 'Rejected', ar: 'مرفوض' });
       case 'DESACTIVE':
-        return this.site.localize({ fr: 'Desactive', en: 'Disabled', ar: 'معطل' });
+        return this.site.localize({ fr: 'Désactivé', en: 'Disabled', ar: 'معطل' });
       default:
         return this.site.localize({ fr: 'Tous', en: 'All', ar: 'الكل' });
     }
@@ -823,7 +823,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
   formatDate(value: string | null | undefined) {
     if (!value) {
       return this.site.localize({
-        fr: 'Non renseignee',
+        fr: 'Non renseignée',
         en: 'Not provided',
         ar: 'غير متوفرة',
       });
@@ -867,7 +867,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
 
     if (meta.total === 0) {
       return this.site.localize({
-        fr: 'Aucun dossier trouve.',
+        fr: 'Aucun dossier trouvé.',
         en: 'No files found.',
         ar: 'لم يتم العثور على ملفات.',
       });
@@ -1008,7 +1008,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
     if (motifRejet.length < 5) {
       this.errorMessage.set(
         this.site.localize({
-          fr: 'Le motif de rejet doit contenir au moins 5 caracteres.',
+          fr: 'Le motif de rejet doit contenir au moins 5 caractères.',
           en: 'Rejection reason must contain at least 5 characters.',
           ar: 'يجب أن يحتوي سبب الرفض على 5 أحرف على الأقل.',
         }),
@@ -1024,7 +1024,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
       await api.refuseRegistration(this.token, target.id, { motifRejet });
       this.statusMessage.set(
         this.site.localize({
-          fr: `Dossier refuse pour ${target.nomComplet}.`,
+          fr: `Dossier refusé pour ${target.nomComplet}.`,
           en: `File rejected for ${target.nomComplet}.`,
           ar: `تم رفض الملف الخاص بـ ${target.nomComplet}.`,
         }),
@@ -1067,7 +1067,7 @@ export class AdminRegistrationsPageComponent implements OnInit {
 
       this.statusMessage.set(
         this.site.localize({
-          fr: `Inscription validee pour ${item.nomComplet}.`,
+          fr: `Inscription validée pour ${item.nomComplet}.`,
           en: `Registration approved for ${item.nomComplet}.`,
           ar: `تم اعتماد التسجيل الخاص بـ ${item.nomComplet}.`,
         }),

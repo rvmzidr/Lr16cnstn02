@@ -11,6 +11,26 @@ for (const variable of requiredVariables) {
   }
 }
 
+const JWT_SECRET_MIN_LENGTH = 32;
+const JWT_SECRET_WEAK_PATTERN = /change-this|secret|password|123|example|default/i;
+const isProduction = process.env.NODE_ENV === "production";
+
+if (process.env.JWT_SECRET.length < JWT_SECRET_MIN_LENGTH) {
+  const message = `JWT_SECRET trop court (${process.env.JWT_SECRET.length} caracteres). Minimum recommande: ${JWT_SECRET_MIN_LENGTH}. Generez un secret avec: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`;
+
+  if (isProduction) {
+    throw new Error(message);
+  }
+
+  console.warn(`[env] AVERTISSEMENT: ${message}`);
+}
+
+if (isProduction && JWT_SECRET_WEAK_PATTERN.test(process.env.JWT_SECRET)) {
+  throw new Error(
+    "JWT_SECRET semble etre une valeur par defaut. Generez un secret aleatoire fort pour la production.",
+  );
+}
+
 const LOCAL_FRONTEND_ORIGINS = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",

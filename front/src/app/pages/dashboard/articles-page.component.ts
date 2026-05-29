@@ -811,116 +811,299 @@ function countOccurrences(value: string, query: string) {
     }
 
     @if (showCreateModal()) {
-      <div class="fixed inset-0 z-[145] flex items-center justify-center bg-black/45 p-4" (click)="closeCreateModal()">
-        <div class="max-h-[94vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" (click)="$event.stopPropagation()">
-          <header class="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
-            <div>
-              <h3 class="text-lg font-semibold text-foreground lg:text-xl">{{ site.localize(newArticleModalTitle) }}</h3>
-              <p class="text-sm text-muted-foreground">{{ site.localize(newArticleModalSubtitle) }}</p>
-              <p class="mt-1 text-xs text-muted-foreground">{{ site.localize(requiredFieldsHintLabel) }}</p>
-            </div>
-            <button type="button" class="btn-outline" (click)="closeCreateModal()" [disabled]="creatingArticle()">{{ site.localize(closeLabel) }}</button>
-          </header>
-
-          <div class="max-h-[calc(94vh-180px)] space-y-5 overflow-y-auto px-5 py-5">
-            <section class="rounded-2xl border border-border bg-muted/20 p-4">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">{{ site.localize(sectionInformationsPrincipales) }}</h4>
-
-              <div class="mt-4 space-y-4">
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(articleTitleLabel) }} *</label>
-                  <input class="input-shell" [(ngModel)]="createForm.titre" />
+      <div
+        class="fixed inset-0 z-[145] flex items-end justify-center bg-black/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+        (click)="closeCreateModal()"
+      >
+        <div
+          class="flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-elevated sm:max-h-[94vh] sm:rounded-[1.75rem]"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- Header avec accent de couleur -->
+          <header class="relative overflow-hidden border-b border-border bg-gradient-to-r from-primary/8 via-transparent to-transparent px-5 py-5 shrink-0">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(99,102,241,0.10),transparent_55%)]"></div>
+            <div class="relative flex items-start justify-between gap-4">
+              <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <lucide-icon [img]="icons.FileText" class="h-5 w-5"></lucide-icon>
                 </div>
-
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(summaryLabel) }} *</label>
-                  <textarea class="textarea-shell min-h-24" [(ngModel)]="createForm.resume"></textarea>
-                </div>
-
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(contentLabel) }} *</label>
-                  <textarea class="textarea-shell min-h-40" [(ngModel)]="createForm.contenu"></textarea>
-                </div>
-
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(doiLabel) }} *</label>
-                  <input
-                    class="input-shell"
-                    [placeholder]="site.localize(doiPlaceholderLabel)"
-                    [(ngModel)]="createForm.lienDoi"
-                  />
+                  <h3 class="text-lg font-semibold text-foreground lg:text-xl">{{ site.localize(newArticleModalTitle) }}</h3>
+                  <p class="mt-0.5 text-sm text-muted-foreground">{{ site.localize(newArticleModalSubtitle) }}</p>
                 </div>
               </div>
-            </section>
+              <button
+                type="button"
+                class="btn-outline h-9 w-9 shrink-0 p-0"
+                (click)="closeCreateModal()"
+                [disabled]="creatingArticle()"
+              >
+                <lucide-icon [img]="icons.X" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+            <div class="relative mt-4 flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500"></span>
+              {{ site.localize(requiredFieldsHintLabel) }}
+            </div>
+          </header>
 
-            <section class="rounded-2xl border border-border bg-muted/20 p-4">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">{{ site.localize(sectionAuteurs) }}</h4>
+          <!-- Corps scrollable -->
+          <div class="min-h-0 flex-1 overflow-y-auto divide-y divide-border">
 
-              <div class="mt-4 grid gap-4 lg:grid-cols-2">
-                <div class="rounded-xl border border-border bg-card px-3 py-3">
-                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{{ site.localize(mainAuthorLabel) }}</p>
-                  <p class="mt-2 text-sm font-semibold text-foreground">{{ currentUserFullName() }}</p>
-                  <p class="text-xs text-muted-foreground">{{ currentUserEmail() }}</p>
+            <!-- SECTION 1 — Informations principales -->
+            <section class="px-5 py-6">
+              <div class="mb-5 flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                  <lucide-icon [img]="icons.FileText" class="h-4 w-4"></lucide-icon>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-foreground">{{ site.localize(sectionInformationsPrincipales) }}</h4>
+                  <p class="text-xs text-muted-foreground">{{ site.localize({ fr: 'Titre, résumé, contenu scientifique et DOI', en: 'Title, abstract, scientific content and DOI', ar: 'العنوان والملخص والمحتوى العلمي وDOI' }) }}</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1.5 flex items-center gap-1 text-sm font-medium text-foreground">
+                    {{ site.localize(articleTitleLabel) }}
+                    <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    class="input-shell"
+                    [placeholder]="site.localize({ fr: 'Ex: Étude dosimétrique par simulation Monte Carlo...', en: 'Ex: Dosimetric study by Monte Carlo simulation...', ar: 'مثال: دراسة قياس الجرعة بمحاكاة مونتي كارلو...' })"
+                    [(ngModel)]="createForm.titre"
+                  />
                 </div>
 
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(authorsSelectionLabel) }} *</label>
-                  <p class="mb-2 text-xs text-muted-foreground">{{ site.localize(authorsSelectionHintLabel) }}</p>
-                  <input
-                    class="input-shell"
-                    [placeholder]="site.localize(searchCoAuthorPlaceholder)"
-                    [ngModel]="coAuthorSearch()"
-                    (ngModelChange)="coAuthorSearch.set($event)"
-                  />
+                  <div class="mb-1.5 flex items-center justify-between">
+                    <label class="flex items-center gap-1 text-sm font-medium text-foreground">
+                      {{ site.localize(summaryLabel) }}
+                      <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-xs text-muted-foreground">{{ createForm.resume.length }} / 1000</span>
+                  </div>
+                  <textarea
+                    class="textarea-shell min-h-24"
+                    [placeholder]="site.localize({ fr: 'Résumé concis des objectifs, méthodes et résultats...', en: 'Concise summary of objectives, methods and results...', ar: 'ملخص موجز للأهداف والأساليب والنتائج...' })"
+                    [(ngModel)]="createForm.resume"
+                    maxlength="1000"
+                  ></textarea>
+                </div>
 
-                  <div class="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-xl border border-border bg-card px-2 py-2">
-                    @for (member of coAuthorCandidates(); track member.id) {
-                      <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition hover:bg-muted/40">
-                        <input
-                          type="checkbox"
-                          class="h-4 w-4"
-                          [checked]="isCoAuthorSelected(member.id)"
-                          (change)="toggleCoAuthor(member.id, $event)"
-                        />
-                        <span class="text-foreground">{{ member.nomComplet }}</span>
-                        <span class="ml-auto text-xs text-muted-foreground">{{ member.emailInstitutionnel }}</span>
-                      </label>
-                    } @empty {
-                      <div class="px-2 py-3 text-xs text-muted-foreground">{{ site.localize(noCoAuthorCandidateLabel) }}</div>
-                    }
+                <div>
+                  <div class="mb-1.5 flex items-center justify-between">
+                    <label class="flex items-center gap-1 text-sm font-medium text-foreground">
+                      {{ site.localize(contentLabel) }}
+                      <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-xs text-muted-foreground">{{ createForm.contenu.length }} / 5000</span>
+                  </div>
+                  <textarea
+                    class="textarea-shell min-h-40"
+                    [placeholder]="site.localize({ fr: 'Description scientifique détaillée, méthodologie, résultats et discussion...', en: 'Detailed scientific description, methodology, results and discussion...', ar: 'وصف علمي مفصل، منهجية، نتائج ومناقشة...' })"
+                    [(ngModel)]="createForm.contenu"
+                    maxlength="5000"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label class="mb-1.5 flex items-center gap-1 text-sm font-medium text-foreground">
+                    {{ site.localize(doiLabel) }}
+                    <span class="text-rose-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <lucide-icon
+                      [img]="icons.Link2"
+                      class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    ></lucide-icon>
+                    <input
+                      class="input-shell pl-11"
+                      [placeholder]="site.localize(doiPlaceholderLabel)"
+                      [(ngModel)]="createForm.lienDoi"
+                    />
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-muted/20 p-4">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">{{ site.localize(sectionFichiers) }}</h4>
-
-              <div class="mt-4">
+            <!-- SECTION 2 — Auteurs -->
+            <section class="px-5 py-6">
+              <div class="mb-5 flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+                  <lucide-icon [img]="icons.Users" class="h-4 w-4"></lucide-icon>
+                </div>
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(pdfAttachmentLabel) }} *</label>
-                  <input
-                    type="file"
-                    class="input-shell file:mr-3 file:rounded-lg file:border-0 file:bg-primary/12 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-primary"
-                    accept="application/pdf"
-                    (change)="onCreatePdfSelected($event)"
-                  />
-                  <p class="mt-1 text-xs text-muted-foreground">{{ site.localize(pdfMaxSizeHintLabel) }}</p>
-                  @if (selectedPdfName()) {
-                    <p class="mt-1 text-xs text-muted-foreground">{{ selectedPdfName() }}</p>
+                  <h4 class="text-sm font-semibold text-foreground">{{ site.localize(sectionAuteurs) }}</h4>
+                  <p class="text-xs text-muted-foreground">{{ site.localize(authorsSelectionHintLabel) }}</p>
+                </div>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-2">
+                <!-- Auteur principal -->
+                <div class="rounded-2xl border border-border bg-gradient-to-br from-muted/60 to-muted/20 p-4">
+                  <p class="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {{ site.localize(mainAuthorLabel) }}
+                  </p>
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                      {{ currentUserFullName().charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-semibold text-foreground">{{ currentUserFullName() }}</p>
+                      <p class="truncate text-xs text-muted-foreground">{{ currentUserEmail() }}</p>
+                    </div>
+                  </div>
+                  <div class="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    {{ site.localize(mainAuthorLabel) }}
+                  </div>
+                </div>
+
+                <!-- Sélection co-auteurs -->
+                <div class="flex flex-col gap-3">
+                  <label class="text-sm font-medium text-foreground">{{ site.localize(authorsSelectionLabel) }}</label>
+
+                  <div class="relative">
+                    <lucide-icon
+                      [img]="icons.Search"
+                      class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                    ></lucide-icon>
+                    <input
+                      class="input-shell h-9 py-0 pl-9 text-sm"
+                      [placeholder]="site.localize(searchCoAuthorPlaceholder)"
+                      [ngModel]="coAuthorSearch()"
+                      (ngModelChange)="coAuthorSearch.set($event)"
+                    />
+                  </div>
+
+                  <div class="max-h-40 overflow-y-auto rounded-xl border border-border bg-card">
+                    @for (member of coAuthorCandidates(); track member.id) {
+                      <label class="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm transition hover:bg-muted/40 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border">
+                        <input
+                          type="checkbox"
+                          class="h-4 w-4 accent-primary"
+                          [checked]="isCoAuthorSelected(member.id)"
+                          (change)="toggleCoAuthor(member.id, $event)"
+                        />
+                        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                          {{ member.nomComplet.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="truncate text-sm font-medium text-foreground">{{ member.nomComplet }}</p>
+                          <p class="truncate text-xs text-muted-foreground">{{ member.emailInstitutionnel }}</p>
+                        </div>
+                        @if (isCoAuthorSelected(member.id)) {
+                          <lucide-icon [img]="icons.Check" class="h-3.5 w-3.5 shrink-0 text-primary"></lucide-icon>
+                        }
+                      </label>
+                    } @empty {
+                      <div class="px-3 py-4 text-center text-xs text-muted-foreground">
+                        {{ site.localize(noCoAuthorCandidateLabel) }}
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Co-auteurs sélectionnés sous forme de chips -->
+                  @if (createForm.coAuteurIds.length > 0) {
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (coAuthorId of createForm.coAuteurIds; track coAuthorId) {
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-xs font-medium text-primary">
+                          {{ getCoAuthorName(coAuthorId) }}
+                          <button
+                            type="button"
+                            class="flex items-center opacity-70 hover:opacity-100"
+                            (click)="removeCoAuthor(coAuthorId)"
+                          >
+                            <lucide-icon [img]="icons.X" class="h-3 w-3"></lucide-icon>
+                          </button>
+                        </span>
+                      }
+                    </div>
                   }
                 </div>
               </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-muted/20 p-4">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">{{ site.localize(metadataOptionalLabel) }}</h4>
-              <p class="mt-1 text-xs text-muted-foreground">{{ site.localize(metadataOptionalHintLabel) }}</p>
+            <!-- SECTION 3 — Fichier PDF -->
+            <section class="px-5 py-6">
+              <div class="mb-5 flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                  <lucide-icon [img]="icons.Paperclip" class="h-4 w-4"></lucide-icon>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-foreground">{{ site.localize(sectionFichiers) }}</h4>
+                  <p class="text-xs text-muted-foreground">{{ site.localize(pdfMaxSizeHintLabel) }}</p>
+                </div>
+              </div>
 
-              <div class="mt-4 grid gap-4 md:grid-cols-2">
+              <label class="group cursor-pointer block">
+                <input
+                  type="file"
+                  class="sr-only"
+                  accept="application/pdf"
+                  (change)="onCreatePdfSelected($event)"
+                />
+                @if (selectedPdfName()) {
+                  <div class="flex items-center gap-4 rounded-2xl border-2 border-primary/30 bg-primary/5 px-5 py-4 transition group-hover:bg-primary/8">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600">
+                      <lucide-icon [img]="icons.FileText" class="h-6 w-6"></lucide-icon>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-semibold text-foreground">{{ selectedPdfName() }}</p>
+                      <p class="text-xs text-muted-foreground">PDF · {{ site.localize({ fr: 'Cliquer pour changer', en: 'Click to change', ar: 'انقر للتغيير' }) }}</p>
+                    </div>
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600">
+                      <lucide-icon [img]="icons.Check" class="h-4 w-4"></lucide-icon>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/20 px-6 py-8 text-center transition group-hover:border-primary/40 group-hover:bg-primary/5">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground">
+                      <lucide-icon [img]="icons.Paperclip" class="h-6 w-6"></lucide-icon>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-foreground">
+                        {{ site.localize(pdfAttachmentLabel) }}
+                        <span class="ml-1 text-rose-500">*</span>
+                      </p>
+                      <p class="mt-0.5 text-xs text-muted-foreground">{{ site.localize(pdfMaxSizeHintLabel) }}</p>
+                    </div>
+                    <span class="rounded-xl border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition group-hover:border-primary/30 group-hover:text-primary">
+                      {{ site.localize({ fr: 'Choisir un fichier PDF', en: 'Choose a PDF file', ar: 'اختر ملف PDF' }) }}
+                    </span>
+                  </div>
+                }
+              </label>
+            </section>
+
+            <!-- SECTION 4 — Métadonnées (optionnel) -->
+            <section class="px-5 py-6">
+              <div class="mb-5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                    <lucide-icon [img]="icons.Settings" class="h-4 w-4"></lucide-icon>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-semibold text-foreground">{{ site.localize(metadataOptionalLabel) }}</h4>
+                    <p class="text-xs text-muted-foreground">{{ site.localize(metadataOptionalHintLabel) }}</p>
+                  </div>
+                </div>
+                <span class="shrink-0 rounded-full border border-border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                  {{ site.localize({ fr: 'Optionnel', en: 'Optional', ar: 'اختياري' }) }}
+                </span>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(submissionDateLabel) }}</label>
-                  <input class="input-shell" type="date" [(ngModel)]="createForm.dateSoumission" />
+                  <div class="relative">
+                    <lucide-icon
+                      [img]="icons.Calendar"
+                      class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    ></lucide-icon>
+                    <input class="input-shell pl-11" type="date" [(ngModel)]="createForm.dateSoumission" />
+                  </div>
                 </div>
 
                 <div>
@@ -945,28 +1128,68 @@ function countOccurrences(value: string, query: string) {
 
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-foreground">{{ site.localize(keywordsLabel) }}</label>
-                  <input class="input-shell" [placeholder]="site.localize(keywordsPlaceholder)" [(ngModel)]="createForm.motsCles" />
+                  <input
+                    class="input-shell"
+                    [placeholder]="site.localize(keywordsPlaceholder)"
+                    [(ngModel)]="createForm.motsCles"
+                  />
                 </div>
               </div>
             </section>
 
+            <!-- Messages d'état -->
             @if (createStatusMessage()) {
-              <div class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
+              <div class="mx-5 mb-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-feedback-success">
                 {{ createStatusMessage() }}
               </div>
             }
-
             @if (createErrorMessage()) {
-              <div class="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
+              <div class="mx-5 mb-2 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-feedback-error">
                 {{ createErrorMessage() }}
               </div>
             }
           </div>
 
-          <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-border px-5 py-4">
-            <button type="button" class="btn-outline" (click)="closeCreateModal()" [disabled]="creatingArticle()">{{ site.localize(cancelLabel) }}</button>
-            <button type="button" class="btn-outline" (click)="submitCreateArticle('BROUILLON')" [disabled]="creatingArticle()">{{ site.localize(saveDraftLabel) }}</button>
-            <button type="button" class="btn-secondary" (click)="submitCreateArticle('SOUMETTRE')" [disabled]="creatingArticle()">{{ site.localize(submitForReviewLabel) }}</button>
+          <!-- Footer sticky -->
+          <footer class="shrink-0 border-t border-border bg-card px-5 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="text-xs text-muted-foreground">
+                <span class="text-rose-500">*</span>
+                {{ site.localize({ fr: 'Champs obligatoires', en: 'Required fields', ar: 'حقول إلزامية' }) }}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="btn-outline"
+                  (click)="closeCreateModal()"
+                  [disabled]="creatingArticle()"
+                >
+                  {{ site.localize(cancelLabel) }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-outline"
+                  (click)="submitCreateArticle('BROUILLON')"
+                  [disabled]="creatingArticle()"
+                >
+                  @if (creatingArticle()) {
+                    <span class="mr-1.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"></span>
+                  }
+                  {{ site.localize(saveDraftLabel) }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  (click)="submitCreateArticle('SOUMETTRE')"
+                  [disabled]="creatingArticle()"
+                >
+                  @if (creatingArticle()) {
+                    <span class="mr-1.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/60 border-t-transparent"></span>
+                  }
+                  {{ site.localize(submitForReviewLabel) }}
+                </button>
+              </div>
+            </div>
           </footer>
         </div>
       </div>
@@ -2090,6 +2313,14 @@ export class ArticlesPageComponent implements OnInit, OnDestroy {
 
   isCoAuthorSelected(userId: string) {
     return this.createForm.coAuteurIds.includes(userId);
+  }
+
+  getCoAuthorName(userId: string) {
+    return this.members().find((m) => m.id === userId)?.nomComplet || userId;
+  }
+
+  removeCoAuthor(userId: string) {
+    this.createForm.coAuteurIds = this.createForm.coAuteurIds.filter((id) => id !== userId);
   }
 
   toggleCoAuthor(userId: string, event: Event) {

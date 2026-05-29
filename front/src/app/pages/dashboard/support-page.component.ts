@@ -733,7 +733,7 @@ export class SupportPageComponent implements OnInit {
     ar: 'مركز الدعم',
   };
   readonly pageDescription = {
-    fr: 'Gestion des tickets d’assistance technique',
+    fr: "Gestion des tickets d'assistance technique",
     en: 'Technical support ticket management',
     ar: 'إدارة تذاكر المساندة التقنية',
   };
@@ -753,64 +753,64 @@ export class SupportPageComponent implements OnInit {
     ar: 'كل الحالات',
   };
   readonly allCategoriesLabel = {
-    fr: 'Toutes les categories',
+    fr: 'Toutes les catégories',
     en: 'All categories',
     ar: 'كل الفئات',
   };
   readonly allPrioritiesLabel = {
-    fr: 'Toutes les priorites',
+    fr: 'Toutes les priorités',
     en: 'All priorities',
     ar: 'كل الأولويات',
   };
   readonly assignmentAllLabel = { fr: 'Toutes assignations', en: 'All assignments', ar: 'كل الإسنادات' };
   readonly assignmentMineLabel = { fr: 'Mes tickets', en: 'My tickets', ar: 'تذاكري' };
-  readonly assignmentAssignedLabel = { fr: 'Assignes', en: 'Assigned', ar: 'مسندة' };
-  readonly assignmentUnassignedLabel = { fr: 'Non assignes', en: 'Unassigned', ar: 'غير مسندة' };
+  readonly assignmentAssignedLabel = { fr: 'Assignés', en: 'Assigned', ar: 'مسندة' };
+  readonly assignmentUnassignedLabel = { fr: 'Non assignés', en: 'Unassigned', ar: 'غير مسندة' };
   readonly applyFiltersLabel = { fr: 'Appliquer', en: 'Apply', ar: 'تطبيق' };
-  readonly resetFiltersLabel = { fr: 'Reinitialiser', en: 'Reset', ar: 'إعادة تعيين' };
+  readonly resetFiltersLabel = { fr: 'Réinitialiser', en: 'Reset', ar: 'إعادة تعيين' };
   readonly loadingTicketsLabel = {
     fr: 'Chargement des tickets support...',
     en: 'Loading support tickets...',
     ar: 'جار تحميل تذاكر الدعم...',
   };
   readonly requesterLabel = { fr: 'Demandeur', en: 'Requester', ar: 'صاحب الطلب' };
-  readonly categoryLabelText = { fr: 'Categorie', en: 'Category', ar: 'الفئة' };
-  readonly createdAtLabel = { fr: 'Cree le', en: 'Created on', ar: 'تاريخ الإنشاء' };
-  readonly repliesLabel = { fr: 'Reponses', en: 'Replies', ar: 'الردود' };
-  readonly viewDetailsLabel = { fr: 'Voir details', en: 'View details', ar: 'عرض التفاصيل' };
+  readonly categoryLabelText = { fr: 'Catégorie', en: 'Category', ar: 'الفئة' };
+  readonly createdAtLabel = { fr: 'Créé le', en: 'Created on', ar: 'تاريخ الإنشاء' };
+  readonly repliesLabel = { fr: 'Réponses', en: 'Replies', ar: 'الردود' };
+  readonly viewDetailsLabel = { fr: 'Voir détails', en: 'View details', ar: 'عرض التفاصيل' };
   readonly emptyTicketsLabel = {
-    fr: 'Aucun ticket trouve pour les filtres actuels.',
+    fr: 'Aucun ticket trouvé pour les filtres actuels.',
     en: 'No ticket found for current filters.',
     ar: 'لا توجد تذاكر وفق الفلاتر الحالية.',
   };
   readonly newTicketModalTitle = {
-    fr: 'Creation d’un ticket support',
+    fr: "Création d'un ticket support",
     en: 'Create a support ticket',
     ar: 'إنشاء تذكرة دعم',
   };
   readonly newTicketModalSubtitle = {
-    fr: 'Decrivez clairement le probleme technique rencontre.',
+    fr: 'Décrivez clairement le problème technique rencontré.',
     en: 'Clearly describe the technical issue encountered.',
     ar: 'صف المشكلة التقنية بوضوح.',
   };
   readonly closeLabel = { fr: 'Fermer', en: 'Close', ar: 'إغلاق' };
   readonly cancelLabel = { fr: 'Annuler', en: 'Cancel', ar: 'إلغاء' };
   readonly subjectLabel = { fr: 'Sujet', en: 'Subject', ar: 'الموضوع' };
-  readonly priorityLabelText = { fr: 'Priorite', en: 'Priority', ar: 'الأولوية' };
+  readonly priorityLabelText = { fr: 'Priorité', en: 'Priority', ar: 'الأولوية' };
   readonly descriptionLabel = { fr: 'Description', en: 'Description', ar: 'الوصف' };
-  readonly attachmentLabel = { fr: 'Piece jointe (optionnelle)', en: 'Attachment (optional)', ar: 'مرفق (اختياري)' };
-  readonly createTicketConfirmLabel = { fr: 'Creer le ticket', en: 'Create ticket', ar: 'إنشاء التذكرة' };
+  readonly attachmentLabel = { fr: 'Pièce jointe (optionnelle)', en: 'Attachment (optional)', ar: 'مرفق (اختياري)' };
+  readonly createTicketConfirmLabel = { fr: 'Créer le ticket', en: 'Create ticket', ar: 'إنشاء التذكرة' };
   readonly ticketDescriptionLabel = { fr: 'Description du ticket', en: 'Ticket description', ar: 'وصف التذكرة' };
-  readonly repliesHistoryLabel = { fr: 'Historique des reponses', en: 'Reply history', ar: 'سجل الردود' };
-  readonly addReplyLabel = { fr: 'Ajouter une reponse', en: 'Add a reply', ar: 'إضافة رد' };
+  readonly repliesHistoryLabel = { fr: 'Historique des réponses', en: 'Reply history', ar: 'سجل الردود' };
+  readonly addReplyLabel = { fr: 'Ajouter une réponse', en: 'Add a reply', ar: 'إضافة رد' };
   readonly replyPlaceholder = {
-    fr: 'Saisissez votre reponse...',
+    fr: 'Saisissez votre réponse...',
     en: 'Type your reply...',
     ar: 'اكتب ردك...',
   };
   readonly internalNoteLabel = { fr: 'Note interne', en: 'Internal note', ar: 'ملاحظة داخلية' };
   readonly internalNoteCheckboxLabel = {
-    fr: 'Rendre cette reponse visible uniquement aux administrateurs',
+    fr: 'Rendre cette réponse visible uniquement aux administrateurs',
     en: 'Make this reply visible to administrators only',
     ar: 'اجعل هذا الرد مرئياً للمسؤولين فقط',
   };
@@ -819,20 +819,20 @@ export class SupportPageComponent implements OnInit {
     en: 'Reopen this ticket',
     ar: 'إعادة فتح هذه التذكرة',
   };
-  readonly sendReplyLabel = { fr: 'Envoyer la reponse', en: 'Send reply', ar: 'إرسال الرد' };
+  readonly sendReplyLabel = { fr: 'Envoyer la réponse', en: 'Send reply', ar: 'إرسال الرد' };
   readonly ticketMetaLabel = { fr: 'Informations ticket', en: 'Ticket details', ar: 'معلومات التذكرة' };
-  readonly roleLabel = { fr: 'Role', en: 'Role', ar: 'الدور' };
+  readonly roleLabel = { fr: 'Rôle', en: 'Role', ar: 'الدور' };
   readonly statusLabelText = { fr: 'Statut', en: 'Status', ar: 'الحالة' };
-  readonly attachmentsLabel = { fr: 'Pieces jointes', en: 'Attachments', ar: 'المرفقات' };
-  readonly emptyRepliesLabel = { fr: 'Aucune reponse pour le moment.', en: 'No replies yet.', ar: 'لا توجد ردود بعد.' };
-  readonly emptyAttachmentsLabel = { fr: 'Aucune piece jointe.', en: 'No attachments.', ar: 'لا توجد مرفقات.' };
+  readonly attachmentsLabel = { fr: 'Pièces jointes', en: 'Attachments', ar: 'المرفقات' };
+  readonly emptyRepliesLabel = { fr: 'Aucune réponse pour le moment.', en: 'No replies yet.', ar: 'لا توجد ردود بعد.' };
+  readonly emptyAttachmentsLabel = { fr: 'Aucune pièce jointe.', en: 'No attachments.', ar: 'لا توجد مرفقات.' };
   readonly adminActionsLabel = { fr: 'Actions administrateur', en: 'Admin actions', ar: 'إجراءات المسؤول' };
   readonly accessDiagnosticTitle = {
-    fr: "Diagnostic des acces",
+    fr: 'Diagnostic des accès',
     en: 'Access diagnostics',
     ar: 'تشخيص الوصول',
   };
-  readonly accessProfileLabel = { fr: 'Profil acces', en: 'Access profile', ar: 'ملف الوصول' };
+  readonly accessProfileLabel = { fr: "Profil d'accès", en: 'Access profile', ar: 'ملف الوصول' };
   readonly defaultLandingLabel = {
     fr: "Page d'accueil",
     en: 'Default landing',
@@ -850,19 +850,19 @@ export class SupportPageComponent implements OnInit {
   };
   readonly overridesLabel = { fr: 'Overrides', en: 'Overrides', ar: 'الاستثناءات' };
   readonly noOverridesLabel = {
-    fr: 'Aucun override applique.',
+    fr: 'Aucun override appliqué.',
     en: 'No override applied.',
     ar: 'لا توجد استثناءات مطبقة.',
   };
   readonly enabledLabel = { fr: 'Actif', en: 'Enabled', ar: 'مفعل' };
   readonly disabledLabel = { fr: 'Inactif', en: 'Disabled', ar: 'غير مفعل' };
   readonly openAccessControlLabel = {
-    fr: "Ouvrir controle d'acces",
+    fr: "Ouvrir contrôle d'accès",
     en: 'Open access control',
     ar: 'فتح التحكم في الوصول',
   };
   readonly applyResolutionLabel = {
-    fr: 'Appliquer une resolution',
+    fr: 'Appliquer une résolution',
     en: 'Apply resolution',
     ar: 'تطبيق معالجة',
   };
@@ -902,27 +902,27 @@ export class SupportPageComponent implements OnInit {
     ar: 'المشتريات: منع',
   };
   readonly resolutionNotesLabel = {
-    fr: 'Notes de resolution (interne)',
+    fr: 'Notes de résolution (interne)',
     en: 'Resolution notes (internal)',
     ar: 'ملاحظات المعالجة (داخلية)',
   };
   readonly resolutionMessageLabel = {
-    fr: 'Message reponse ticket',
+    fr: 'Message réponse ticket',
     en: 'Ticket reply message',
     ar: 'رسالة الرد على التذكرة',
   };
   readonly closeTicketAfterResolutionLabel = {
-    fr: 'Marquer le ticket comme resolu apres correction',
+    fr: 'Marquer le ticket comme résolu après correction',
     en: 'Mark ticket as resolved after applying fix',
     ar: 'وضع التذكرة كـ محلولة بعد التصحيح',
   };
   readonly saveAccessResolutionLabel = {
-    fr: 'Enregistrer resolution acces',
+    fr: 'Enregistrer résolution accès',
     en: 'Save access resolution',
     ar: 'حفظ معالجة الوصول',
   };
   readonly accessDiagnosticUnavailableLabel = {
-    fr: "Diagnostic d'acces indisponible pour ce ticket.",
+    fr: "Diagnostic d'accès indisponible pour ce ticket.",
     en: 'Access diagnostics unavailable for this ticket.',
     ar: 'تشخيص الوصول غير متاح لهذه التذكرة.',
   };
@@ -1148,7 +1148,7 @@ export class SupportPageComponent implements OnInit {
       this.showCreateModal.set(false);
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Ticket support cree avec succes.',
+          fr: 'Ticket support créé avec succès.',
           en: 'Support ticket created successfully.',
           ar: 'تم إنشاء تذكرة الدعم بنجاح.',
         }),
@@ -1159,7 +1159,7 @@ export class SupportPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Creation ticket impossible.',
+              fr: 'Création ticket impossible.',
               en: 'Failed to create ticket.',
               ar: 'تعذر إنشاء التذكرة.',
             }),
@@ -1188,7 +1188,7 @@ export class SupportPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Chargement du detail ticket impossible.',
+              fr: 'Chargement du détail ticket impossible.',
               en: 'Failed to load ticket detail.',
               ar: 'تعذر تحميل تفاصيل التذكرة.',
             }),
@@ -1285,7 +1285,7 @@ export class SupportPageComponent implements OnInit {
 
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Reponse enregistree avec succes.',
+          fr: 'Réponse enregistrée avec succès.',
           en: 'Reply saved successfully.',
           ar: 'تم حفظ الرد بنجاح.',
         }),
@@ -1315,7 +1315,7 @@ export class SupportPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Telechargement piece jointe impossible.',
+              fr: 'Téléchargement pièce jointe impossible.',
               en: 'Unable to download attachment.',
               ar: 'تعذر تنزيل المرفق.',
             }),
@@ -1394,7 +1394,7 @@ export class SupportPageComponent implements OnInit {
 
       this.statusMessage.set(
         this.site.localize({
-          fr: "Resolution d'acces liee au ticket enregistree.",
+          fr: "Résolution d'accès liée au ticket enregistrée.",
           en: 'Access resolution linked to the ticket has been saved.',
           ar: 'تم حفظ معالجة الوصول وربطها بالتذكرة.',
         }),
@@ -1451,7 +1451,7 @@ export class SupportPageComponent implements OnInit {
 
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Action support appliquee.',
+          fr: 'Action support appliquée.',
           en: 'Support action applied.',
           ar: 'تم تنفيذ إجراء الدعم.',
         }),
@@ -1526,7 +1526,7 @@ export class SupportPageComponent implements OnInit {
       this.selectedTicketDetail.set(updated);
       this.statusMessage.set(
         this.site.localize({
-          fr: 'Statut ticket mis a jour.',
+          fr: 'Statut ticket mis à jour.',
           en: 'Ticket status updated.',
           ar: 'تم تحديث حالة التذكرة.',
         }),
@@ -1537,7 +1537,7 @@ export class SupportPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Mise a jour statut impossible.',
+              fr: 'Mise à jour statut impossible.',
               en: 'Unable to update ticket status.',
               ar: 'تعذر تحديث حالة التذكرة.',
             }),
@@ -1573,10 +1573,10 @@ export class SupportPageComponent implements OnInit {
     }
 
     if (status === 'RESOLVED') {
-      return this.site.localize({ fr: 'Resolu', en: 'Resolved', ar: 'تم الحل' });
+      return this.site.localize({ fr: 'Résolu', en: 'Resolved', ar: 'تم الحل' });
     }
 
-    return this.site.localize({ fr: 'Ferme', en: 'Closed', ar: 'مغلق' });
+    return this.site.localize({ fr: 'Fermé', en: 'Closed', ar: 'مغلق' });
   }
 
   categoryLabel(category: SupportTicketCategory) {
@@ -1589,16 +1589,16 @@ export class SupportPageComponent implements OnInit {
     }
 
     if (category === 'ACCESS') {
-      return this.site.localize({ fr: 'Acces', en: 'Access', ar: 'الوصول' });
+      return this.site.localize({ fr: 'Accès', en: 'Access', ar: 'الوصول' });
     }
 
     if (category === 'ROLE') {
-      return this.site.localize({ fr: 'Role', en: 'Role', ar: 'الدور' });
+      return this.site.localize({ fr: 'Rôle', en: 'Role', ar: 'الدور' });
     }
 
     if (category === 'MODULE_VISIBILITY') {
       return this.site.localize({
-        fr: 'Visibilite module',
+        fr: 'Visibilité module',
         en: 'Module visibility',
         ar: 'ظهور الوحدات',
       });
@@ -1629,7 +1629,7 @@ export class SupportPageComponent implements OnInit {
     }
 
     if (category === 'SYSTEM') {
-      return this.site.localize({ fr: 'Systeme', en: 'System', ar: 'النظام' });
+      return this.site.localize({ fr: 'Système', en: 'System', ar: 'النظام' });
     }
 
     return this.site.localize({ fr: 'Autre', en: 'Other', ar: 'أخرى' });

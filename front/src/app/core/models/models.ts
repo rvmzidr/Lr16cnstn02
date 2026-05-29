@@ -510,8 +510,10 @@ export interface LoginResponse {
 }
 
 export interface ForgotPasswordResponse {
-  resetToken: string | null;
-  resetUrl: string | null;
+  /** Disponible uniquement en environnement non-production (NODE_ENV !== "production"). */
+  resetToken?: string | null;
+  /** Disponible uniquement en environnement non-production (NODE_ENV !== "production"). */
+  resetUrl?: string | null;
   expireDansMinutes: number;
 }
 

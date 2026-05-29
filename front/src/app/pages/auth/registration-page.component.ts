@@ -22,9 +22,9 @@ type RegistrationStep = {
           <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div class="max-w-3xl">
               <div class="tag-chip">Inscription</div>
-              <h1 class="mt-5 text-4xl font-semibold text-foreground lg:text-5xl">Acces a la plateforme du laboratoire</h1>
+              <h1 class="mt-5 text-4xl font-semibold text-foreground lg:text-5xl">Accès à la plateforme du laboratoire</h1>
               <p class="mt-4 text-base text-muted-foreground lg:text-lg">
-                Le role demande reste fixe a "Membre" et chaque inscription est creee avec le statut EN_ATTENTE.
+                Le rôle demandé reste fixé à "Membre" et chaque inscription est créée avec le statut EN_ATTENTE.
               </p>
             </div>
 
@@ -46,7 +46,7 @@ type RegistrationStep = {
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Nom</label><input [(ngModel)]="form.nom" name="nom" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Prenom</label><input [(ngModel)]="form.prenom" name="prenom" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Nom de jeune fille</label><input [(ngModel)]="form.nomJeuneFille" name="nomJeuneFille" class="input-shell" /></div>
-                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Sexe</label><select [(ngModel)]="form.sexe" name="sexe" class="select-shell"><option value="FEMME">Feminin</option><option value="HOMME">Masculin</option><option value="AUTRE">Autre</option></select></div>
+                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Sexe</label><select [(ngModel)]="form.sexe" name="sexe" class="select-shell"><option value="FEMME">Féminin</option><option value="HOMME">Masculin</option><option value="AUTRE">Autre</option></select></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Date de naissance</label><input [(ngModel)]="form.dateNaissance" name="dateNaissance" type="date" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Lieu de naissance</label><input [(ngModel)]="form.lieuNaissance" name="lieuNaissance" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">CIN tunisien</label><input [(ngModel)]="form.cin" name="cin" class="input-shell" /></div>
@@ -56,7 +56,7 @@ type RegistrationStep = {
               @case ('contact') {
                 <div class="grid gap-4 md:grid-cols-2">
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Email institutionnel</label><input [(ngModel)]="form.emailInstitutionnel" name="emailInstitutionnel" type="email" class="input-shell" /></div>
-                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Telephone</label><input [(ngModel)]="form.telephone" name="telephone" class="input-shell" /></div>
+                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Téléphone</label><input [(ngModel)]="form.telephone" name="telephone" class="input-shell" /></div>
                   <div class="md:col-span-2"><label class="mb-1.5 block text-sm font-medium text-foreground/80">Adresse</label><textarea [(ngModel)]="form.adresse" name="adresse" class="textarea-shell"></textarea></div>
                 </div>
               }
@@ -64,8 +64,8 @@ type RegistrationStep = {
                 <div class="grid gap-4 md:grid-cols-2">
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Grade</label><input [(ngModel)]="form.grade" name="grade" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">ORCID</label><input [(ngModel)]="form.orcid" name="orcid" class="input-shell" /></div>
-                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Institution d'affectation</label><select [(ngModel)]="form.institutionAffectationId" name="institutionAffectationId" class="select-shell"><option value="">Selectionner</option>@for (item of references()?.institutions || []; track item.id) { <option [ngValue]="item.id">{{ item.nom }}</option> }</select></div>
-                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Equipe de recherche</label><select [(ngModel)]="form.equipeRechercheId" name="equipeRechercheId" class="select-shell"><option value="">Selectionner</option>@for (item of references()?.equipesRecherche || []; track item.id) { <option [ngValue]="item.id">{{ item.nom }}</option> }</select></div>
+                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Institution d'affectation</label><select [(ngModel)]="form.institutionAffectationId" name="institutionAffectationId" class="select-shell"><option value="">Sélectionner</option>@for (item of references()?.institutions || []; track item.id) { <option [ngValue]="item.id">{{ item.nom }}</option> }</select></div>
+                  <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Equipe de recherche</label><select [(ngModel)]="form.equipeRechercheId" name="equipeRechercheId" class="select-shell"><option value="">Sélectionner</option>@for (item of references()?.equipesRecherche || []; track item.id) { <option [ngValue]="item.id">{{ item.nom }}</option> }</select></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Dernier diplome obtenu</label><input [(ngModel)]="form.dernierDiplomeLibre" name="dernierDiplomeLibre" class="input-shell" /></div>
                   <div><label class="mb-1.5 block text-sm font-medium text-foreground/80">Date d'obtention du diplome</label><input [(ngModel)]="form.dateObtentionDiplome" name="dateObtentionDiplome" type="date" class="input-shell" /></div>
                   <div class="md:col-span-2"><label class="mb-1.5 block text-sm font-medium text-foreground/80">Etablissement du diplome</label><input [(ngModel)]="form.etablissementDiplome" name="etablissementDiplome" class="input-shell" /></div>
@@ -123,13 +123,13 @@ type RegistrationStep = {
 
             <div class="flex flex-wrap justify-between gap-3 pt-4">
               <div class="flex flex-wrap gap-3">
-                <button type="button" class="btn-outline" [disabled]="currentStepIndex() === 0" (click)="previousStep()">Precedent</button>
-                <a routerLink="/connexion" class="btn-outline">J'ai deja un compte</a>
+                <button type="button" class="btn-outline" [disabled]="currentStepIndex() === 0" (click)="previousStep()">Précédent</button>
+                <a routerLink="/connexion" class="btn-outline">J'ai déjà un compte</a>
               </div>
               @if (currentStepIndex() < steps.length - 1) {
                 <button type="button" class="btn-secondary" (click)="nextStep()">Suivant</button>
               } @else {
-                <button type="submit" class="btn-secondary" [disabled]="isSubmitting()">{{ isSubmitting() ? 'Creation...' : 'Creer le compte' }}</button>
+                <button type="submit" class="btn-secondary" [disabled]="isSubmitting()">{{ isSubmitting() ? 'Création...' : 'Créer le compte' }}</button>
               }
             </div>
           </form>
@@ -137,7 +137,7 @@ type RegistrationStep = {
 
         <aside class="auth-aside p-6 lg:p-8">
           <div class="tag-chip border-white/10 bg-white/10 text-white">Parcours d'inscription</div>
-          <h2 class="mt-6 text-3xl font-semibold text-white">Un dossier guide, etape par etape</h2>
+          <h2 class="mt-6 text-3xl font-semibold text-white">Un dossier guide, étape par étape</h2>
           <p class="mt-4 text-sm text-white/72">
             La logique de validation reste strictement la meme, mais la presentation se rapproche maintenant du style TailAdmin avec un parcours plus lisible.
           </p>
@@ -149,7 +149,7 @@ type RegistrationStep = {
                   <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/12 text-sm font-semibold text-white">{{ stepIndex + 1 }}</span>
                   <div>
                     <div class="text-sm font-semibold text-white">{{ step.title }}</div>
-                    <div class="text-xs text-white/64">{{ stepIndex < currentStepIndex() ? 'Completee' : stepIndex === currentStepIndex() ? 'En cours' : 'A venir' }}</div>
+                    <div class="text-xs text-white/64">{{ stepIndex < currentStepIndex() ? 'Complétée' : stepIndex === currentStepIndex() ? 'En cours' : 'A venir' }}</div>
                   </div>
                 </div>
               </div>
@@ -172,12 +172,12 @@ export class RegistrationPageComponent implements OnInit {
   form: RegistrationPayload = createEmptyRegistrationPayload();
 
   readonly steps: RegistrationStep[] = [
-    { id: 'identite', title: 'Identite' },
+    { id: 'identite', title: 'Identité' },
     { id: 'contact', title: 'Contact' },
     { id: 'professionnel', title: 'Informations professionnelles' },
     { id: 'laboratoire', title: 'Informations laboratoire' },
     { id: 'doctorat', title: 'Doctorat' },
-    { id: 'securite', title: 'Securite du compte' }
+    { id: 'securite', title: 'Sécurité du compte' }
   ];
 
   readonly visibleErrors = computed(() => Object.values(this.errors()).filter(Boolean) as string[]);
@@ -226,7 +226,7 @@ export class RegistrationPageComponent implements OnInit {
         payload.set('attestationDoctorant', this.attestationFile);
       }
       await api.register(payload);
-      this.successMessage.set('Votre inscription a ete enregistree. Elle sera validee par un administrateur.');
+      this.successMessage.set('Votre inscription a été enregistrée. Elle sera validée par un administrateur.');
       this.form = createEmptyRegistrationPayload(this.references()?.laboratoireParDefaut);
       this.attestationFile = null;
       this.selectedFileName.set('');

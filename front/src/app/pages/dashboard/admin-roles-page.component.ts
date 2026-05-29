@@ -28,7 +28,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
 
         <div class="app-page-hero__content">
           <p class="app-page-eyebrow">
-            {{ site.localize({ fr: 'Gouvernance des roles', en: 'Role governance', ar: 'حوكمة الأدوار' }) }}
+            {{ site.localize({ fr: 'Gouvernance des rôles', en: 'Role governance', ar: 'حوكمة الأدوار' }) }}
           </p>
 
           <div class="app-page-header mt-2">
@@ -45,7 +45,7 @@ import { sharedIcons } from '../../shared/lucide-icons';
               {{ site.localize({ fr: 'Comptes', en: 'Accounts', ar: 'الحسابات' }) }}: {{ (accounts()?.comptes || []).length }}
             </span>
             <span class="app-page-pill">
-              {{ site.localize({ fr: 'Sans role', en: 'No role', ar: 'بدون دور' }) }}: {{ accountsWithoutRoleCount() }}
+              {{ site.localize({ fr: 'Sans rôle', en: 'No role', ar: 'بدون دور' }) }}: {{ accountsWithoutRoleCount() }}
             </span>
           </div>
         </div>
@@ -169,31 +169,31 @@ export class AdminRolesPageComponent implements OnInit {
   readonly selectedRoles: Record<string, Role> = {};
   readonly initials = getInitials;
   readonly rolesTitle = {
-    fr: 'Gestion des roles',
+    fr: 'Gestion des rôles',
     en: 'Roles & permissions',
     ar: 'الأدوار والصلاحيات',
   };
   readonly rolesDescription = {
-    fr: 'Attribution et mise a jour des roles applicatifs.',
+    fr: 'Attribution et mise à jour des rôles applicatifs.',
     en: 'Assign and update application roles.',
     ar: 'تعيين وتحديث أدوار التطبيق.',
   };
   readonly searchPlaceholder = {
-    fr: 'Rechercher un compte pour modifier son role...',
+    fr: 'Rechercher un compte pour modifier son rôle...',
     en: 'Search an account to change its role...',
     ar: 'ابحث عن حساب لتغيير دوره...',
   };
   readonly assignmentsTitle = {
-    fr: 'Attribution des roles',
+    fr: 'Attribution des rôles',
     en: 'Role assignments',
     ar: 'تعيين الأدوار',
   };
   readonly accountsShownLabel = {
-    fr: 'compte(s) affiche(s).',
+    fr: 'compte(s) affiché(s).',
     en: 'account(s) shown.',
     ar: 'حساب/حسابات معروضة.',
   };
-  readonly newRoleLabel = { fr: 'Nouveau role', en: 'New role', ar: 'الدور الجديد' };
+  readonly newRoleLabel = { fr: 'Nouveau rôle', en: 'New role', ar: 'الدور الجديد' };
   readonly roleMemberLabel = { fr: 'MEMBRE', en: 'MEMBER', ar: 'عضو' };
   readonly roleAdminLabel = {
     fr: 'ADMINISTRATEUR',
@@ -206,7 +206,7 @@ export class AdminRolesPageComponent implements OnInit {
     ar: 'رئيس_مختبر',
   };
   readonly updateRoleLabel = {
-    fr: 'Mettre a jour le role',
+    fr: 'Mettre à jour le rôle',
     en: 'Update role',
     ar: 'تحديث الدور',
   };
@@ -224,7 +224,7 @@ export class AdminRolesPageComponent implements OnInit {
         label: this.site.localize({ fr: 'MEMBRE', en: 'MEMBER', ar: 'عضو' }),
         value: comptes.filter((item) => item.role === 'MEMBRE').length,
         meta: this.site.localize({
-          fr: 'Role standard',
+          fr: 'Rôle standard',
           en: 'Standard role',
           ar: 'دور قياسي',
         }),
@@ -257,13 +257,13 @@ export class AdminRolesPageComponent implements OnInit {
       },
       {
         label: this.site.localize({
-          fr: 'Sans role',
+          fr: 'Sans rôle',
           en: 'No role',
           ar: 'بدون دور',
         }),
         value: comptes.filter((item) => !item.role).length,
         meta: this.site.localize({
-          fr: 'A regulariser',
+          fr: 'À régulariser',
           en: 'Needs assignment',
           ar: 'بحاجة إلى تعيين',
         }),
@@ -345,11 +345,11 @@ export class AdminRolesPageComponent implements OnInit {
     }
 
     if (status === 'REJETE') {
-      return this.site.localize({ fr: 'Rejete', en: 'Rejected', ar: 'مرفوض' });
+      return this.site.localize({ fr: 'Rejeté', en: 'Rejected', ar: 'مرفوض' });
     }
 
     if (status === 'DESACTIVE') {
-      return this.site.localize({ fr: 'Desactive', en: 'Disabled', ar: 'معطل' });
+      return this.site.localize({ fr: 'Désactivé', en: 'Disabled', ar: 'معطل' });
     }
 
     return status;
@@ -387,7 +387,7 @@ export class AdminRolesPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Erreur chargement roles.',
+              fr: 'Erreur de chargement des rôles.',
               en: 'Failed to load roles.',
               ar: 'تعذر تحميل الأدوار.',
             }),
@@ -399,7 +399,7 @@ export class AdminRolesPageComponent implements OnInit {
     if (!this.canChangeRole(item)) {
       this.errorMessage.set(
         this.site.localize({
-          fr: 'Le role ne peut etre modifie que pour un compte ACTIF ou DESACTIVE.',
+          fr: 'Le rôle ne peut être modifié que pour un compte ACTIF ou DÉSACTIVÉ.',
           en: 'Role can be changed only for ACTIVE or DISABLED accounts.',
           ar: 'يمكن تغيير الدور فقط للحسابات النشطة أو المعطلة.',
         }),
@@ -410,12 +410,12 @@ export class AdminRolesPageComponent implements OnInit {
     const commentaire =
       window.prompt(
         this.site.localize({
-          fr: 'Commentaire optionnel pour le changement de role :',
+          fr: 'Commentaire optionnel pour le changement de rôle :',
           en: 'Optional comment for the role change:',
           ar: 'تعليق اختياري لتغيير الدور:',
         }),
         this.site.localize({
-          fr: 'Mise a jour du role par administration technique.',
+          fr: 'Mise à jour du rôle par administration technique.',
           en: 'Role updated by technical administration.',
           ar: 'تم تحديث الدور بواسطة الإدارة التقنية.',
         }),
@@ -427,7 +427,7 @@ export class AdminRolesPageComponent implements OnInit {
         commentaire,
       });
       this.statusMessage.set(
-        this.site.localize({ fr: 'Role modifie.', en: 'Role updated.', ar: 'تم تحديث الدور.' }),
+        this.site.localize({ fr: 'Rôle modifié.', en: 'Role updated.', ar: 'تم تحديث الدور.' }),
       );
       await this.loadData();
     } catch (error) {
@@ -435,7 +435,7 @@ export class AdminRolesPageComponent implements OnInit {
         error instanceof Error
           ? error.message
           : this.site.localize({
-              fr: 'Erreur lors du changement de role.',
+              fr: 'Erreur lors du changement de rôle.',
               en: 'Role change failed.',
               ar: 'فشل تغيير الدور.',
             }),

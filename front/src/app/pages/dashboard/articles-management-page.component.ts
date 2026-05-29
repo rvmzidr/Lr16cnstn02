@@ -57,7 +57,7 @@ type DetailedSections = {
               (click)="editArticle(article)"
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
-                <span class="badge-soft">{{ article.statut }}</span>
+                <span class="badge-soft">{{ formatStatut(article.statut) }}</span>
                 <span class="text-sm text-muted-foreground">{{
                   formatDate(article.modifieLe)
                 }}</span>
@@ -82,10 +82,10 @@ type DetailedSections = {
           <div class="space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="tag-chip">
-                {{ editingArticle() ? 'Edition article' : 'Creation article' }}
+                {{ editingArticle() ? 'Édition article' : 'Création article' }}
               </div>
               <div class="text-xs text-muted-foreground">
-                Progression formulaire: {{ completionRate() }}%
+                Progression du formulaire : {{ completionRate() }}%
               </div>
             </div>
 
@@ -108,10 +108,10 @@ type DetailedSections = {
           <div class="surface-muted space-y-4 p-4">
             <div>
               <h4 class="text-lg font-semibold text-foreground">
-                Informations generales
+                Informations générales
               </h4>
               <p class="mt-1 text-sm text-muted-foreground">
-                Identifiez clairement l'article, son resume et sa categorie scientifique.
+                Identifiez clairement l'article, son résumé et sa catégorie scientifique.
               </p>
             </div>
 
@@ -126,12 +126,12 @@ type DetailedSections = {
                   placeholder="Titre complet de l'article"
                 />
                 <div class="mt-1 text-xs text-muted-foreground">
-                  {{ form.titre.length }} caractere(s)
+                  {{ form.titre.length }} caractère(s)
                 </div>
               </div>
 
               <div class="md:col-span-2">
-                <label class="mb-2 block">Resume</label>
+                <label class="mb-2 block">Résumé</label>
                 <textarea
                   [(ngModel)]="form.resume"
                   name="resume"
@@ -139,18 +139,18 @@ type DetailedSections = {
                   placeholder="Contexte, objectif et valeur scientifique"
                 ></textarea>
                 <div class="mt-1 text-xs text-muted-foreground">
-                  {{ form.resume.length }} caractere(s)
+                  {{ form.resume.length }} caractère(s)
                 </div>
               </div>
 
               <div>
-                <label class="mb-2 block">Categorie</label>
+                <label class="mb-2 block">Catégorie</label>
                 <select
                   [(ngModel)]="form.categorieId"
                   name="categorieId"
                   class="select-shell"
                 >
-                  <option [ngValue]="null">Selectionner</option>
+                  <option [ngValue]="null">Sélectionner</option>
                   @for (item of references()?.categoriesArticle || []; track item.id) {
                     <option [ngValue]="item.id">{{ item.libelle }}</option>
                   }
@@ -171,10 +171,10 @@ type DetailedSections = {
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h4 class="text-lg font-semibold text-foreground">
-                  Formulaire detaille de redaction
+                  Formulaire détaillé de rédaction
                 </h4>
                 <p class="mt-1 text-sm text-muted-foreground">
-                  Remplissez les sections puis generez le contenu complet.
+                  Remplissez les sections puis générez le contenu complet.
                 </p>
               </div>
               <button
@@ -182,38 +182,38 @@ type DetailedSections = {
                 class="btn-outline"
                 (click)="generateStructuredDraft()"
               >
-                Generer le contenu
+                Générer le contenu
               </button>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
               <div>
-                <label class="mb-2 block">Contexte et problematique</label>
+                <label class="mb-2 block">Contexte et problématique</label>
                 <textarea
                   [(ngModel)]="detailed.contexte"
                   name="detailContexte"
                   class="textarea-shell"
-                  placeholder="Probleme scientifique traite"
+                  placeholder="Problème scientifique traité"
                 ></textarea>
               </div>
 
               <div>
-                <label class="mb-2 block">Methodologie</label>
+                <label class="mb-2 block">Méthodologie</label>
                 <textarea
                   [(ngModel)]="detailed.methodologie"
                   name="detailMethodologie"
                   class="textarea-shell"
-                  placeholder="Methodes, protocoles, approches"
+                  placeholder="Méthodes, protocoles, approches"
                 ></textarea>
               </div>
 
               <div>
-                <label class="mb-2 block">Resultats et observations</label>
+                <label class="mb-2 block">Résultats et observations</label>
                 <textarea
                   [(ngModel)]="detailed.resultats"
                   name="detailResultats"
                   class="textarea-shell"
-                  placeholder="Resultats majeurs et preuves"
+                  placeholder="Résultats majeurs et preuves"
                 ></textarea>
               </div>
 
@@ -243,7 +243,7 @@ type DetailedSections = {
             <div>
               <h4 class="text-lg font-semibold text-foreground">Contenu final</h4>
               <p class="mt-1 text-sm text-muted-foreground">
-                Ce champ constitue la version finale enregistree en base et soumise au workflow.
+                Ce champ constitue la version finale enregistrée en base et soumise au workflow.
               </p>
             </div>
 
@@ -253,10 +253,10 @@ type DetailedSections = {
                 [(ngModel)]="form.contenu"
                 name="contenu"
                 class="textarea-shell min-h-56"
-                placeholder="Texte complet pret pour brouillon ou soumission"
+                placeholder="Texte complet prêt pour brouillon ou soumission"
               ></textarea>
               <div class="mt-1 text-xs text-muted-foreground">
-                {{ form.contenu.length }} caractere(s)
+                {{ form.contenu.length }} caractère(s)
               </div>
             </div>
           </div>
@@ -300,8 +300,8 @@ type DetailedSections = {
               <div>
                 <h4 class="text-lg font-semibold text-foreground">PDF de l'article</h4>
                 <p class="mt-1 text-sm text-muted-foreground">
-                  Televersez la version PDF et activez les boutons Voir et
-                  Telecharger.
+                  Téléversez la version PDF et activez les boutons Voir et
+                  Télécharger.
                 </p>
               </div>
               <div class="flex flex-col gap-3 sm:flex-row">
@@ -317,13 +317,13 @@ type DetailedSections = {
                   [disabled]="!selectedPdfFile"
                   (click)="uploadPdf()"
                 >
-                  Televerser PDF
+                  Téléverser PDF
                 </button>
               </div>
 
               @if (selectedPdfName()) {
                 <div class="text-xs text-muted-foreground">
-                  Fichier selectionne: {{ selectedPdfName() }}
+                  Fichier sélectionné : {{ selectedPdfName() }}
                 </div>
               }
 
@@ -341,7 +341,7 @@ type DetailedSections = {
                     class="btn-outline sm:w-auto"
                     (click)="downloadPdf()"
                   >
-                    Telecharger PDF
+                    Télécharger PDF
                   </button>
                 </div>
               }
@@ -361,7 +361,7 @@ type DetailedSections = {
                   name="selectedMemberId"
                   class="select-shell"
                 >
-                  <option value="">Selectionner un membre</option>
+                  <option value="">Sélectionner un membre</option>
                   @for (member of members(); track member.id) {
                     <option [value]="member.id">{{ member.nomComplet }}</option>
                   }
@@ -393,7 +393,7 @@ type DetailedSections = {
                   </div>
                 } @empty {
                   <div class="text-sm text-muted-foreground">
-                    Aucun co-auteur enregistre pour cet article.
+                    Aucun co-auteur enregistré pour cet article.
                   </div>
                 }
               </div>
@@ -440,13 +440,29 @@ export class ArticlesManagementPageComponent implements OnInit {
 
   readonly formatDate = formatDate;
 
+  readonly statutLabels: Record<string, { fr: string; en: string; ar: string }> = {
+    BROUILLON: { fr: 'Brouillon', en: 'Draft', ar: 'مسودة' },
+    SOUMIS: { fr: 'Soumis', en: 'Submitted', ar: 'مرسل' },
+    VALIDE: { fr: 'Validé', en: 'Validated', ar: 'مُعتمد' },
+    REJETE: { fr: 'Rejeté', en: 'Rejected', ar: 'مرفوض' },
+    PUBLIE: { fr: 'Publié', en: 'Published', ar: 'منشور' },
+  };
+
+  formatStatut(statut: string | null | undefined): string {
+    if (!statut) {
+      return '';
+    }
+    const entry = this.statutLabels[statut];
+    return entry ? this.site.localize(entry) : statut;
+  }
+
   readonly myArticlesTitle = {
     fr: 'Mes articles',
     en: 'My articles',
     ar: 'My articles',
   };
   readonly myArticlesIntro = {
-    fr: "Creer, modifier et suivre vos publications scientifiques avec un formulaire detaille.",
+    fr: "Créer, modifier et suivre vos publications scientifiques avec un formulaire détaillé.",
     en: 'Create, edit, and track your scientific publications with a detailed form.',
     ar: 'Create, edit, and track your scientific publications with a detailed form.',
   };
@@ -472,7 +488,7 @@ export class ArticlesManagementPageComponent implements OnInit {
       {
         label: 'Brouillons',
         value: stats.BROUILLON || 0,
-        meta: 'Encore editables',
+        meta: 'Encore éditables',
       },
       {
         label: 'Soumis',
@@ -580,11 +596,11 @@ export class ArticlesManagementPageComponent implements OnInit {
 
   generateStructuredDraft() {
     const sections = [
-      ['Contexte et problematique', this.detailed.contexte],
-      ['Methodologie', this.detailed.methodologie],
-      ['Resultats et observations', this.detailed.resultats],
+      ['Contexte et problématique', this.detailed.contexte],
+      ['Méthodologie', this.detailed.methodologie],
+      ['Résultats et observations', this.detailed.resultats],
       ['Impact et perspectives', this.detailed.impact],
-      ['References', this.detailed.references],
+      ['Références', this.detailed.references],
     ] as const;
 
     const built = sections
@@ -593,13 +609,13 @@ export class ArticlesManagementPageComponent implements OnInit {
       .join('\n\n');
 
     if (!built) {
-      this.errorMessage.set('Remplissez au moins une section detaillee avant generation.');
+      this.errorMessage.set('Remplissez au moins une section détaillée avant génération.');
       return;
     }
 
     this.form.contenu = built;
     this.errorMessage.set('');
-    this.statusMessage.set('Contenu detaille genere dans le champ principal.');
+    this.statusMessage.set('Contenu détaillé généré dans le champ principal.');
   }
 
   async saveAsDraft() {
@@ -612,20 +628,20 @@ export class ArticlesManagementPageComponent implements OnInit {
 
   private validatePayload(action: 'BROUILLON' | 'SOUMETTRE') {
     if (this.form.titre.trim().length < 10) {
-      return 'Le titre doit contenir au moins 10 caracteres.';
+      return 'Le titre doit contenir au moins 10 caractères.';
     }
 
     if (this.form.resume.trim().length < 30) {
-      return 'Le resume doit contenir au moins 30 caracteres.';
+      return 'Le résumé doit contenir au moins 30 caractères.';
     }
 
     if (this.form.categorieId === null || this.form.categorieId === undefined) {
-      return "Veuillez selectionner une categorie d'article.";
+      return "Veuillez sélectionner une catégorie d'article.";
     }
 
     const minContent = action === 'SOUMETTRE' ? 120 : 40;
     if (this.form.contenu.trim().length < minContent) {
-      return `Le contenu doit contenir au moins ${minContent} caracteres.`;
+      return `Le contenu doit contenir au moins ${minContent} caractères.`;
     }
 
     return '';
@@ -676,8 +692,8 @@ export class ArticlesManagementPageComponent implements OnInit {
 
       const successText =
         action === 'SOUMETTRE'
-          ? 'Article soumis pour validation avec succes.'
-          : 'Article enregistre en brouillon avec succes.';
+          ? 'Article soumis pour validation avec succès.'
+          : 'Article enregistré en brouillon avec succès.';
       this.statusMessage.set(successText);
 
       await this.ngOnInit();
@@ -715,11 +731,11 @@ export class ArticlesManagementPageComponent implements OnInit {
       this.editingArticle.set(updated);
       this.selectedPdfFile = null;
       this.selectedPdfName.set('');
-      this.statusMessage.set('PDF televerse avec succes.');
+      this.statusMessage.set('PDF téléversé avec succès.');
       await this.ngOnInit();
     } catch (error) {
       this.errorMessage.set(
-        error instanceof Error ? error.message : 'Erreur lors du televersement PDF.',
+        error instanceof Error ? error.message : 'Erreur lors du téléversement PDF.',
       );
     }
   }
@@ -757,7 +773,7 @@ export class ArticlesManagementPageComponent implements OnInit {
       });
       this.editingArticle.set(updated);
       this.selectedMemberId = '';
-      this.statusMessage.set('Co-auteur ajoute avec succes.');
+      this.statusMessage.set('Co-auteur ajouté avec succès.');
       await this.ngOnInit();
     } catch (error) {
       this.errorMessage.set(
@@ -776,7 +792,7 @@ export class ArticlesManagementPageComponent implements OnInit {
     try {
       const updated = await api.deleteCoAuthor(token, article.id, userId);
       this.editingArticle.set(updated);
-      this.statusMessage.set('Co-auteur retire avec succes.');
+      this.statusMessage.set('Co-auteur retiré avec succès.');
       await this.ngOnInit();
     } catch (error) {
       this.errorMessage.set(
